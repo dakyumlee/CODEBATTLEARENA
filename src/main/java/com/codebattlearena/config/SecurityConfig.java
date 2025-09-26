@@ -22,20 +22,16 @@ public class SecurityConfig {
         http
             .csrf().disable()
             .authorizeHttpRequests(auth -> auth
-                // 공개 접근 허용
-                .requestMatchers("/", "/api/auth/**", "/css/**", "/js/**", "/images/**").permitAll()
-                
-                // 학생 페이지: 모든 역할 접근 가능 (학생, 강사, 관리자)
+                .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
+                .requestMatchers("/api/auth/**").permitAll()
+                .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll()
                 .requestMatchers("/student/**", "/api/student/**").permitAll()
-                
-                // 강사 페이지: 강사와 관리자만 접근 가능
                 .requestMatchers("/teacher/**", "/api/teacher/**").permitAll()
-                
-                // 관리자 페이지: 관리자만 접근 가능
                 .requestMatchers("/admin/**", "/api/admin/**").permitAll()
-                
-                .anyRequest().permitAll()
-            );
+                .requestMatchers("/api/ai/**").permitAll()
+                .anyRequest().authenticated()
+            )
+            .headers().frameOptions().disable();
 
         return http.build();
     }
