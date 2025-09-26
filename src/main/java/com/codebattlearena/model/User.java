@@ -22,13 +22,17 @@ public class User {
     @Enumerated(EnumType.STRING)
     private UserRole role = UserRole.STUDENT;
     
+    @Column(name = "group_id")
     private Long groupId;
     
-    private Boolean onlineStatus = false;
+    @Column(name = "online_status")
+    private boolean onlineStatus = false;
     
-    private LocalDateTime lastActivity = LocalDateTime.now();
+    @Column(name = "last_activity")
+    private LocalDateTime lastActivity;
     
-    private LocalDateTime createdAt = LocalDateTime.now();
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -48,8 +52,8 @@ public class User {
     public Long getGroupId() { return groupId; }
     public void setGroupId(Long groupId) { this.groupId = groupId; }
 
-    public Boolean getOnlineStatus() { return onlineStatus; }
-    public void setOnlineStatus(Boolean onlineStatus) { this.onlineStatus = onlineStatus; }
+    public boolean isOnlineStatus() { return onlineStatus; }
+    public void setOnlineStatus(boolean onlineStatus) { this.onlineStatus = onlineStatus; }
 
     public LocalDateTime getLastActivity() { return lastActivity; }
     public void setLastActivity(LocalDateTime lastActivity) { this.lastActivity = lastActivity; }

@@ -5,668 +5,178 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>강사 대시보드 - CodeBattleArena</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background: #f8fafc;
-            font-size: 16px;
-            line-height: 1.6;
-        }
-        
-        .teacher-header {
-            background: white;
-            padding: 20px 30px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-        }
-        
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1a202c;
-        }
-        
-        .nav-menu {
-            display: flex;
-            gap: 30px;
-        }
-        
-        .nav-item {
-            color: #718096;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-        
-        .nav-item:hover, .nav-item.active {
-            background: #3182ce;
-            color: white;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            font-size: 1.1rem;
-            color: #4a5568;
-        }
-        
-        .main-container {
-            margin-top: 80px;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 30px;
-        }
-        
-        .dashboard-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 40px;
-            text-align: center;
-        }
-        
-        .dashboard-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 40px;
-        }
-        
-        .dashboard-section {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
-            border: 1px solid #e2e8f0;
-        }
-        
-        .section-title {
-            font-size: 1.6rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        
-        .section-icon {
-            width: 40px;
-            height: 40px;
-            background: #ebf8ff;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.2rem;
-        }
-        
-        .students-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-        }
-        
-        .student-card {
-            background: #f7fafc;
-            border-radius: 12px;
-            padding: 20px;
-            text-align: center;
-            border: 2px solid #e2e8f0;
-            transition: all 0.2s;
-        }
-        
-        .student-card:hover {
-            border-color: #cbd5e0;
-        }
-        
-        .student-status {
-            width: 16px;
-            height: 16px;
-            border-radius: 50%;
-            margin: 0 auto 12px;
-        }
-        
-        .status-online { background: #48bb78; }
-        .status-away { background: #ed8936; }
-        .status-offline { background: #a0aec0; }
-        
-        .student-name {
-            font-size: 1.1rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 8px;
-        }
-        
-        .student-activity {
-            font-size: 0.95rem;
-            color: #718096;
-        }
-        
-        .quick-actions {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-        
-        .action-btn {
-            padding: 20px;
-            background: white;
-            border: 2px solid #3182ce;
-            color: #3182ce;
-            border-radius: 12px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        
-        .action-btn:hover {
-            background: #3182ce;
-            color: white;
-        }
-        
-        .action-btn.primary {
-            background: #3182ce;
-            color: white;
-        }
-        
-        .action-btn.primary:hover {
-            background: #2c5282;
-        }
-        
-        .full-width-section {
-            grid-column: 1 / -1;
-        }
-        
-        .announcement-form {
-            display: flex;
-            gap: 20px;
-            align-items: flex-end;
-        }
-        
-        .form-group {
-            flex: 1;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 600;
-            color: #4a5568;
-            font-size: 1.1rem;
-        }
-        
-        .form-input {
-            width: 100%;
-            padding: 16px 20px;
-            border: 2px solid #e2e8f0;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            transition: border-color 0.2s;
-        }
-        
-        .form-input:focus {
-            outline: none;
-            border-color: #3182ce;
-        }
-        
-        .form-textarea {
-            min-height: 120px;
-            resize: vertical;
-        }
-        
-        .send-btn {
-            padding: 16px 30px;
-            background: #48bb78;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        
-        .send-btn:hover {
-            background: #38a169;
-        }
-        
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.7);
-            display: none;
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .modal-content {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80%;
-            overflow-y: auto;
-        }
-        
-        .modal-title {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 20px;
-        }
-        
-        .btn-primary {
-            padding: 16px 30px;
-            background: #3182ce;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            margin-top: 15px;
-        }
-        
-        .btn-close {
-            float: right;
-            background: #e53e3e;
-            color: white;
-            border: none;
-            width: 30px;
-            height: 30px;
-            border-radius: 50%;
-            cursor: pointer;
-            margin-bottom: 20px;
-        }
-        
-        .empty-state {
-            text-align: center;
-            color: #718096;
-            padding: 20px;
-        }
-        
-        @media (max-width: 1024px) {
-            .dashboard-grid {
-                grid-template-columns: 1fr;
-            }
-            
-            .announcement-form {
-                flex-direction: column;
-                align-items: stretch;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/teacher.css">
 </head>
 <body>
-    <div class="teacher-header">
-        <div class="header-content">
-            <div class="logo">CodeBattleArena</div>
-            <nav class="nav-menu">
-                <a href="/teacher/dashboard" class="nav-item active">대시보드</a>
-                <a href="/teacher/class" class="nav-item">수업관리</a>
-                <a href="/teacher/grades" class="nav-item">성적관리</a>
-            </nav>
-            <div class="user-info">
-                <span>강사님 환영합니다</span>
-                <button onclick="logout()" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
-            </div>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">CodeBattleArena</a>
+            <ul class="nav-links">
+                <li><a href="/teacher" class="active">대시보드</a></li>
+                <li><a href="/teacher/class">수업 관리</a></li>
+                <li><a href="/teacher/create-problem">문제 출제</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
         </div>
     </div>
 
-    <div class="main-container">
-        <h1 class="dashboard-title">실시간 학습 모니터링</h1>
-        
-        <div class="dashboard-grid">
-            <div class="dashboard-section">
-                <h2 class="section-title">
-                    <div class="section-icon">👥</div>
-                    학생 현황 (접속: <span id="onlineCount">0</span>명)
-                </h2>
-                
-                <div class="students-grid" id="studentsGrid">
-                    <div class="empty-state">등록된 학생이 없습니다.</div>
-                </div>
-            </div>
-            
-            <div class="dashboard-section">
-                <h2 class="section-title">
-                    <div class="section-icon">⚡</div>
-                    빠른 실행
-                </h2>
-                
-                <div class="quick-actions">
-                    <button class="action-btn primary" onclick="sendQuickAnnouncement()">
-                        전체 공지
-                    </button>
-                    <button class="action-btn" onclick="shareQuickMaterial()">
-                        자료 공유
-                    </button>
-                    <button class="action-btn" onclick="createQuickProblem()">
-                        즉석 문제
-                    </button>
-                    <button class="action-btn" onclick="startQuickQuiz()">
-                        퀴즈 시작
-                    </button>
-                </div>
-            </div>
-            
-            <div class="dashboard-section full-width-section">
-                <h2 class="section-title">
-                    <div class="section-icon">💬</div>
-                    실시간 공지사항 전송
-                </h2>
-                
-                <div class="announcement-form">
-                    <div class="form-group">
-                        <label class="form-label">공지 제목</label>
-                        <input type="text" class="form-input" id="announcementTitle" placeholder="공지사항 제목을 입력하세요">
-                    </div>
-                    <div class="form-group" style="flex: 2;">
-                        <label class="form-label">공지 내용</label>
-                        <textarea class="form-input form-textarea" id="announcementContent" placeholder="학생들에게 전달할 내용을 입력하세요"></textarea>
-                    </div>
-                    <button class="send-btn" onclick="sendAnnouncement()">전송</button>
+    <div class="teacher-container">
+        <div class="teacher-header">
+            <h1>실시간 학생 모니터링</h1>
+            <div class="connection-info">
+                <span id="connectionStatus" class="connection-indicator">연결 확인 중...</span>
+                <div class="student-count">
+                    온라인: <span id="onlineCount">0</span> / 전체: <span id="totalCount">0</span>명
                 </div>
             </div>
         </div>
-    </div>
-    
-    <!-- 빠른 작업 모달 -->
-    <div class="modal" id="quickModal">
-        <div class="modal-content">
-            <button class="btn-close" onclick="closeModal()">×</button>
-            <h2 class="modal-title" id="modalTitle">빠른 작업</h2>
-            <div id="modalBody">
-                <!-- 내용이 동적으로 채워집니다 -->
-            </div>
+
+        <div class="dashboard-actions">
+            <button onclick="sendNotification()" class="btn btn-primary">전체 공지</button>
+            <button onclick="loadStudents()" class="btn btn-secondary">새로고침</button>
+            <button onclick="window.location.href='/teacher/create-problem'" class="btn">문제 출제</button>
         </div>
-    </div>
-    
-    <!-- 성공 메시지 모달 -->
-    <div class="modal" id="successModal">
-        <div class="modal-content">
-            <button class="btn-close" onclick="closeSuccessModal()">×</button>
-            <h2 class="modal-title">성공!</h2>
-            <p id="successMessage"></p>
-            <button class="btn-primary" onclick="closeSuccessModal()">확인</button>
+
+        <div class="students-container">
+            <h3>학생 현황</h3>
+            <div id="studentsGrid" class="students-grid">
+                <div class="loading">학생 데이터를 불러오는 중...</div>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+    <script src="/js/teacher/dashboard.js"></script>
+    
     <script>
-        let stompClient = null;
-        
-        document.addEventListener('DOMContentLoaded', function() {
-            connectWebSocket();
-            loadStudents();
-        });
-        
-        function connectWebSocket() {
-            const socket = new SockJS('/ws');
-            stompClient = Stomp.over(socket);
-            
-            stompClient.connect({}, function(frame) {
-                console.log('웹소켓 연결됨: ' + frame);
-            }, function(error) {
-                console.error('웹소켓 연결 실패:', error);
-            });
-        }
-        
-        async function loadStudents() {
-            try {
-                const response = await fetch('/api/teacher/students');
-                const students = await response.json();
-                displayStudents(students);
-            } catch (error) {
-                console.error('학생 목록 로드 실패:', error);
-                document.getElementById('studentsGrid').innerHTML = '<div class="empty-state">학생 목록을 불러올 수 없습니다.</div>';
-            }
-        }
-        
-        function displayStudents(students) {
-            const grid = document.getElementById('studentsGrid');
-            const onlineStudents = students.filter(s => s.onlineStatus);
-            
-            document.getElementById('onlineCount').textContent = onlineStudents.length;
-            
-            if (students.length === 0) {
-                grid.innerHTML = '<div class="empty-state">등록된 학생이 없습니다.</div>';
-                return;
-            }
-            
-            grid.innerHTML = students.map(student => `
-                <div class="student-card">
-                    <div class="student-status status-${student.onlineStatus ? 'online' : 'offline'}"></div>
-                    <div class="student-name">${student.name}</div>
-                    <div class="student-activity">${student.onlineStatus ? '온라인' : '오프라인'}</div>
-                </div>
-            `).join('');
-        }
-        
-        function sendAnnouncement() {
-            const title = document.getElementById('announcementTitle').value.trim();
-            const content = document.getElementById('announcementContent').value.trim();
-            
-            if (!title || !content) {
-                showErrorModal('제목과 내용을 모두 입력해주세요.');
-                return;
-            }
-            
-            const announcement = {
-                type: 'announcement',
-                title: title,
-                message: content,
-                timestamp: new Date().toISOString()
-            };
-            
-            if (stompClient) {
-                stompClient.send('/app/announce', {}, JSON.stringify(announcement));
-                showSuccessModal('공지사항이 모든 학생에게 전송되었습니다!');
-                
-                document.getElementById('announcementTitle').value = '';
-                document.getElementById('announcementContent').value = '';
-            } else {
-                showErrorModal('웹소켓 연결이 필요합니다.');
-            }
-        }
-        
-        function sendQuickAnnouncement() {
-            showQuickModal('긴급 공지', `
-                <div class="form-group">
-                    <label class="form-label">공지 내용</label>
-                    <textarea class="form-input form-textarea" id="quickMessage" placeholder="긴급 공지 내용을 입력하세요"></textarea>
-                </div>
-                <button class="btn-primary" onclick="executeQuickAnnouncement()">전송</button>
-            `);
-        }
-        
-        function executeQuickAnnouncement() {
-            const message = document.getElementById('quickMessage').value.trim();
-            if (!message) return;
-            
-            const announcement = {
-                type: 'announcement',
-                title: '긴급 공지',
-                message: message,
-                timestamp: new Date().toISOString()
-            };
-            
-            if (stompClient) {
-                stompClient.send('/app/announce', {}, JSON.stringify(announcement));
-                closeModal();
-                showSuccessModal('긴급 공지가 전송되었습니다!');
-            }
-        }
-        
-        function shareQuickMaterial() {
-            showQuickModal('빠른 자료 공유', `
-                <div class="form-group">
-                    <label class="form-label">자료 제목</label>
-                    <input type="text" class="form-input" id="quickMaterialTitle" placeholder="자료 제목">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">자료 링크</label>
-                    <input type="url" class="form-input" id="quickMaterialUrl" placeholder="https://example.com">
-                </div>
-                <button class="btn-primary" onclick="executeQuickMaterial()">공유</button>
-            `);
-        }
-        
-        function executeQuickMaterial() {
-            const title = document.getElementById('quickMaterialTitle').value.trim();
-            const url = document.getElementById('quickMaterialUrl').value.trim();
-            
-            if (!title || !url) return;
-            
-            const material = {
-                type: 'new_material',
-                title: title,
-                url: url,
-                message: `새로운 자료가 공유되었습니다: ${title}`,
-                timestamp: new Date().toISOString()
-            };
-            
-            if (stompClient) {
-                stompClient.send('/app/share-material', {}, JSON.stringify(material));
-                closeModal();
-                showSuccessModal('자료가 공유되었습니다!');
-            }
-        }
-        
-        function createQuickProblem() {
-            showQuickModal('즉석 문제 출제', `
-                <div class="form-group">
-                    <label class="form-label">문제 제목</label>
-                    <input type="text" class="form-input" id="quickProblemTitle" placeholder="문제 제목">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">문제 설명</label>
-                    <textarea class="form-input form-textarea" id="quickProblemDesc" placeholder="문제 설명"></textarea>
-                </div>
-                <button class="btn-primary" onclick="executeQuickProblem()">출제</button>
-            `);
-        }
-        
-        function executeQuickProblem() {
-            const title = document.getElementById('quickProblemTitle').value.trim();
-            const description = document.getElementById('quickProblemDesc').value.trim();
-            
-            if (!title || !description) return;
-            
-            const problem = {
-                type: 'new_problem',
-                title: title,
-                description: description,
-                message: `새로운 문제가 출제되었습니다: ${title}`,
-                timestamp: new Date().toISOString()
-            };
-            
-            if (stompClient) {
-                stompClient.send('/app/create-problem', {}, JSON.stringify(problem));
-                closeModal();
-                showSuccessModal('문제가 출제되었습니다!');
-            }
-        }
-        
-        function startQuickQuiz() {
-            showQuickModal('빠른 퀴즈 시작', `
-                <div class="form-group">
-                    <label class="form-label">퀴즈 제목</label>
-                    <input type="text" class="form-input" id="quickQuizTitle" placeholder="퀴즈 제목">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">제한시간 (분)</label>
-                    <input type="number" class="form-input" id="quickQuizDuration" placeholder="10" min="1" max="60">
-                </div>
-                <button class="btn-primary" onclick="executeQuickQuiz()">시작</button>
-            `);
-        }
-        
-        function executeQuickQuiz() {
-            const title = document.getElementById('quickQuizTitle').value.trim();
-            const duration = document.getElementById('quickQuizDuration').value;
-            
-            if (!title || !duration) return;
-            
-            const quiz = {
-                type: 'new_quiz',
-                title: title,
-                duration: parseInt(duration),
-                message: `새로운 퀴즈가 시작되었습니다: ${title}`,
-                timestamp: new Date().toISOString()
-            };
-            
-            if (stompClient) {
-                stompClient.send('/app/start-quiz', {}, JSON.stringify(quiz));
-                closeModal();
-                showSuccessModal('퀴즈가 시작되었습니다!');
-            }
-        }
-        
-        function showQuickModal(title, content) {
-            document.getElementById('modalTitle').textContent = title;
-            document.getElementById('modalBody').innerHTML = content;
-            document.getElementById('quickModal').style.display = 'flex';
-        }
-        
-        function closeModal() {
-            document.getElementById('quickModal').style.display = 'none';
-        }
-        
-        function showSuccessModal(message) {
-            document.getElementById('successMessage').textContent = message;
-            document.getElementById('successModal').style.display = 'flex';
-        }
-        
-        function showErrorModal(message) {
-            document.getElementById('successMessage').textContent = message;
-            document.querySelector('#successModal .modal-title').textContent = '오류';
-            document.getElementById('successModal').style.display = 'flex';
-        }
-        
-        function closeSuccessModal() {
-            document.getElementById('successModal').style.display = 'none';
-            document.querySelector('#successModal .modal-title').textContent = '성공!';
-        }
-        
         function logout() {
             localStorage.clear();
             window.location.href = '/';
         }
-        
-        // 5초마다 학생 상태 업데이트
-        setInterval(loadStudents, 5000);
     </script>
+
+    <style>
+        .connection-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .connection-indicator {
+            padding: 0.5rem 1rem;
+            border-radius: 2rem;
+            background: #ef4444;
+            color: white;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .connection-indicator.active {
+            background: #10b981;
+        }
+        
+        .student-count {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .dashboard-actions {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1rem;
+        }
+        
+        .student-card {
+            background: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid #6b7280;
+            transition: all 0.2s;
+        }
+        
+        .student-card.online {
+            border-left-color: #10b981;
+        }
+        
+        .student-card.offline {
+            border-left-color: #ef4444;
+            opacity: 0.7;
+        }
+        
+        .student-info {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+        
+        .student-status {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6b7280;
+        }
+        
+        .student-status.online {
+            background: #10b981;
+        }
+        
+        .student-status.offline {
+            background: #ef4444;
+        }
+        
+        .student-details h4 {
+            margin: 0;
+            color: #374151;
+        }
+        
+        .student-details p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .student-activity {
+            margin-bottom: 1rem;
+        }
+        
+        .status-text {
+            font-weight: 600;
+            color: #374151;
+        }
+        
+        .activity-text {
+            display: block;
+            font-size: 0.9rem;
+            color: #6b7280;
+            margin-top: 0.25rem;
+        }
+        
+        .btn-view {
+            padding: 0.5rem 1rem;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        
+        .loading, .no-students {
+            text-align: center;
+            color: #6b7280;
+            padding: 2rem;
+            grid-column: 1 / -1;
+        }
+    </style>
 </body>
 </html>
