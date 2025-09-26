@@ -77,6 +77,25 @@
             border-radius: 12px;
             margin-bottom: 20px;
             scroll-behavior: smooth;
+            max-height: calc(100vh - 250px);
+        }
+        
+        .chat-messages::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-track {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb {
+            background: #68d391;
+            border-radius: 4px;
+        }
+        
+        .chat-messages::-webkit-scrollbar-thumb:hover {
+            background: #48bb78;
         }
         
         .message {
@@ -99,6 +118,7 @@
             justify-content: center;
             font-size: 1.2rem;
             font-weight: 600;
+            flex-shrink: 0;
         }
         
         .avatar-ai {
@@ -114,6 +134,8 @@
             padding: 15px 20px;
             border-radius: 16px;
             line-height: 1.6;
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
         
         .message.ai .message-content {
@@ -170,6 +192,7 @@
             padding: 20px;
             background: #2d3748;
             border-radius: 12px;
+            flex-shrink: 0;
         }
         
         .chat-input {
@@ -182,6 +205,7 @@
             font-size: 1rem;
             resize: none;
             max-height: 120px;
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
         }
         
         .chat-input:focus {
@@ -199,6 +223,7 @@
             cursor: pointer;
             font-size: 1.2rem;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         
         .send-btn:hover {
@@ -281,31 +306,29 @@
             const message = chatInput.value.trim();
             if (!message || sendBtn.disabled) return;
             
-            // 사용자 메시지 표시
             addMessage('user', message);
             
-            // 입력창 초기화 및 버튼 비활성화
             chatInput.value = '';
             chatInput.style.height = 'auto';
             sendBtn.disabled = true;
             
-            // 타이핑 인디케이터 표시
             showTypingIndicator();
             
             try {
                 const response = await fetch('/api/ai/chat', {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
                     body: JSON.stringify({ message: message })
                 });
                 
                 const data = await response.json();
                 
-                // 타이핑 인디케이터 숨김
                 hideTypingIndicator();
                 
                 if (data.response) {
-                    // 타이핑 애니메이션으로 AI 응답 표시
                     await typeMessage('ai', data.response);
                 } else {
                     addMessage('ai', '죄송합니다. 현재 AI 서비스를 이용할 수 없습니다.');
@@ -346,7 +369,7 @@
                 if (i < content.length) {
                     contentDiv.textContent += content.charAt(i);
                     i++;
-                    setTimeout(typing, 20); // 타이핑 속도
+                    setTimeout(typing, 20);
                     chatMessages.scrollTop = chatMessages.scrollHeight;
                 }
             };

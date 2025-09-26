@@ -212,7 +212,7 @@
                 <a href="/student/battle" class="nav-item">코드배틀</a>
             </nav>
             <div class="user-info">
-                <span>학생님 환영합니다</span>
+                <span id="userName">님 환영합니다</span>
                 <button onclick="logout()" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
             </div>
         </div>
@@ -259,9 +259,19 @@
         let connectionStatus = document.getElementById('connectionStatus');
         
         document.addEventListener('DOMContentLoaded', function() {
+            loadUserInfo();
             loadTodayContent();
             connectWebSocket();
         });
+
+        function loadUserInfo() {
+            const token = localStorage.getItem('authToken');
+            const userName = localStorage.getItem('userName');
+            
+            if (userName) {
+                document.getElementById('userName').textContent = userName + '님 환영합니다';
+            }
+        }
         
         function connectWebSocket() {
             updateConnectionStatus('reconnecting', '연결 중...');
@@ -359,7 +369,11 @@
         
         async function loadAIProblem() {
             try {
-                const response = await fetch('/api/student/today');
+                const response = await fetch('/api/student/today', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
                 const data = await response.json();
                 
                 const section = document.getElementById('aiProblemSection');
@@ -386,7 +400,11 @@
         
         async function loadMaterials() {
             try {
-                const response = await fetch('/api/teacher/materials');
+                const response = await fetch('/api/teacher/materials', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
                 const materials = await response.json();
                 
                 const section = document.getElementById('materialsSection');

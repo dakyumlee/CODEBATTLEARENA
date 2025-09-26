@@ -1,6 +1,5 @@
 package com.codebattlearena.service;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.http.*;
@@ -10,9 +9,7 @@ import java.util.*;
 @Service
 public class OpenAIService {
 
-    @Value("${ai.openai.api-key}")
-    private String apiKey;
-
+    private final String apiKey = System.getenv("OPENAI_API_KEY");
     private final RestTemplate restTemplate = new RestTemplate();
 
     public String generateResponse(String message) {
