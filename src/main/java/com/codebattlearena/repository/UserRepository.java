@@ -24,3 +24,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     List<User> findByRoleAndOnlineStatus(UserRole role, Boolean onlineStatus);
 }
+
+    void deleteByEmail(String email);

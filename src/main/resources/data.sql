@@ -1,12 +1,9 @@
--- 테이블이 있는지 확인하고 데이터 삽입
-INSERT INTO users (name, email, password, role, created_at, online_status) 
-VALUES ('관리자', 'oicrcutie@gmail.com', '$2a$10$N9qo8uLOickgx2ZMRJpart4nrY15y.GYJqhH9i2ODbNRvHRkVN.Vm', 'ADMIN', CURRENT_TIMESTAMP, false)
-ON CONFLICT (email) DO NOTHING;
+-- 기존 사용자 삭제 후 재생성
+DELETE FROM users WHERE email IN ('admin@test.com', 'teacher@test.com', 'student@test.com', 'oicrcutie@gmail.com');
 
-INSERT INTO users (name, email, password, role, created_at, online_status) 
-VALUES ('김강사', 'teacher@test.com', '$2a$10$N9qo8uLOickgx2ZMRJpart4nrY15y.GYJqhH9i2ODbNRvHRkVN.Vm', 'TEACHER', CURRENT_TIMESTAMP, false)
-ON CONFLICT (email) DO NOTHING;
-
-INSERT INTO users (name, email, password, role, created_at, online_status) 
-VALUES ('김학생', 'student@test.com', '$2a$10$N9qo8uLOickgx2ZMRJpart4nrY15y.GYJqhH9i2ODbNRvHRkVN.Vm', 'STUDENT', CURRENT_TIMESTAMP, false)
-ON CONFLICT (email) DO NOTHING;
+-- 테스트 계정 생성 (평문 비밀번호)
+INSERT INTO users (name, email, password, role, online_status, created_at, last_activity) VALUES
+('관리자', 'admin@test.com', '1234', 'ADMIN', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('김강사', 'teacher@test.com', '1234', 'TEACHER', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('박학생', 'student@test.com', '1234', 'STUDENT', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP),
+('원관리자', 'oicrcutie@gmail.com', 'aa667788!!', 'ADMIN', false, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP);
