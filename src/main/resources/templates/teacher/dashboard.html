@@ -41,10 +41,10 @@
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
-                <button class="btn" id="announcementBtn">전체 공지사항</button>
-                <button class="btn btn-secondary" id="shareMaterialBtn">자료 공유</button>
-                <button class="btn" id="createProblemBtn">즉석 문제 출제</button>
-                <button class="btn btn-secondary" id="startQuizBtn">퀴즈 시작</button>
+                <button class="btn" onclick="showAnnouncementModal()">전체 공지사항</button>
+                <button class="btn btn-secondary" onclick="showMaterialModal()">자료 공유</button>
+                <button class="btn" onclick="showProblemModal()">즉석 문제 출제</button>
+                <button class="btn btn-secondary" onclick="showQuizModal()">퀴즈 시작</button>
             </div>
         </div>
     </div>
@@ -141,6 +141,40 @@
     <script>
         let studentActivityData = {};
 
+        // 모달 함수들
+        function showAnnouncementModal() {
+            document.getElementById('announcementModal').style.display = 'block';
+        }
+
+        function showMaterialModal() {
+            document.getElementById('materialModal').style.display = 'block';
+        }
+
+        function showProblemModal() {
+            document.getElementById('problemModal').style.display = 'block';
+        }
+
+        function showQuizModal() {
+            document.getElementById('quizModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            clearModalInputs(modalId);
+        }
+
+        function clearModalInputs(modalId) {
+            const modal = document.getElementById(modalId);
+            const inputs = modal.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                if (input.type !== 'number') {
+                    input.value = '';
+                } else if (input.id === 'problemPoints' || input.id === 'quizDuration') {
+                    input.value = '10';
+                }
+            });
+        }
+
         async function loadStudents() {
             try {
                 const response = await fetch('/api/teacher/students', {
@@ -184,38 +218,6 @@
                 `;
             }).join('');
         }
-
-        // 모달 관리
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            clearModalInputs(modalId);
-        }
-
-        function clearModalInputs(modalId) {
-            const modal = document.getElementById(modalId);
-            const inputs = modal.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                if (input.type !== 'number') {
-                    input.value = '';
-                } else if (input.id === 'problemPoints') {
-                    input.value = '10';
-                } else if (input.id === 'quizDuration') {
-                    input.value = '10';
-                }
-            });
-        }
-
-        // 버튼 이벤트 연결
-        document.addEventListener('DOMContentLoaded', () => {
-            document.getElementById('announcementBtn').onclick = () => showModal('announcementModal');
-            document.getElementById('shareMaterialBtn').onclick = () => showModal('materialModal');
-            document.getElementById('createProblemBtn').onclick = () => showModal('problemModal');
-            document.getElementById('startQuizBtn').onclick = () => showModal('quizModal');
-        });
 
         // 기능 구현
         async function sendAnnouncement() {
@@ -378,9 +380,16 @@
             }
         });
 
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+
         // 초기 로드
         loadStudents();
-        setInterval(loadStudents, 30000); // 30초마다 학생 목록 새로고침
+        setInterval(loadStudents, 30000);
 
         // WebSocket 연결 상태 모니터링
         function checkWebSocketConnection() {

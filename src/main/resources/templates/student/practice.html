@@ -13,7 +13,7 @@
             <a href="/" class="logo">코드배틀아레나</a>
             <ul class="nav-links">
                 <li><a href="/student">대시보드</a></li>
-                <li><a href="#" onclick="logout()">로그아웃</a></li>
+                <li><a href="#" onclick="AuthManager.logout()">로그아웃</a></li>
             </ul>
         </div>
     </div>
@@ -63,6 +63,7 @@
         </div>
     </div>
 
+    <!-- 문제 풀기 모달은 버튼 클릭 시에만 표시 -->
     <div id="solveProblemModal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="max-width: 1200px; width: 95%;">
             <div class="modal-header">
@@ -134,24 +135,29 @@ public class Solution {
             const filteredProblems = currentCategory === 'all' ? problems : problems.filter(p => p.category === currentCategory);
             
             document.getElementById('problemsList').innerHTML = filteredProblems.map(problem => `
-                <div class="problem-card ${problem.solved ? 'solved' : ''}" onclick="openProblem(${problem.id})">
-                    <div class="problem-info">
-                        <h3>${problem.title}</h3>
-                        <span class="difficulty ${problem.difficulty}">${problem.difficulty}</span>
-                    </div>
-                    <div class="problem-stats">
-                        <span>시도: ${problem.attempts}회</span>
-                        ${problem.solved ? `<span class="score">점수: ${problem.score}점</span>` : ''}
-                    </div>
-                    <div class="problem-action">
-                        <button class="btn btn-primary" onclick="event.stopPropagation(); openProblem(${problem.id})">
-                            ${problem.solved ? '다시 풀기' : '문제 풀기'}
-                        </button>
+                <div class="problem-card ${problem.solved ? 'solved' : ''}" style="background: #334155; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s ease; border: 1px solid #475569;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div style="flex: 1;">
+                            <div class="problem-info">
+                                <h3 style="color: #e2e8f0; margin-bottom: 0.5rem;">${problem.title}</h3>
+                                <span class="difficulty ${problem.difficulty}" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; background: ${problem.difficulty === '하' ? '#10b981' : problem.difficulty === '중' ? '#f59e0b' : '#ef4444'}; color: white; margin-right: 1rem;">${problem.difficulty}</span>
+                            </div>
+                            <div class="problem-stats" style="margin-top: 0.5rem;">
+                                <span style="color: #64748b; font-size: 0.9rem;">시도: ${problem.attempts}회</span>
+                                ${problem.solved ? `<span class="score" style="color: #10b981; font-weight: bold; margin-left: 1rem;">점수: ${problem.score}점</span>` : ''}
+                            </div>
+                        </div>
+                        <div class="problem-action">
+                            <button class="btn btn-primary" onclick="event.stopPropagation(); openProblem(${problem.id})" style="padding: 0.75rem 1.5rem;">
+                                ${problem.solved ? '다시 풀기' : '문제 풀기'}
+                            </button>
+                        </div>
                     </div>
                 </div>
             `).join('');
         }
 
+        // 문제 클릭 시에만 모달 열기 (자동 실행 제거)
         function openProblem(problemId) {
             currentProblem = problems.find(p => p.id === problemId);
             if (!currentProblem) return;
@@ -161,6 +167,8 @@ public class Solution {
             document.getElementById('modalProblemExample').textContent = currentProblem.example;
             document.getElementById('solutionCode').value = '';
             document.getElementById('testResult').style.display = 'none';
+            
+            // 모달을 명시적으로 표시
             document.getElementById('solveProblemModal').style.display = 'block';
         }
 
@@ -238,16 +246,18 @@ public class Solution {
             AuthManager.logout();
         }
 
-        // 초기화
-        renderStats();
-        renderProblems();
-
         // 모달 외부 클릭시 닫기
         window.onclick = function(event) {
             if (event.target.classList.contains('modal-overlay')) {
                 event.target.style.display = 'none';
             }
         }
+
+        // 페이지 로드 시 초기화 (모달 자동 실행 제거)
+        document.addEventListener('DOMContentLoaded', function() {
+            renderStats();
+            renderProblems();
+        });
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
