@@ -56,17 +56,14 @@ class WebSocketManager {
     }
 
     setupDefaultSubscriptions() {
-        // 알림 구독
         this.subscribe('/topic/notifications', (message) => {
             this.handleNotification(JSON.parse(message.body));
         });
 
-        // 활동 모니터링 구독 (강사용)
         this.subscribe('/topic/activity', (message) => {
             this.handleActivityUpdate(JSON.parse(message.body));
         });
 
-        // 배틀 업데이트 구독
         this.subscribe('/topic/battle', (message) => {
             this.handleBattleUpdate(JSON.parse(message.body));
         });
@@ -93,7 +90,6 @@ class WebSocketManager {
         }
     }
 
-    // 학생 활동 전송
     sendStudentActivity(activity, page) {
         this.send('/app/student-activity', {
             userId: AuthManager.getCurrentUserId(),
@@ -104,7 +100,6 @@ class WebSocketManager {
         });
     }
 
-    // 공지사항 전송 (강사용)
     sendNotification(message) {
         this.send('/app/notification', {
             message: message,
@@ -114,48 +109,34 @@ class WebSocketManager {
         });
     }
 
-    // 알림 처리
     handleNotification(notification) {
         console.log('알림 수신:', notification);
-        
-        // UI에 알림 표시
         this.showNotificationPopup(notification.message, notification.type);
-        
-        // 커스텀 이벤트 발생
         window.dispatchEvent(new CustomEvent('websocket-notification', { 
             detail: notification 
         }));
     }
 
-    // 활동 업데이트 처리 (강사용)
     handleActivityUpdate(activity) {
         console.log('활동 업데이트:', activity);
-        
-        // 커스텀 이벤트 발생
         window.dispatchEvent(new CustomEvent('student-activity-update', { 
             detail: activity 
         }));
     }
 
-    // 배틀 업데이트 처리
     handleBattleUpdate(battleData) {
         console.log('배틀 업데이트:', battleData);
-        
-        // 커스텀 이벤트 발생
         window.dispatchEvent(new CustomEvent('battle-update', { 
             detail: battleData 
         }));
     }
 
-    // 알림 팝업 표시
     showNotificationPopup(message, type = 'info') {
-        // 기존 알림 제거
         const existingNotification = document.getElementById('websocket-notification');
         if (existingNotification) {
             existingNotification.remove();
         }
 
-        // 새 알림 생성
         const notification = document.createElement('div');
         notification.id = 'websocket-notification';
         notification.style.cssText = `
@@ -180,7 +161,6 @@ class WebSocketManager {
             </div>
         `;
 
-        // CSS 애니메이션 추가
         if (!document.getElementById('websocket-notification-styles')) {
             const style = document.createElement('style');
             style.id = 'websocket-notification-styles';
@@ -195,7 +175,6 @@ class WebSocketManager {
 
         document.body.appendChild(notification);
 
-        // 5초 후 자동 제거
         setTimeout(() => {
             if (notification.parentElement) {
                 notification.remove();
@@ -204,17 +183,14 @@ class WebSocketManager {
     }
 }
 
-// 전역 WebSocket 매니저 인스턴스
 window.webSocketManager = new WebSocketManager();
 
-// 페이지 로드 시 WebSocket 연결
 document.addEventListener('DOMContentLoaded', () => {
     if (AuthManager.isLoggedIn()) {
         window.webSocketManager.connect();
     }
 });
 
-// 페이지 언로드 시 WebSocket 연결 해제
 window.addEventListener('beforeunload', () => {
     window.webSocketManager.disconnect();
 });
