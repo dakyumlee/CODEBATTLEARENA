@@ -192,3 +192,215 @@ body {
     .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
     .nav-links { flex-direction: column; gap: 0.5rem; }
 }
+
+/* 모달 스타일 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 0.5rem;
+    max-width: 500px;
+    width: 90%;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1.5rem 1.5rem 1rem;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: #64748b;
+}
+
+.modal-body {
+    padding: 1.5rem;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+    margin-top: 1rem;
+}
+
+/* 연습 통계 스타일 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    text-align: center;
+    padding: 1rem;
+    background: white;
+    border-radius: 0.5rem;
+    border: 1px solid #e2e8f0;
+}
+
+.stat-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #3b82f6;
+}
+
+.stat-label {
+    color: #64748b;
+    font-size: 0.9rem;
+    margin-top: 0.25rem;
+}
+
+/* 카테고리 탭 스타일 */
+.category-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 0.5rem 1rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 0.25rem;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+
+.tab.active {
+    background: #3b82f6;
+    color: white;
+    border-color: #3b82f6;
+}
+
+.tab:hover:not(.active) {
+    background: #f8fafc;
+}
+
+/* 문제 카드 스타일 */
+.problems-list {
+    display: grid;
+    gap: 1rem;
+}
+
+.problem-card {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    background: white;
+}
+
+.problem-card.solved {
+    border-color: #10b981;
+    background: #f0fdf4;
+}
+
+.problem-info h3 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1rem;
+}
+
+.difficulty {
+    padding: 0.125rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.75rem;
+    font-weight: bold;
+}
+
+.difficulty.하 {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.difficulty.중 {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.difficulty.상 {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.problem-stats {
+    font-size: 0.9rem;
+    color: #64748b;
+}
+
+.score {
+    color: #10b981;
+    font-weight: bold;
+}
+
+/* 노트 카드 스타일 */
+.note-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: white;
+}
+
+.note-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.5rem;
+}
+
+.note-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+}
+
+.note-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-icon {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+    border: 1px solid #e2e8f0;
+    background: white;
+    border-radius: 0.25rem;
+    cursor: pointer;
+}
+
+.btn-icon:hover {
+    background: #f8fafc;
+}
+
+.note-content {
+    line-height: 1.6;
+    margin-bottom: 0.5rem;
+}
+
+.note-date {
+    font-size: 0.8rem;
+    color: #64748b;
+}

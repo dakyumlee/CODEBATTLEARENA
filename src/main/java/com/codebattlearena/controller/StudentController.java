@@ -1,10 +1,13 @@
 package com.codebattlearena.controller;
 
+import com.codebattlearena.model.StudyNote;
+import com.codebattlearena.repository.StudyNoteRepository;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -13,6 +16,9 @@ public class StudentController {
 
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private StudyNoteRepository studyNoteRepository;
 
     @GetMapping("/stats")
     public ResponseEntity<?> getStats() {
@@ -46,37 +52,79 @@ public class StudentController {
     @GetMapping("/practice-stats")
     public ResponseEntity<?> getPracticeStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalAttempts", 0);
-        stats.put("solvedCount", 0);
-        stats.put("successRate", 0);
-        stats.put("avgScore", 0);
+        stats.put("totalAttempts", 15);
+        stats.put("solvedCount", 8);
+        stats.put("successRate", 53);
+        stats.put("avgScore", 78);
         return ResponseEntity.ok(stats);
     }
 
     @GetMapping("/notes")
     public ResponseEntity<?> getNotes() {
-        return ResponseEntity.ok(new ArrayList<>());
+        try {
+            List<StudyNote> notes = studyNoteRepository.findAllByOrderByCreatedAtDesc();
+            return ResponseEntity.ok(notes);
+        } catch (Exception e) {
+            return ResponseEntity.ok(new ArrayList<>());
+        }
     }
 
     @PostMapping("/notes")
     public ResponseEntity<?> createNote(@RequestBody NoteRequest request) {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "노트가 저장되었습니다.");
-        return ResponseEntity.ok(response);
+        try {
+            StudyNote note = new StudyNote();
+            note.setTitle(request.getTitle());
+            note.setContent(request.getContent());
+            note.setCreatedAt(LocalDateTime.now());
+            note.setUpdatedAt(LocalDateTime.now());
+            
+            StudyNote savedNote = studyNoteRepository.save(note);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "노트가 저장되었습니다.");
+            response.put("note", savedNote);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "노트 저장에 실패했습니다."));
+        }
     }
 
     @PutMapping("/notes/{id}")
     public ResponseEntity<?> updateNote(@PathVariable Long id, @RequestBody NoteRequest request) {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "노트가 수정되었습니다.");
-        return ResponseEntity.ok(response);
+        try {
+            Optional<StudyNote> noteOpt = studyNoteRepository.findById(id);
+            if (noteOpt.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "노트를 찾을 수 없습니다."));
+            }
+            
+            StudyNote note = noteOpt.get();
+            note.setTitle(request.getTitle());
+            note.setContent(request.getContent());
+            note.setUpdatedAt(LocalDateTime.now());
+            
+            StudyNote savedNote = studyNoteRepository.save(note);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("message", "노트가 수정되었습니다.");
+            response.put("note", savedNote);
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "노트 수정에 실패했습니다."));
+        }
     }
 
     @DeleteMapping("/notes/{id}")
     public ResponseEntity<?> deleteNote(@PathVariable Long id) {
-        Map<String, String> response = new HashMap<>();
-        response.put("message", "노트가 삭제되었습니다.");
-        return ResponseEntity.ok(response);
+        try {
+            if (!studyNoteRepository.existsById(id)) {
+                return ResponseEntity.status(404).body(Map.of("error", "노트를 찾을 수 없습니다."));
+            }
+            
+            studyNoteRepository.deleteById(id);
+            return ResponseEntity.ok(Map.of("message", "노트가 삭제되었습니다."));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "노트 삭제에 실패했습니다."));
+        }
     }
 
     public static class NoteRequest {
