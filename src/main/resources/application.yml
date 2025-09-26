@@ -1,0 +1,45 @@
+spring:
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/codebattlearena}
+    username: ${DATABASE_USERNAME:postgres}
+    password: ${DATABASE_PASSWORD:password}
+    driver-class-name: org.postgresql.Driver
+  
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+  
+  servlet:
+    multipart:
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:10MB}
+
+server:
+  port: ${SERVER_PORT:8080}
+
+jwt:
+  secret: ${JWT_SECRET:codebattlearena-secret-key-2025-very-long-and-secure-key}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+
+logging:
+  level:
+    com.codebattlearena: ${LOGGING_LEVEL:INFO}
+  file:
+    name: ${LOGGING_FILE:./logs/application.log}
+
+upload:
+  path: ${UPLOAD_PATH:./uploads}

@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>강사 대시보드 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/teacher.css">
+</head>
+<body class="teacher-page">
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">⚔️ 코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/teacher/dashboard">📊 대시보드</a></li>
+                <li><a href="/teacher/class">📚 수업관리</a></li>
+                <li><a href="/teacher/grades">📈 성적관리</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="teacher-dashboard">
+        <div class="teacher-header">
+            <h1 class="teacher-title">👨‍🏫 강사 실시간 모니터링</h1>
+            <p class="teacher-subtitle">학생들의 실시간 학습 현황을 확인하세요</p>
+        </div>
+
+        <div class="activity-monitor">
+            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem;">
+                <h3>📡 실시간 학생 현황</h3>
+                <select class="input" style="width: auto;">
+                    <option>전체 그룹</option>
+                    <option>자바 기초반</option>
+                    <option>자바 심화반</option>
+                </select>
+            </div>
+
+            <div class="student-grid" id="studentGrid">
+                <div class="student-card">
+                    <div class="student-name">
+                        <span class="online-indicator online"></span>
+                        김철수
+                    </div>
+                    <div class="student-activity">현재 활동: 코딩 연습</div>
+                    <div class="student-activity">페이지: 알고리즘 문제</div>
+                    <div class="student-activity">접속 시간: 14:32</div>
+                </div>
+                
+                <div class="student-card">
+                    <div class="student-name">
+                        <span class="online-indicator busy"></span>
+                        박영희
+                    </div>
+                    <div class="student-activity">현재 활동: AI 튜터 이용</div>
+                    <div class="student-activity">페이지: ChatGPT 질문</div>
+                    <div class="student-activity">접속 시간: 14:15</div>
+                </div>
+
+                <div class="student-card">
+                    <div class="student-name">
+                        <span class="online-indicator away"></span>
+                        이민수
+                    </div>
+                    <div class="student-activity">현재 활동: 휴식 중</div>
+                    <div class="student-activity">페이지: 대시보드</div>
+                    <div class="student-activity">접속 시간: 13:45</div>
+                </div>
+
+                <div class="student-card">
+                    <div class="student-name">
+                        <span class="online-indicator offline"></span>
+                        최지훈
+                    </div>
+                    <div class="student-activity">현재 활동: 오프라인</div>
+                    <div class="student-activity">마지막 접속: 12:30</div>
+                    <div class="student-activity">-</div>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn">📢 전체 공지사항</button>
+                <button class="btn btn-secondary">📤 자료 공유</button>
+                <button class="btn">❓ 즉석 문제 출제</button>
+                <button class="btn btn-secondary">⏰ 퀴즈 시작</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script src="/js/common/websocket.js"></script>
+    <script>
+        function logout() {
+            AuthManager.logout();
+        }
+    </script>
+</body>
+</html>

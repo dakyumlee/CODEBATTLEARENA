@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>학생 대시보드 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">⚔️ 코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">👨‍🎓 학생 대시보드</h1>
+            <p class="student-subtitle">오늘도 열심히 코딩 공부해봐요!</p>
+        </div>
+
+        <div class="student-nav">
+            <a href="/student/today" class="student-nav-item active">📅 오늘의 학습</a>
+            <a href="/student/ai-tutor" class="student-nav-item">🤖 AI 튜터</a>
+            <a href="/student/practice" class="student-nav-item">💻 코딩연습</a>
+            <a href="/student/notes" class="student-nav-item">📝 복습노트</a>
+            <a href="/student/battle" class="student-nav-item">⚔️ 코드배틀</a>
+        </div>
+
+        <div class="battle-modes">
+            <div class="battle-mode-card" onclick="location.href='/student/battle/create'">
+                <div class="battle-icon">🎯</div>
+                <h3>친구와 배틀</h3>
+                <p>방을 만들어서 친구와 1:1 코딩 대결!</p>
+            </div>
+            
+            <div class="battle-mode-card" onclick="location.href='/student/battle/random'">
+                <div class="battle-icon">🎲</div>
+                <h3>랜덤 배틀</h3>
+                <p>랜덤 상대와 즉시 매칭되는 스릴 넘치는 대결!</p>
+            </div>
+            
+            <div class="battle-mode-card" onclick="location.href='/student/battle/ai'">
+                <div class="battle-icon">🤖</div>
+                <h3>AI와 배틀</h3>
+                <p>AI와 함께하는 혼자만의 코딩 연습!</p>
+            </div>
+        </div>
+
+        <div class="study-stats">
+            <h3>📊 나의 학습 현황</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value">23</div>
+                    <div class="stat-label">해결한 문제</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">12</div>
+                    <div class="stat-label">배틀 승리</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">85%</div>
+                    <div class="stat-label">정답률</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value">7일</div>
+                    <div class="stat-label">연속 학습</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script>
+        function logout() {
+            AuthManager.logout();
+        }
+    </script>
+</body>
+</html>
