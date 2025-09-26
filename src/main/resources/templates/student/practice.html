@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>코딩연습 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">코딩연습</h1>
+            <p class="student-subtitle">다양한 난이도의 문제를 풀어보세요</p>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3>문제 목록</h3>
+                <select id="difficultyFilter" class="input" style="width: auto;" onchange="filterProblems()">
+                    <option value="">전체 난이도</option>
+                    <option value="하">하</option>
+                    <option value="중">중</option>
+                    <option value="상">상</option>
+                </select>
+            </div>
+
+            <div id="problemList">
+                <div style="text-align: center; padding: 2rem;">문제를 불러오는 중...</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>나의 통계</h3>
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <div class="stat-value" id="totalAttempts">-</div>
+                    <div class="stat-label">총 시도</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="solvedCount">-</div>
+                    <div class="stat-label">해결한 문제</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="successRate">-</div>
+                    <div class="stat-label">성공률</div>
+                </div>
+                <div class="stat-item">
+                    <div class="stat-value" id="avgScore">-</div>
+                    <div class="stat-label">평균 점수</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script src="/js/common/api.js"></script>
+    <script>
+        let allProblems = [];
+
+        async function loadProblems() {
+            try {
+                const response = await ApiClient.get('/api/problems');
+                allProblems = response;
+                displayProblems(allProblems);
+            } catch (error) {
+                document.getElementById('problemList').innerHTML = 
+                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">문제를 불러올 수 없습니다.</div>';
+                console.error('문제 로드 실패:', error);
+            }
+        }
+
+        function displayProblems(problems) {
+            const listDiv = document.getElementById('problemList');
+            
+            if (problems.length === 0) {
+                listDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">문제가 없습니다.</div>';
+                return;
+            }
+
+            listDiv.innerHTML = problems.map(problem => `
+                <div class="card" style="margin: 1rem 0; cursor: pointer;" onclick="solveProblem(${problem.id})">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h4>${problem.title}</h4>
+                            <p style="color: #cbd5e1; margin: 0.5rem 0;">${problem.description.substring(0, 100)}...</p>
+                            <span style="background: ${getDifficultyColor(problem.difficulty)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">
+                                ${problem.difficulty}
+                            </span>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;">${problem.points}점</div>
+                            <div style="font-size: 0.9rem; color: #64748b;">클릭하여 풀기</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function getDifficultyColor(difficulty) {
+            switch(difficulty) {
+                case '하': return '#10b981';
+                case '중': return '#f59e0b';
+                case '상': return '#ef4444';
+                default: return '#6b7280';
+            }
+        }
+
+        function filterProblems() {
+            const difficulty = document.getElementById('difficultyFilter').value;
+            if (difficulty) {
+                const filtered = allProblems.filter(p => p.difficulty === difficulty);
+                displayProblems(filtered);
+            } else {
+                displayProblems(allProblems);
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const stats = await ApiClient.get('/api/student/practice-stats');
+                document.getElementById('totalAttempts').textContent = stats.totalAttempts || 0;
+                document.getElementById('solvedCount').textContent = stats.solvedCount || 0;
+                document.getElementById('successRate').textContent = (stats.successRate || 0) + '%';
+                document.getElementById('avgScore').textContent = stats.avgScore || 0;
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        function solveProblem(problemId) {
+            location.href = `/student/problem/${problemId}`;
+        }
+
+        function logout() {
+            AuthManager.logout();
+        }
+
+        loadProblems();
+        loadStats();
+    </script>
+</body>
+</html>

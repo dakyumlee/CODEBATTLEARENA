@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>복습노트 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">복습노트</h1>
+            <p class="student-subtitle">학습한 내용을 정리하고 복습하세요</p>
+        </div>
+
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3>나의 노트</h3>
+                <button class="btn" onclick="showCreateNote()">새 노트 작성</button>
+            </div>
+
+            <div id="createNoteForm" style="display: none; margin-bottom: 2rem; padding: 1rem; background: #334155; border-radius: 0.5rem;">
+                <input type="text" id="noteTitle" class="input" placeholder="노트 제목" style="margin-bottom: 1rem;">
+                <textarea id="noteContent" class="input" placeholder="노트 내용을 작성하세요..." style="min-height: 200px; margin-bottom: 1rem;"></textarea>
+                <div>
+                    <button class="btn" onclick="saveNote()">저장</button>
+                    <button class="btn" onclick="cancelNote()" style="background: #6b7280; margin-left: 1rem;">취소</button>
+                </div>
+            </div>
+
+            <div id="notesList">
+                <div style="text-align: center; padding: 2rem;">노트를 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script src="/js/common/api.js"></script>
+    <script>
+        let editingNoteId = null;
+
+        async function loadNotes() {
+            try {
+                const notes = await ApiClient.get('/api/student/notes');
+                displayNotes(notes);
+            } catch (error) {
+                document.getElementById('notesList').innerHTML = 
+                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">노트를 불러올 수 없습니다.</div>';
+                console.error('노트 로드 실패:', error);
+            }
+        }
+
+        function displayNotes(notes) {
+            const listDiv = document.getElementById('notesList');
+            
+            if (notes.length === 0) {
+                listDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">작성된 노트가 없습니다. 첫 노트를 작성해보세요!</div>';
+                return;
+            }
+
+            listDiv.innerHTML = notes.map(note => `
+                <div class="card" style="margin: 1rem 0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <h4>${note.title}</h4>
+                            <p style="color: #cbd5e1; margin: 1rem 0; white-space: pre-line;">${note.content.length > 200 ? note.content.substring(0, 200) + '...' : note.content}</p>
+                            <small style="color: #64748b;">작성일: ${formatDate(note.createdAt)}</small>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-secondary" onclick="editNote(${note.id}, '${note.title}', '${note.content}')" style="padding: 0.5rem;">수정</button>
+                            <button class="btn btn-danger" onclick="deleteNote(${note.id})" style="padding: 0.5rem;">삭제</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showCreateNote() {
+            document.getElementById('createNoteForm').style.display = 'block';
+            document.getElementById('noteTitle').focus();
+            editingNoteId = null;
+        }
+
+        function cancelNote() {
+            document.getElementById('createNoteForm').style.display = 'none';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            editingNoteId = null;
+        }
+
+        async function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!title || !content) {
+                alert('제목과 내용을 모두 입력해주세요.');
+                return;
+            }
+
+            try {
+                if (editingNoteId) {
+                    await ApiClient.put(`/api/student/notes/${editingNoteId}`, { title, content });
+                    alert('노트가 수정되었습니다.');
+                } else {
+                    await ApiClient.post('/api/student/notes', { title, content });
+                    alert('노트가 저장되었습니다.');
+                }
+                
+                cancelNote();
+                loadNotes();
+            } catch (error) {
+                alert('노트 저장에 실패했습니다: ' + error.message);
+            }
+        }
+
+        function editNote(id, title, content) {
+            editingNoteId = id;
+            document.getElementById('noteTitle').value = title;
+            document.getElementById('noteContent').value = content;
+            document.getElementById('createNoteForm').style.display = 'block';
+            document.getElementById('noteTitle').focus();
+        }
+
+        async function deleteNote(id) {
+            if (confirm('정말로 이 노트를 삭제하시겠습니까?')) {
+                try {
+                    await ApiClient.delete(`/api/student/notes/${id}`);
+                    alert('노트가 삭제되었습니다.');
+                    loadNotes();
+                } catch (error) {
+                    alert('노트 삭제에 실패했습니다: ' + error.message);
+                }
+            }
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ko-KR', {
+                year: 'numeric', month: 'long', day: 'numeric'
+            });
+        }
+
+        function logout() {
+            AuthManager.logout();
+        }
+
+        loadNotes();
+    </script>
+</body>
+</html>

@@ -8,24 +8,86 @@
 </head>
 <body>
     <div class="container">
-        <div class="card" style="text-align: center; margin-top: 5rem;">
-            <h1 style="font-size: 3rem; color: #60a5fa; margin-bottom: 2rem;">⚔️ 코드배틀아레나</h1>
-            <p style="font-size: 1.2rem; color: #cbd5e1; margin-bottom: 3rem;">
-                국비학원 전용 코딩 학습 관리 시스템
-            </p>
+        <div class="card" style="max-width: 400px; margin: 5rem auto; text-align: center;">
+            <h1 style="font-size: 2.5rem; color: #60a5fa; margin-bottom: 1rem;">코드배틀아레나</h1>
+            <p style="color: #cbd5e1; margin-bottom: 2rem;">국비학원 학습 관리 시스템</p>
             
-            <div style="display: flex; gap: 2rem; justify-content: center; flex-wrap: wrap;">
-                <a href="/student" class="btn" style="text-decoration: none; padding: 1rem 2rem;">
-                    👨‍🎓 학생 로그인
-                </a>
-                <a href="/teacher" class="btn btn-secondary" style="text-decoration: none; padding: 1rem 2rem;">
-                    👨‍🏫 강사 로그인  
-                </a>
-                <a href="/admin" class="btn" style="text-decoration: none; padding: 1rem 2rem; background: linear-gradient(135deg, #6b7280, #4b5563);">
-                    👨‍💼 관리자 로그인
-                </a>
+            <form id="loginForm" style="margin-bottom: 2rem;">
+                <input type="email" id="email" class="input" placeholder="이메일" style="margin-bottom: 1rem;" required>
+                <input type="password" id="password" class="input" placeholder="비밀번호" style="margin-bottom: 1.5rem;" required>
+                <button type="submit" class="btn" style="width: 100%; margin-bottom: 1rem;">로그인</button>
+            </form>
+            
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <select id="roleSelect" class="input" style="width: auto;">
+                    <option value="STUDENT">학생</option>
+                    <option value="TEACHER">강사</option>
+                    <option value="ADMIN">관리자</option>
+                </select>
+                <button onclick="showRegister()" class="btn btn-secondary">회원가입</button>
+            </div>
+
+            <div id="registerForm" style="display: none; margin-top: 2rem; border-top: 1px solid rgba(59, 130, 246, 0.3); padding-top: 2rem;">
+                <h3 style="color: #60a5fa; margin-bottom: 1rem;">회원가입</h3>
+                <form onsubmit="register(event)">
+                    <input type="text" id="regName" class="input" placeholder="이름" style="margin-bottom: 1rem;" required>
+                    <input type="email" id="regEmail" class="input" placeholder="이메일" style="margin-bottom: 1rem;" required>
+                    <input type="password" id="regPassword" class="input" placeholder="비밀번호" style="margin-bottom: 1rem;" required>
+                    <select id="regRole" class="input" style="margin-bottom: 1.5rem;">
+                        <option value="STUDENT">학생</option>
+                        <option value="TEACHER">강사</option>
+                    </select>
+                    <button type="submit" class="btn btn-success" style="width: 100%; margin-bottom: 1rem;">가입하기</button>
+                    <button type="button" onclick="hideRegister()" class="btn" style="width: 100%; background: #6b7280;">취소</button>
+                </form>
             </div>
         </div>
     </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script src="/js/common/api.js"></script>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('roleSelect').value;
+
+            try {
+                const response = await ApiClient.post('/api/auth/login', { email, password });
+                AuthManager.setToken(response.token);
+                
+                if (role === 'STUDENT') window.location.href = '/student';
+                else if (role === 'TEACHER') window.location.href = '/teacher';  
+                else if (role === 'ADMIN') window.location.href = '/admin';
+            } catch (error) {
+                alert('로그인 실패: ' + error.message);
+            }
+        });
+
+        function showRegister() {
+            document.getElementById('registerForm').style.display = 'block';
+        }
+
+        function hideRegister() {
+            document.getElementById('registerForm').style.display = 'none';
+        }
+
+        async function register(e) {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+            const role = document.getElementById('regRole').value;
+
+            try {
+                await ApiClient.post('/api/auth/register', { name, email, password, role });
+                alert('회원가입 성공! 로그인해주세요.');
+                hideRegister();
+            } catch (error) {
+                alert('회원가입 실패: ' + error.message);
+            }
+        }
+    </script>
 </body>
 </html>

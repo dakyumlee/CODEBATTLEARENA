@@ -10,11 +10,11 @@
 <body class="teacher-page">
     <div class="header">
         <div class="nav">
-            <a href="/" class="logo">⚔️ 코드배틀아레나</a>
+            <a href="/" class="logo">코드배틀아레나</a>
             <ul class="nav-links">
-                <li><a href="/teacher/dashboard">📊 대시보드</a></li>
-                <li><a href="/teacher/class">📚 수업관리</a></li>
-                <li><a href="/teacher/grades">📈 성적관리</a></li>
+                <li><a href="/teacher/dashboard">대시보드</a></li>
+                <li><a href="/teacher/class">수업관리</a></li>
+                <li><a href="/teacher/grades">성적관리</a></li>
                 <li><a href="#" onclick="logout()">로그아웃</a></li>
             </ul>
         </div>
@@ -22,77 +22,102 @@
 
     <div class="teacher-dashboard">
         <div class="teacher-header">
-            <h1 class="teacher-title">👨‍🏫 강사 실시간 모니터링</h1>
+            <h1 class="teacher-title">강사 실시간 모니터링</h1>
             <p class="teacher-subtitle">학생들의 실시간 학습 현황을 확인하세요</p>
         </div>
 
         <div class="activity-monitor">
-            <div style="display: flex; justify-content: between; align-items: center; margin-bottom: 2rem;">
-                <h3>📡 실시간 학생 현황</h3>
-                <select class="input" style="width: auto;">
-                    <option>전체 그룹</option>
-                    <option>자바 기초반</option>
-                    <option>자바 심화반</option>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3>실시간 학생 현황</h3>
+                <select class="input" style="width: auto;" id="groupSelect">
+                    <option value="">그룹 선택...</option>
                 </select>
             </div>
 
             <div class="student-grid" id="studentGrid">
-                <div class="student-card">
-                    <div class="student-name">
-                        <span class="online-indicator online"></span>
-                        김철수
-                    </div>
-                    <div class="student-activity">현재 활동: 코딩 연습</div>
-                    <div class="student-activity">페이지: 알고리즘 문제</div>
-                    <div class="student-activity">접속 시간: 14:32</div>
-                </div>
-                
-                <div class="student-card">
-                    <div class="student-name">
-                        <span class="online-indicator busy"></span>
-                        박영희
-                    </div>
-                    <div class="student-activity">현재 활동: AI 튜터 이용</div>
-                    <div class="student-activity">페이지: ChatGPT 질문</div>
-                    <div class="student-activity">접속 시간: 14:15</div>
-                </div>
-
-                <div class="student-card">
-                    <div class="student-name">
-                        <span class="online-indicator away"></span>
-                        이민수
-                    </div>
-                    <div class="student-activity">현재 활동: 휴식 중</div>
-                    <div class="student-activity">페이지: 대시보드</div>
-                    <div class="student-activity">접속 시간: 13:45</div>
-                </div>
-
-                <div class="student-card">
-                    <div class="student-name">
-                        <span class="online-indicator offline"></span>
-                        최지훈
-                    </div>
-                    <div class="student-activity">현재 활동: 오프라인</div>
-                    <div class="student-activity">마지막 접속: 12:30</div>
-                    <div class="student-activity">-</div>
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    학생 데이터를 불러오는 중...
                 </div>
             </div>
 
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn">📢 전체 공지사항</button>
-                <button class="btn btn-secondary">📤 자료 공유</button>
-                <button class="btn">❓ 즉석 문제 출제</button>
-                <button class="btn btn-secondary">⏰ 퀴즈 시작</button>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+                <button class="btn" onclick="sendNotification()">전체 공지사항</button>
+                <button class="btn btn-secondary" onclick="shareFile()">자료 공유</button>
+                <button class="btn" onclick="createProblem()">즉석 문제 출제</button>
+                <button class="btn btn-secondary" onclick="startQuiz()">퀴즈 시작</button>
             </div>
         </div>
     </div>
 
     <script src="/js/common/auth.js"></script>
+    <script src="/js/common/api.js"></script>
     <script src="/js/common/websocket.js"></script>
     <script>
+        async function loadStudents() {
+            try {
+                const students = await ApiClient.get('/api/teacher/students');
+                const grid = document.getElementById('studentGrid');
+                
+                if (students.length === 0) {
+                    grid.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">등록된 학생이 없습니다.</div>';
+                    return;
+                }
+
+                grid.innerHTML = students.map(student => `
+                    <div class="student-card">
+                        <div class="student-name">
+                            <span class="online-indicator ${student.onlineStatus ? 'online' : 'offline'}"></span>
+                            ${student.name}
+                        </div>
+                        <div class="student-activity">현재 활동: ${student.currentActivity || '알 수 없음'}</div>
+                        <div class="student-activity">페이지: ${student.currentPage || '-'}</div>
+                        <div class="student-activity">접속 시간: ${student.lastActivity || '-'}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('학생 목록 로드 실패:', error);
+                document.getElementById('studentGrid').innerHTML = 
+                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">학생 목록을 불러올 수 없습니다.</div>';
+            }
+        }
+
+        async function loadGroups() {
+            try {
+                const groups = await ApiClient.get('/api/teacher/groups');
+                const select = document.getElementById('groupSelect');
+                select.innerHTML = '<option value="">전체 그룹</option>' + 
+                    groups.map(group => `<option value="${group.id}">${group.name}</option>`).join('');
+            } catch (error) {
+                console.error('그룹 목록 로드 실패:', error);
+            }
+        }
+
+        function sendNotification() {
+            const message = prompt('공지사항을 입력하세요:');
+            if (message) {
+                alert('공지사항이 전송되었습니다: ' + message);
+            }
+        }
+
+        function shareFile() {
+            alert('파일 공유 기능은 준비 중입니다.');
+        }
+
+        function createProblem() {
+            alert('문제 출제 기능은 준비 중입니다.');
+        }
+
+        function startQuiz() {
+            alert('퀴즈 시작 기능은 준비 중입니다.');
+        }
+
         function logout() {
             AuthManager.logout();
         }
+
+        loadStudents();
+        loadGroups();
+        setInterval(loadStudents, 30000);
     </script>
 </body>
 </html>

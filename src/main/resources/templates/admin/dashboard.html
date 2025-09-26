@@ -10,7 +10,7 @@
 <body class="admin-page">
     <div class="header">
         <div class="nav">
-            <a href="/" class="logo">⚔️ 코드배틀아레나</a>
+            <a href="/" class="logo">코드배틀아레나</a>
             <ul class="nav-links">
                 <li><a href="#" onclick="logout()">로그아웃</a></li>
             </ul>
@@ -19,33 +19,33 @@
 
     <div class="admin-dashboard">
         <div class="admin-header">
-            <h1 class="admin-title">👨‍💼 시스템 관리자</h1>
+            <h1 class="admin-title">시스템 관리자</h1>
             <p class="admin-subtitle">전체 시스템 현황 및 사용자 관리</p>
         </div>
 
         <div class="system-stats">
             <div class="stat-card">
-                <div class="stat-number">127</div>
+                <div class="stat-number" id="totalUsers">-</div>
                 <div class="stat-description">전체 사용자</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">98</div>
+                <div class="stat-number" id="totalStudents">-</div>
                 <div class="stat-description">학생</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">8</div>
+                <div class="stat-number" id="totalTeachers">-</div>
                 <div class="stat-description">강사</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number">45</div>
+                <div class="stat-number" id="todayUsers">-</div>
                 <div class="stat-description">오늘 접속자</div>
             </div>
         </div>
 
         <div class="user-table">
-            <div style="padding: 1.5rem; display: flex; justify-content: between; align-items: center;">
-                <h3>👥 사용자 관리</h3>
-                <button class="btn btn-success">➕ 사용자 추가</button>
+            <div style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+                <h3>사용자 관리</h3>
+                <button class="btn btn-success" onclick="addUser()">사용자 추가</button>
             </div>
             
             <table>
@@ -58,35 +58,9 @@
                         <th>관리</th>
                     </tr>
                 </thead>
-                <tbody>
+                <tbody id="userTableBody">
                     <tr>
-                        <td>김철수</td>
-                        <td>kim@example.com</td>
-                        <td><span class="role-badge role-student">학생</span></td>
-                        <td>2025-09-01</td>
-                        <td>
-                            <button class="btn btn-success" style="padding: 0.25rem 0.75rem; margin-right: 0.5rem;">👨‍🏫 강사 승급</button>
-                            <button class="btn btn-danger" style="padding: 0.25rem 0.75rem;">🗑️ 삭제</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>이강사</td>
-                        <td>lee@example.com</td>
-                        <td><span class="role-badge role-teacher">강사</span></td>
-                        <td>2025-08-15</td>
-                        <td>
-                            <button class="btn btn-danger" style="padding: 0.25rem 0.75rem;">🗑️ 삭제</button>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>박학생</td>
-                        <td>park@example.com</td>
-                        <td><span class="role-badge role-student">학생</span></td>
-                        <td>2025-09-03</td>
-                        <td>
-                            <button class="btn btn-success" style="padding: 0.25rem 0.75rem; margin-right: 0.5rem;">👨‍🏫 강사 승급</button>
-                            <button class="btn btn-danger" style="padding: 0.25rem 0.75rem;">🗑️ 삭제</button>
-                        </td>
+                        <td colspan="5" style="text-align: center; padding: 2rem;">사용자 데이터를 불러오는 중...</td>
                     </tr>
                 </tbody>
             </table>
@@ -94,10 +68,94 @@
     </div>
 
     <script src="/js/common/auth.js"></script>
+    <script src="/js/common/api.js"></script>
     <script>
+        async function loadStats() {
+            try {
+                const stats = await ApiClient.get('/api/admin/stats');
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                document.getElementById('totalStudents').textContent = stats.totalStudents || 0;
+                document.getElementById('totalTeachers').textContent = stats.totalTeachers || 0;
+                document.getElementById('todayUsers').textContent = stats.todayUsers || 0;
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        async function loadUsers() {
+            try {
+                const users = await ApiClient.get('/api/admin/users');
+                const tbody = document.getElementById('userTableBody');
+                
+                if (users.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">등록된 사용자가 없습니다.</td></tr>';
+                    return;
+                }
+
+                tbody.innerHTML = users.map(user => `
+                    <tr>
+                        <td>${user.name}</td>
+                        <td>${user.email}</td>
+                        <td><span class="role-badge role-${user.role.toLowerCase()}">${getRoleText(user.role)}</span></td>
+                        <td>${formatDate(user.createdAt)}</td>
+                        <td>
+                            ${user.role === 'STUDENT' ? `<button class="btn btn-success" style="padding: 0.25rem 0.75rem; margin-right: 0.5rem;" onclick="promoteUser(${user.id})">강사 승급</button>` : ''}
+                            <button class="btn btn-danger" style="padding: 0.25rem 0.75rem;" onclick="deleteUser(${user.id})">삭제</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } catch (error) {
+                console.error('사용자 목록 로드 실패:', error);
+                document.getElementById('userTableBody').innerHTML = 
+                    '<tr><td colspan="5" style="text-align: center; color: #ef4444; padding: 2rem;">사용자 목록을 불러올 수 없습니다.</td></tr>';
+            }
+        }
+
+        function getRoleText(role) {
+            const roleMap = { 'STUDENT': '학생', 'TEACHER': '강사', 'ADMIN': '관리자' };
+            return roleMap[role] || role;
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('ko-KR');
+        }
+
+        async function promoteUser(userId) {
+            if (confirm('이 사용자를 강사로 승급하시겠습니까?')) {
+                try {
+                    await ApiClient.put(`/api/admin/users/${userId}/role`, { role: 'TEACHER' });
+                    alert('강사로 승급되었습니다.');
+                    loadUsers();
+                    loadStats();
+                } catch (error) {
+                    alert('승급 실패: ' + error.message);
+                }
+            }
+        }
+
+        async function deleteUser(userId) {
+            if (confirm('이 사용자를 삭제하시겠습니까?')) {
+                try {
+                    await ApiClient.delete(`/api/admin/users/${userId}`);
+                    alert('사용자가 삭제되었습니다.');
+                    loadUsers();
+                    loadStats();
+                } catch (error) {
+                    alert('삭제 실패: ' + error.message);
+                }
+            }
+        }
+
+        function addUser() {
+            alert('사용자 추가 기능은 준비 중입니다.');
+        }
+
         function logout() {
             AuthManager.logout();
         }
+
+        loadStats();
+        loadUsers();
     </script>
 </body>
 </html>

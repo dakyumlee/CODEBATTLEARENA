@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>오늘의 학습 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">오늘의 학습</h1>
+            <p class="student-subtitle" id="todayDate"></p>
+        </div>
+
+        <div class="card">
+            <h3>AI 추천 문제</h3>
+            <div id="aiProblem">
+                <div style="text-align: center; padding: 2rem;">
+                    AI 문제를 불러오는 중...
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>강사님 공유 자료</h3>
+            <div id="sharedMaterials">
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    공유된 자료가 없습니다.
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>최근 제출한 과제</h3>
+            <div id="recentSubmissions">
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    제출한 과제가 없습니다.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script src="/js/common/api.js"></script>
+    <script>
+        async function loadTodayContent() {
+            document.getElementById('todayDate').textContent = new Date().toLocaleDateString('ko-KR', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
+            });
+
+            try {
+                const response = await ApiClient.get('/api/student/today');
+                
+                const aiProblemDiv = document.getElementById('aiProblem');
+                if (response.aiProblem) {
+                    aiProblemDiv.innerHTML = `
+                        <div style="padding: 1rem; background: #334155; border-radius: 0.5rem; margin: 1rem 0;">
+                            <h4>${response.aiProblem.title}</h4>
+                            <p style="margin: 1rem 0; color: #cbd5e1;">${response.aiProblem.description}</p>
+                            <button class="btn" onclick="solveProblem(${response.aiProblem.id})">문제 풀기</button>
+                        </div>
+                    `;
+                }
+
+                const materialsDiv = document.getElementById('sharedMaterials');
+                if (response.materials && response.materials.length > 0) {
+                    materialsDiv.innerHTML = response.materials.map(material => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #334155;">
+                            <span>${material.title}</span>
+                            <button class="btn" onclick="downloadFile('${material.id}')">다운로드</button>
+                        </div>
+                    `).join('');
+                }
+
+                const submissionsDiv = document.getElementById('recentSubmissions');
+                if (response.submissions && response.submissions.length > 0) {
+                    submissionsDiv.innerHTML = response.submissions.map(submission => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid #334155;">
+                            <span>${submission.title}</span>
+                            <span style="color: ${submission.score >= 80 ? '#10b981' : submission.score >= 60 ? '#f59e0b' : '#ef4444'};">
+                                ${submission.score}점
+                            </span>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('오늘의 학습 내용 로드 실패:', error);
+            }
+        }
+
+        function solveProblem(problemId) {
+            location.href = `/student/problem/${problemId}`;
+        }
+
+        function downloadFile(fileId) {
+            window.open(`/api/files/download/${fileId}`, '_blank');
+        }
+
+        function logout() {
+            AuthManager.logout();
+        }
+
+        loadTodayContent();
+    </script>
+</body>
+</html>

@@ -8,7 +8,7 @@
 
 body {
     font-family: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 50%, #312e81 100%);
+    background: #0f172a;
     color: #e2e8f0;
     min-height: 100vh;
     line-height: 1.6;
@@ -22,10 +22,10 @@ body {
 }
 
 .header {
-    background: rgba(30, 58, 138, 0.9);
+    background: rgba(15, 23, 42, 0.95);
     backdrop-filter: blur(10px);
     padding: 1rem 0;
-    border-bottom: 2px solid rgba(59, 130, 246, 0.3);
+    border-bottom: 1px solid #1e293b;
     position: sticky;
     top: 0;
     z-index: 100;
@@ -43,7 +43,7 @@ body {
 .logo {
     font-size: 1.5rem;
     font-weight: 700;
-    color: #60a5fa;
+    color: #3b82f6;
     text-decoration: none;
     letter-spacing: -0.025em;
 }
@@ -64,21 +64,20 @@ body {
 }
 
 .nav-links a:hover {
-    background: rgba(59, 130, 246, 0.2);
-    color: #60a5fa;
+    background: #1e293b;
+    color: #3b82f6;
 }
 
 .card {
-    background: rgba(30, 64, 175, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: #1e293b;
+    border: 1px solid #334155;
     border-radius: 1rem;
     padding: 1.5rem;
     margin: 1rem 0;
-    backdrop-filter: blur(10px);
 }
 
 .btn {
-    background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+    background: #3b82f6;
     color: white;
     border: none;
     padding: 0.75rem 1.5rem;
@@ -91,25 +90,37 @@ body {
 }
 
 .btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    background: #2563eb;
+    transform: translateY(-1px);
 }
 
 .btn-secondary {
-    background: linear-gradient(135deg, #6366f1, #4f46e5);
+    background: #6366f1;
+}
+
+.btn-secondary:hover {
+    background: #4f46e5;
 }
 
 .btn-danger {
-    background: linear-gradient(135deg, #ef4444, #dc2626);
+    background: #ef4444;
+}
+
+.btn-danger:hover {
+    background: #dc2626;
 }
 
 .btn-success {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: #10b981;
+}
+
+.btn-success:hover {
+    background: #059669;
 }
 
 .input {
-    background: rgba(30, 64, 175, 0.2);
-    border: 1px solid rgba(59, 130, 246, 0.3);
+    background: #1e293b;
+    border: 1px solid #334155;
     border-radius: 0.5rem;
     padding: 0.75rem;
     color: #e2e8f0;
@@ -119,12 +130,12 @@ body {
 }
 
 .input::placeholder {
-    color: #94a3b8;
+    color: #64748b;
 }
 
 .input:focus {
     outline: none;
-    border-color: #60a5fa;
+    border-color: #3b82f6;
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
 }
 
