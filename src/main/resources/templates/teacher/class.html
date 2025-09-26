@@ -15,7 +15,7 @@
                 <li><a href="/teacher">대시보드</a></li>
                 <li><a href="/teacher/class">수업관리</a></li>
                 <li><a href="/teacher/grades">성적관리</a></li>
-                <li><a href="#" onclick="AuthManager.logout()">로그아웃</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
             </ul>
         </div>
     </div>
@@ -30,8 +30,8 @@
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3>학습 자료 관리</h3>
                 <div style="display: flex; gap: 1rem;">
-                    <button onclick="showModal('uploadModal')" class="btn">파일 업로드</button>
-                    <button onclick="showModal('linkModal')" class="btn btn-secondary">링크 공유</button>
+                    <button onclick="location.href='/teacher/upload'" class="btn">파일 업로드</button>
+                    <button onclick="location.href='/teacher/link'" class="btn btn-secondary">링크 공유</button>
                 </div>
             </div>
             <div id="materialsList">
@@ -42,7 +42,7 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3>문제 출제</h3>
-                <button onclick="showModal('problemModal')" class="btn">문제 출제</button>
+                <button onclick="location.href='/teacher/problem'" class="btn">문제 출제</button>
             </div>
             <div id="problemsList">
                 <div style="text-align: center; color: #64748b; padding: 2rem;">출제한 문제가 없습니다.</div>
@@ -50,91 +50,8 @@
         </div>
     </div>
 
-    <div id="uploadModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>파일 업로드</h3>
-                <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="file" id="uploadFiles" multiple class="input" style="margin-bottom: 1rem;">
-                <input type="text" id="uploadTitle" class="input" placeholder="자료 제목" style="margin-bottom: 1rem;">
-                <textarea id="uploadDescription" class="input" placeholder="자료 설명 (선택사항)" style="margin-bottom: 1rem; min-height: 80px;"></textarea>
-                <div style="display: flex; gap: 1rem;">
-                    <button onclick="uploadFiles()" class="btn">업로드</button>
-                    <button onclick="closeModal('uploadModal')" class="btn" style="background: #6b7280;">취소</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="linkModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>링크 공유</h3>
-                <button class="modal-close" onclick="closeModal('linkModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="url" id="linkUrl" class="input" placeholder="https://example.com" style="margin-bottom: 1rem;">
-                <input type="text" id="linkTitle" class="input" placeholder="링크 제목" style="margin-bottom: 1rem;">
-                <textarea id="linkDescription" class="input" placeholder="링크 설명 (선택사항)" style="margin-bottom: 1rem; min-height: 80px;"></textarea>
-                <div style="display: flex; gap: 1rem;">
-                    <button onclick="shareLink()" class="btn">공유</button>
-                    <button onclick="closeModal('linkModal')" class="btn" style="background: #6b7280;">취소</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div id="problemModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width: 800px;">
-            <div class="modal-header">
-                <h3>문제 출제</h3>
-                <button class="modal-close" onclick="closeModal('problemModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <input type="text" id="problemTitle" class="input" placeholder="문제 제목">
-                    <select id="problemDifficulty" class="input">
-                        <option value="하">하 - 기초</option>
-                        <option value="중" selected>중 - 표준</option>
-                        <option value="상">상 - 고급</option>
-                    </select>
-                </div>
-                <textarea id="problemDescription" class="input" placeholder="문제 설명" style="min-height: 120px; margin-bottom: 1rem;"></textarea>
-                <textarea id="problemExample" class="input" placeholder="예제 입출력" style="min-height: 80px; margin-bottom: 1rem;"></textarea>
-                <input type="number" id="problemPoints" class="input" placeholder="점수" value="10" min="1" max="100" style="margin-bottom: 1rem;">
-                <div style="display: flex; gap: 1rem;">
-                    <button onclick="createProblem()" class="btn">문제 출제</button>
-                    <button onclick="closeModal('problemModal')" class="btn" style="background: #6b7280;">취소</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <script src="/js/common/auth.js"></script>
     <script>
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            clearModalInputs(modalId);
-        }
-
-        function clearModalInputs(modalId) {
-            const modal = document.getElementById(modalId);
-            const inputs = modal.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                if (input.type !== 'number') {
-                    input.value = '';
-                } else if (input.id === 'problemPoints') {
-                    input.value = '10';
-                }
-            });
-        }
-
         async function loadMaterials() {
             try {
                 const response = await fetch('/api/teacher/materials', {
@@ -162,125 +79,12 @@
                         <h4 style="margin-bottom: 0.5rem;">${material.title}</h4>
                         <div style="color: #64748b; font-size: 0.9rem;">
                             ${material.fileType === 'link' ? '링크' : '파일'} | 
-                            ${new Date(material.createdAt).toLocaleDateString('ko-KR')} | 
-                            다운로드: ${material.downloadsCount || 0}회
+                            ${new Date(material.createdAt).toLocaleDateString('ko-KR')}
                         </div>
-                        ${material.description ? `<p style="color: #475569; font-size: 0.9rem; margin-top: 0.5rem;">${material.description}</p>` : ''}
                     </div>
                     <button onclick="deleteMaterial(${material.id})" class="btn btn-danger" style="padding: 0.5rem;">삭제</button>
                 </div>
             `).join('');
-        }
-
-        async function uploadFiles() {
-            const filesInput = document.getElementById('uploadFiles');
-            const title = document.getElementById('uploadTitle').value.trim();
-            
-            if (filesInput.files.length === 0) {
-                alert('업로드할 파일을 선택해주세요.');
-                return;
-            }
-
-            if (!title) {
-                alert('자료 제목을 입력해주세요.');
-                return;
-            }
-
-            try {
-                const formData = new FormData();
-                for (let file of filesInput.files) {
-                    formData.append('files', file);
-                }
-                formData.append('title', title);
-                formData.append('description', document.getElementById('uploadDescription').value);
-
-                const response = await fetch('/api/teacher/materials/upload', {
-                    method: 'POST',
-                    headers: AuthManager.getAuthHeaders(),
-                    body: formData
-                });
-
-                if (response.ok) {
-                    alert('파일이 업로드되어 학생들에게 공유되었습니다.');
-                    closeModal('uploadModal');
-                    loadMaterials();
-                } else {
-                    throw new Error('업로드 실패');
-                }
-            } catch (error) {
-                alert('파일 업로드에 실패했습니다: ' + error.message);
-            }
-        }
-
-        async function shareLink() {
-            const url = document.getElementById('linkUrl').value.trim();
-            const title = document.getElementById('linkTitle').value.trim();
-            
-            if (!url || !title) {
-                alert('URL과 제목을 모두 입력해주세요.');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/teacher/materials/link', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...AuthManager.getAuthHeaders()
-                    },
-                    body: JSON.stringify({
-                        url: url,
-                        title: title,
-                        description: document.getElementById('linkDescription').value
-                    })
-                });
-
-                if (response.ok) {
-                    alert('링크가 공유되어 학생들에게 전송되었습니다.');
-                    closeModal('linkModal');
-                    loadMaterials();
-                } else {
-                    throw new Error('공유 실패');
-                }
-            } catch (error) {
-                alert('링크 공유에 실패했습니다: ' + error.message);
-            }
-        }
-
-        async function createProblem() {
-            const title = document.getElementById('problemTitle').value.trim();
-            const description = document.getElementById('problemDescription').value.trim();
-            
-            if (!title || !description) {
-                alert('문제 제목과 설명을 입력해주세요.');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/teacher/create-problem', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...AuthManager.getAuthHeaders()
-                    },
-                    body: JSON.stringify({
-                        title: title,
-                        description: description,
-                        difficulty: document.getElementById('problemDifficulty').value,
-                        points: parseInt(document.getElementById('problemPoints').value),
-                        type: 'assignment'
-                    })
-                });
-
-                if (response.ok) {
-                    alert('문제가 출제되어 모든 학생에게 전송되었습니다.');
-                    closeModal('problemModal');
-                } else {
-                    throw new Error('문제 출제 실패');
-                }
-            } catch (error) {
-                alert('문제 출제에 실패했습니다: ' + error.message);
-            }
         }
 
         async function deleteMaterial(id) {
@@ -305,16 +109,11 @@
             }
         }
 
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
-            }
+        function logout() {
+            AuthManager.logout();
         }
 
         loadMaterials();
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script src="/js/common/websocket.js"></script>
 </body>
 </html>

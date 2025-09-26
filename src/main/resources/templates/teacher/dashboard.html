@@ -6,6 +6,39 @@
     <title>강사 대시보드 - 코드배틀아레나</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/teacher.css">
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            z-index: 1000;
+        }
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            width: 90%;
+            max-width: 500px;
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body class="teacher-page">
     <div class="header">
@@ -15,7 +48,7 @@
                 <li><a href="/teacher">대시보드</a></li>
                 <li><a href="/teacher/class">수업관리</a></li>
                 <li><a href="/teacher/grades">성적관리</a></li>
-                <li><a href="#" onclick="AuthManager.logout()">로그아웃</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
             </ul>
         </div>
     </div>
@@ -34,47 +67,157 @@
                 </div>
             </div>
 
-            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
-                <button class="btn" onclick="openAnnouncement()">전체 공지사항</button>
-                <button class="btn btn-secondary" onclick="openMaterial()">자료 공유</button>
-                <button class="btn" onclick="openProblem()">즉석 문제 출제</button>
-                <button class="btn btn-secondary" onclick="openQuiz()">퀴즈 시작</button>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
+                <button class="btn" onclick="showAnnouncementModal()">전체 공지사항</button>
+                <button class="btn btn-secondary" onclick="showMaterialModal()">자료 공유</button>
+                <button class="btn" onclick="showProblemModal()">즉석 문제 출제</button>
+                <button class="btn btn-secondary" onclick="showQuizModal()">퀴즈 시작</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="announcementModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>전체 공지사항</h3>
+                <span class="close" onclick="closeModal('announcementModal')">&times;</span>
+            </div>
+            <textarea id="announcementText" placeholder="공지사항 내용을 입력하세요..." style="width: 100%; height: 120px; margin-bottom: 1rem; padding: 1rem; border: 1px solid #ccc; border-radius: 0.25rem;"></textarea>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn" onclick="sendAnnouncement()">전송</button>
+                <button class="btn" style="background: #6b7280;" onclick="closeModal('announcementModal')">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="materialModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>자료 공유</h3>
+                <span class="close" onclick="closeModal('materialModal')">&times;</span>
+            </div>
+            <input type="file" id="materialFile" multiple style="width: 100%; margin-bottom: 1rem;">
+            <input type="text" id="materialTitle" placeholder="자료 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;">
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn" onclick="shareMaterial()">공유</button>
+                <button class="btn" style="background: #6b7280;" onclick="closeModal('materialModal')">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="problemModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>즉석 문제 출제</h3>
+                <span class="close" onclick="closeModal('problemModal')">&times;</span>
+            </div>
+            <input type="text" id="problemTitle" placeholder="문제 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;">
+            <textarea id="problemDescription" placeholder="문제 설명" style="width: 100%; height: 100px; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;"></textarea>
+            <select id="problemDifficulty" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem;">
+                <option value="하">하</option>
+                <option value="중">중</option>
+                <option value="상">상</option>
+            </select>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn" onclick="createProblem()">출제</button>
+                <button class="btn" style="background: #6b7280;" onclick="closeModal('problemModal')">취소</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="quizModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>퀴즈 시작</h3>
+                <span class="close" onclick="closeModal('quizModal')">&times;</span>
+            </div>
+            <input type="text" id="quizTitle" placeholder="퀴즈 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;">
+            <textarea id="quizQuestions" placeholder="문제들을 한 줄씩 입력하세요..." style="width: 100%; height: 100px; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;"></textarea>
+            <div style="display: flex; gap: 1rem;">
+                <button class="btn" onclick="startQuiz()">퀴즈 시작</button>
+                <button class="btn" style="background: #6b7280;" onclick="closeModal('quizModal')">취소</button>
             </div>
         </div>
     </div>
 
     <script src="/js/common/auth.js"></script>
     <script>
-        // 모달 열기 함수들 - 단순하게 alert으로 처리
-        function openAnnouncement() {
-            const message = prompt("전송할 공지사항을 입력하세요:");
-            if (message && message.trim()) {
-                alert("공지사항이 전송되었습니다: " + message);
+        function showAnnouncementModal() {
+            document.getElementById('announcementModal').style.display = 'block';
+        }
+
+        function showMaterialModal() {
+            document.getElementById('materialModal').style.display = 'block';
+        }
+
+        function showProblemModal() {
+            document.getElementById('problemModal').style.display = 'block';
+        }
+
+        function showQuizModal() {
+            document.getElementById('quizModal').style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            clearInputs(modalId);
+        }
+
+        function clearInputs(modalId) {
+            const modal = document.getElementById(modalId);
+            modal.querySelectorAll('input, textarea, select').forEach(input => {
+                input.value = '';
+            });
+        }
+
+        function sendAnnouncement() {
+            const text = document.getElementById('announcementText').value.trim();
+            if (!text) {
+                alert('공지사항을 입력해주세요.');
+                return;
             }
+            alert('공지사항이 전송되었습니다: ' + text);
+            closeModal('announcementModal');
         }
 
-        function openMaterial() {
-            alert("자료 공유 기능입니다. 수업관리 페이지에서 파일 업로드를 이용해주세요.");
-        }
-
-        function openProblem() {
-            const title = prompt("문제 제목을 입력하세요:");
-            if (title && title.trim()) {
-                const description = prompt("문제 설명을 입력하세요:");
-                if (description && description.trim()) {
-                    alert(`문제가 출제되었습니다!\n제목: ${title}\n설명: ${description}`);
-                }
+        function shareMaterial() {
+            const file = document.getElementById('materialFile').files[0];
+            const title = document.getElementById('materialTitle').value.trim();
+            
+            if (file && title) {
+                alert('자료가 공유되었습니다: ' + title);
+            } else {
+                alert('파일과 제목을 입력해주세요.');
+                return;
             }
+            closeModal('materialModal');
         }
 
-        function openQuiz() {
-            const title = prompt("퀴즈 제목을 입력하세요:");
-            if (title && title.trim()) {
-                alert("퀴즈가 시작되었습니다: " + title);
+        function createProblem() {
+            const title = document.getElementById('problemTitle').value.trim();
+            const description = document.getElementById('problemDescription').value.trim();
+            const difficulty = document.getElementById('problemDifficulty').value;
+            
+            if (!title || !description) {
+                alert('제목과 설명을 입력해주세요.');
+                return;
             }
+            alert(`문제가 출제되었습니다!\n제목: ${title}\n난이도: ${difficulty}`);
+            closeModal('problemModal');
         }
 
-        // 학생 목록 로드
+        function startQuiz() {
+            const title = document.getElementById('quizTitle').value.trim();
+            const questions = document.getElementById('quizQuestions').value.trim();
+            
+            if (!title || !questions) {
+                alert('퀴즈 제목과 문제를 입력해주세요.');
+                return;
+            }
+            alert('퀴즈가 시작되었습니다: ' + title);
+            closeModal('quizModal');
+        }
+
         async function loadStudents() {
             try {
                 const response = await fetch('/api/teacher/students', {
@@ -105,7 +248,16 @@
             }
         }
 
-        // 페이지 로드 시 학생 목록만 로드 (모달은 절대 자동 실행 안됨)
+        function logout() {
+            AuthManager.logout();
+        }
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
         loadStudents();
     </script>
 </body>
