@@ -17,6 +17,9 @@ public class TeacherController {
     
     @Autowired
     private JwtUtil jwtUtil;
+    
+    @Autowired
+    private WebSocketController webSocketController;
 
     private Long getUserIdFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
@@ -72,9 +75,14 @@ public class TeacherController {
             return error;
         }
 
+        String title = (String) problemData.get("title");
+        
+        // WebSocket으로 모든 학생들에게 알림 전송
+        webSocketController.sendProblemNotification(title, "코딩 문제");
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "문제가 생성되었습니다");
+        response.put("message", "문제가 생성되고 학생들에게 알림이 전송되었습니다");
         response.put("problemId", System.currentTimeMillis());
         
         return response;
@@ -90,10 +98,38 @@ public class TeacherController {
             return error;
         }
 
+        String title = (String) quizData.get("title");
+        
+        // WebSocket으로 모든 학생들에게 알림 전송
+        webSocketController.sendProblemNotification(title, "퀴즈");
+
         Map<String, Object> response = new HashMap<>();
         response.put("success", true);
-        response.put("message", "퀴즈가 생성되었습니다");
+        response.put("message", "퀴즈가 생성되고 학생들에게 알림이 전송되었습니다");
         response.put("quizId", System.currentTimeMillis());
+        
+        return response;
+    }
+
+    @PostMapping("/exam")
+    public Map<String, Object> createExam(@RequestBody Map<String, Object> examData, HttpServletRequest request) {
+        Long teacherId = getUserIdFromRequest(request);
+        if (teacherId == null) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Unauthorized");
+            return error;
+        }
+
+        String title = (String) examData.get("title");
+        
+        // WebSocket으로 모든 학생들에게 알림 전송
+        webSocketController.sendProblemNotification(title, "시험");
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("message", "시험이 생성되고 학생들에게 알림이 전송되었습니다");
+        response.put("examId", System.currentTimeMillis());
         
         return response;
     }

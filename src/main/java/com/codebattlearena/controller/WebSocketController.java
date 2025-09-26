@@ -1,10 +1,10 @@
 package com.codebattlearena.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.MessageMapping;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
-import java.time.LocalDateTime;
+import org.springframework.beans.factory.annotation.Autowired;
 import java.util.Map;
 
 @Controller
@@ -13,27 +13,26 @@ public class WebSocketController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    @MessageMapping("/announce")
-    public void sendAnnouncement(Map<String, Object> announcement) {
-        announcement.put("timestamp", LocalDateTime.now().toString());
-        messagingTemplate.convertAndSend("/topic/notifications", announcement);
+    @MessageMapping("/notification")
+    @SendTo("/topic/notifications")
+    public Map<String, Object> sendNotification(Map<String, Object> notification) {
+        return notification;
     }
 
-    @MessageMapping("/share-material")
-    public void shareMaterial(Map<String, Object> material) {
-        material.put("timestamp", LocalDateTime.now().toString());
-        messagingTemplate.convertAndSend("/topic/notifications", material);
+    @MessageMapping("/activity")
+    @SendTo("/topic/activities")
+    public Map<String, Object> sendActivity(Map<String, Object> activity) {
+        return activity;
     }
 
-    @MessageMapping("/create-problem")
-    public void createProblem(Map<String, Object> problem) {
-        problem.put("timestamp", LocalDateTime.now().toString());
-        messagingTemplate.convertAndSend("/topic/notifications", problem);
-    }
-
-    @MessageMapping("/start-quiz")
-    public void startQuiz(Map<String, Object> quiz) {
-        quiz.put("timestamp", LocalDateTime.now().toString());
-        messagingTemplate.convertAndSend("/topic/notifications", quiz);
+    public void sendProblemNotification(String problemTitle, String problemType) {
+        Map<String, Object> notification = Map.of(
+            "type", "NEW_PROBLEM",
+            "title", "새로운 " + problemType + " 출제됨",
+            "message", problemTitle,
+            "timestamp", System.currentTimeMillis()
+        );
+        
+        messagingTemplate.convertAndSend("/topic/notifications", notification);
     }
 }
