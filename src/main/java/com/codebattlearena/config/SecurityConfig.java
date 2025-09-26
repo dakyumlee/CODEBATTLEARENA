@@ -20,7 +20,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf().disable()
+            .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .requestMatchers("/api/ai/**").permitAll()
                 .anyRequest().authenticated()
             )
-            .headers().frameOptions().disable();
+            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
 
         return http.build();
     }
