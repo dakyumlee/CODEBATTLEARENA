@@ -6,6 +6,38 @@
     <title>오늘의 학습 - 코드배틀아레나</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/student.css">
+    <style>
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #10b981;
+            color: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            z-index: 1000;
+            max-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        .new-badge {
+            background: #ef4444;
+            color: white;
+            font-size: 0.7rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 0.2rem;
+            margin-left: 0.5rem;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -27,8 +59,14 @@
         <div class="card">
             <h3>🤖 AI 추천 문제</h3>
             <div id="aiProblem">
-                <div style="text-align: center; padding: 2rem;">
-                    AI 문제를 불러오는 중...
+                <div style="padding: 1.5rem; background: #334155; border-radius: 0.75rem; margin: 1rem 0;">
+                    <h4 style="color: #e2e8f0; margin-bottom: 1rem;">오늘의 AI 추천 문제</h4>
+                    <p style="margin: 1rem 0; color: #cbd5e1; line-height: 1.6;">AI가 당신의 학습 수준을 분석하여 맞춤형 문제를 추천해드립니다. 문제는 매번 다르게 출제됩니다.</p>
+                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                        <span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">AI 맞춤형</span>
+                        <span style="color: #64748b;">10-30점</span>
+                    </div>
+                    <button class="btn" onclick="location.href='/student/ai-problem'" style="margin-top: 1rem;">AI 문제 풀기</button>
                 </div>
             </div>
         </div>
@@ -43,7 +81,7 @@
         </div>
 
         <div class="card">
-            <h3>📝 강사 출제 문제</h3>
+            <h3>📝 강사 출제 문제 <span id="newProblemBadge" style="display: none;" class="new-badge">NEW</span></h3>
             <div id="teacherProblems">
                 <div style="text-align: center; color: #64748b; padding: 2rem;">
                     출제된 문제를 확인하는 중...
@@ -53,45 +91,23 @@
     </div>
 
     <script src="/js/common/auth.js"></script>
-    <script src="/js/common/api.js"></script>
     <script>
         async function loadTodayContent() {
             document.getElementById('todayDate').textContent = new Date().toLocaleDateString('ko-KR', {
                 year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
             });
 
-            try {
-                const response = await ApiClient.get('/api/student/today');
-                
-                // AI 문제
-                const aiProblemDiv = document.getElementById('aiProblem');
-                if (response.aiProblem) {
-                    aiProblemDiv.innerHTML = `
-                        <div style="padding: 1.5rem; background: #334155; border-radius: 0.75rem; margin: 1rem 0;">
-                            <h4 style="color: #e2e8f0; margin-bottom: 1rem;">${response.aiProblem.title}</h4>
-                            <p style="margin: 1rem 0; color: #cbd5e1; line-height: 1.6; white-space: pre-line;">${response.aiProblem.description}</p>
-                            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                                <span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">${response.aiProblem.difficulty}</span>
-                                <span style="color: #64748b;">${response.aiProblem.points}점</span>
-                            </div>
-                            <button class="btn" onclick="location.href='/student/practice'" style="margin-top: 1rem;">문제 풀기</button>
-                        </div>
-                    `;
-                } else {
-                    aiProblemDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">AI 문제 준비 중...</div>';
-                }
-
-                loadSharedMaterials();
-
-            } catch (error) {
-                console.error('오늘의 학습 내용 로드 실패:', error);
-            }
+            loadSharedMaterials();
+            loadTeacherProblems();
         }
 
         async function loadSharedMaterials() {
             try {
-                const response = await ApiClient.get('/api/teacher/materials');
-                displayMaterials(response);
+                const response = await fetch('/api/teacher/materials', {
+                    headers: AuthManager.getAuthHeaders()
+                });
+                const materials = await response.json();
+                displayMaterials(materials);
             } catch (error) {
                 console.error('공유 자료 로드 실패:', error);
                 document.getElementById('sharedMaterials').innerHTML = 
@@ -129,14 +145,19 @@
             `).join('');
         }
 
+        function loadTeacherProblems() {
+            // 초기 상태 표시
+            document.getElementById('teacherProblems').innerHTML = 
+                '<div style="text-align: center; color: #64748b; padding: 2rem;">강사님이 문제를 출제하면 여기에 표시됩니다.</div>';
+        }
+
         // WebSocket 알림 처리
         window.addEventListener('websocket-notification', (event) => {
             const notification = event.detail;
             
             if (notification.type === 'new_material') {
-                // 새 자료가 공유되면 목록 새로고침
                 loadSharedMaterials();
-                showNotification(notification.message);
+                showNotification('새로운 자료가 공유되었습니다: ' + notification.problem.title);
             } else if (notification.type === 'new_problem') {
                 showNewProblemNotification(notification);
                 updateTeacherProblems(notification.problem);
@@ -144,45 +165,70 @@
         });
 
         function showNotification(message) {
-            // 간단한 알림 표시
             const notification = document.createElement('div');
-            notification.style.cssText = `
-                position: fixed; top: 20px; right: 20px; background: #10b981; color: white;
-                padding: 1rem; border-radius: 0.5rem; z-index: 1000; max-width: 300px;
-            `;
+            notification.className = 'notification';
             notification.textContent = message;
             document.body.appendChild(notification);
             
-            setTimeout(() => notification.remove(), 5000);
+            setTimeout(() => {
+                notification.remove();
+            }, 5000);
         }
 
         function showNewProblemNotification(notification) {
             showNotification(notification.message);
+            
+            // NEW 뱃지 표시
+            const badge = document.getElementById('newProblemBadge');
+            badge.style.display = 'inline';
+            
+            // 10초 후 뱃지 숨김
+            setTimeout(() => {
+                badge.style.display = 'none';
+            }, 10000);
         }
 
         function updateTeacherProblems(problem) {
             const problemsDiv = document.getElementById('teacherProblems');
             const newProblem = `
-                <div style="padding: 1.5rem; background: #065f46; border: 2px solid #10b981; border-radius: 0.75rem; margin-bottom: 1rem;">
+                <div style="padding: 1.5rem; background: #065f46; border: 2px solid #10b981; border-radius: 0.75rem; margin-bottom: 1rem; position: relative;">
+                    <div style="position: absolute; top: -8px; right: 10px; background: #ef4444; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: bold;">NEW</div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="flex: 1;">
                             <h4 style="color: #d1fae5; margin-bottom: 0.5rem;">🆕 ${problem.title}</h4>
-                            <p style="color: #a7f3d0; margin-bottom: 1rem;">${problem.description}</p>
-                            <div style="display: flex; gap: 1rem;">
+                            <p style="color: #a7f3d0; margin-bottom: 1rem; line-height: 1.5;">${problem.description}</p>
+                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
                                 <span style="background: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">${problem.difficulty}</span>
                                 <span style="color: #a7f3d0;">${problem.points}점</span>
+                                <span style="color: #a7f3d0; font-size: 0.8rem;">방금 출제됨</span>
                             </div>
                         </div>
-                        <button class="btn" onclick="location.href='/student/practice'" style="background: #10b981; margin-left: 1rem;">문제 풀기</button>
+                        <button class="btn" onclick="solveProblem('${problem.id}', '${problem.title}', '${problem.description}', '${problem.difficulty}')" style="background: #10b981; margin-left: 1rem; white-space: nowrap;">문제 풀기</button>
                     </div>
                 </div>
             `;
             
-            if (problemsDiv.innerHTML.includes('출제된 문제를 확인하는 중')) {
+            if (problemsDiv.innerHTML.includes('강사님이 문제를 출제하면')) {
                 problemsDiv.innerHTML = newProblem;
             } else {
                 problemsDiv.innerHTML = newProblem + problemsDiv.innerHTML;
             }
+        }
+
+        function solveProblem(id, title, description, difficulty) {
+            // 문제 정보를 localStorage에 저장
+            const problemData = {
+                id: id,
+                title: title,
+                description: description,
+                difficulty: difficulty,
+                type: 'teacher',
+                timestamp: Date.now()
+            };
+            localStorage.setItem('currentTeacherProblem', JSON.stringify(problemData));
+            
+            // 강사 문제 전용 페이지로 이동
+            location.href = '/student/teacher-problem';
         }
 
         function downloadFile(fileId) {
@@ -194,6 +240,11 @@
         }
 
         loadTodayContent();
+
+        // WebSocket 연결 확인
+        if (window.webSocketManager) {
+            console.log('WebSocket 연결 상태:', window.webSocketManager.isConnected());
+        }
     </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>

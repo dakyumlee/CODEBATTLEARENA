@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>강사 출제 문제 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+    <style>
+        .problem-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            height: calc(100vh - 200px);
+            margin-top: 2rem;
+        }
+        .problem-content {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            overflow-y: auto;
+        }
+        .code-editor {
+            background: #0f172a;
+            padding: 2rem;
+            border-radius: 0.75rem;
+            display: flex;
+            flex-direction: column;
+        }
+        #codeTextarea {
+            flex: 1;
+            min-height: 400px;
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+        }
+        .button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .result-panel {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: #1e293b;
+            color: #e2e8f0;
+            display: none;
+        }
+        .teacher-badge {
+            background: #3b82f6;
+            color: white;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="/student/today">오늘의 학습</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">강사 출제 문제</h1>
+            <p class="student-subtitle">강사님이 직접 출제한 문제입니다</p>
+        </div>
+
+        <div class="problem-container">
+            <div class="problem-content">
+                <div style="display: flex; align-items: center; margin-bottom: 1rem;">
+                    <h2 id="problemTitle">문제를 불러오는 중...</h2>
+                    <span class="teacher-badge" style="margin-left: 1rem;">강사 출제</span>
+                </div>
+                <div id="problemMeta" style="margin: 1rem 0; color: #94a3b8;"></div>
+                
+                <h3>문제 설명</h3>
+                <div id="problemDescription" style="margin-bottom: 2rem; line-height: 1.6; background: #334155; padding: 1.5rem; border-radius: 0.5rem;">
+                    문제 설명을 불러오는 중...
+                </div>
+
+                <h3>참고사항</h3>
+                <div style="background: #334155; padding: 1.5rem; border-radius: 0.5rem;">
+                    <ul style="margin: 0; padding-left: 1.5rem; line-height: 1.6;">
+                        <li>강사님이 직접 출제한 문제입니다</li>
+                        <li>제출 후 강사님의 개별 피드백을 받을 수 있습니다</li>
+                        <li>문제에 대한 질문은 수업시간에 해주세요</li>
+                        <li>정답 여부는 강사님이 직접 확인합니다</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="code-editor">
+                <h3 style="color: #e2e8f0; margin-bottom: 1rem;">코드 작성</h3>
+                <textarea id="codeTextarea" placeholder="여기에 코드를 작성하세요...
+
+public class Solution {
+    public static void main(String[] args) {
+        // 여기에 코드를 작성하세요
+        
+    }
+}"></textarea>
+
+                <div class="button-group">
+                    <button class="btn btn-secondary" onclick="saveCode()">임시 저장</button>
+                    <button class="btn" onclick="submitSolution()">제출하기</button>
+                    <button class="btn" style="background: #6b7280;" onclick="goBack()">뒤로가기</button>
+                </div>
+
+                <div id="resultPanel" class="result-panel">
+                    <h4>제출 결과</h4>
+                    <div id="resultContent"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script>
+        let currentProblem = null;
+
+        function loadProblem() {
+            const problemData = localStorage.getItem('currentTeacherProblem');
+            
+            if (!problemData) {
+                alert('문제 정보를 찾을 수 없습니다.');
+                goBack();
+                return;
+            }
+
+            try {
+                currentProblem = JSON.parse(problemData);
+                
+                document.getElementById('problemTitle').textContent = currentProblem.title;
+                document.getElementById('problemMeta').innerHTML = `
+                    <span style="background: ${getDifficultyColor(currentProblem.difficulty)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem; margin-right: 0.5rem;">${currentProblem.difficulty}</span>
+                    <span>${getCurrentTime()}에 출제됨</span>
+                `;
+                document.getElementById('problemDescription').textContent = currentProblem.description;
+
+                // 임시 저장된 코드 불러오기
+                const savedCode = localStorage.getItem(`code_${currentProblem.id}`);
+                if (savedCode) {
+                    document.getElementById('codeTextarea').value = savedCode;
+                }
+                
+            } catch (error) {
+                console.error('문제 로드 오류:', error);
+                alert('문제 정보를 불러오는 중 오류가 발생했습니다.');
+                goBack();
+            }
+        }
+
+        function getDifficultyColor(difficulty) {
+            switch(difficulty) {
+                case '하': return '#10b981';
+                case '중': return '#f59e0b'; 
+                case '상': return '#ef4444';
+                default: return '#6b7280';
+            }
+        }
+
+        function getCurrentTime() {
+            const now = new Date();
+            return now.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function saveCode() {
+            const code = document.getElementById('codeTextarea').value;
+            if (currentProblem) {
+                localStorage.setItem(`code_${currentProblem.id}`, code);
+                
+                const resultPanel = document.getElementById('resultPanel');
+                const resultContent = document.getElementById('resultContent');
+                
+                resultContent.innerHTML = '<div style="color: #10b981;">코드가 임시 저장되었습니다. 나중에 이어서 작성할 수 있습니다.</div>';
+                resultPanel.style.display = 'block';
+                
+                setTimeout(() => {
+                    resultPanel.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        function submitSolution() {
+            const code = document.getElementById('codeTextarea').value.trim();
+            
+            if (!code) {
+                alert('코드를 입력해주세요.');
+                return;
+            }
+
+            if (code.length < 30) {
+                alert('코드를 더 자세히 작성해주세요.');
+                return;
+            }
+
+            if (!currentProblem) {
+                alert('문제 정보를 찾을 수 없습니다.');
+                return;
+            }
+
+            const resultPanel = document.getElementById('resultPanel');
+            const resultContent = document.getElementById('resultContent');
+            
+            resultContent.innerHTML = '<div style="color: #3b82f6;">제출 중...</div>';
+            resultPanel.style.display = 'block';
+            
+            // 서버에 제출 시뮬레이션
+            setTimeout(() => {
+                const timestamp = new Date().toLocaleString('ko-KR');
+                
+                resultContent.innerHTML = `
+                    <div style="color: #10b981; margin-bottom: 1rem;">
+                        <strong>✅ 제출이 완료되었습니다!</strong>
+                    </div>
+                    <div style="background: #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <strong>제출 정보:</strong><br>
+                        제출 시간: ${timestamp}<br>
+                        코드 길이: ${code.length}자<br>
+                        문제: ${currentProblem.title}
+                    </div>
+                    <div style="color: #f59e0b;">
+                        <strong>📋 다음 단계:</strong><br>
+                        • 강사님이 직접 코드를 검토합니다<br>
+                        • 채점 결과는 수업시간에 안내됩니다<br>
+                        • 궁금한 점은 강사님께 직접 질문해주세요
+                    </div>
+                `;
+                
+                // 임시 저장 코드 삭제
+                localStorage.removeItem(`code_${currentProblem.id}`);
+                
+                // 5초 후 자동으로 뒤로가기 버튼 강조
+                setTimeout(() => {
+                    const backButton = document.querySelector('button[onclick="goBack()"]');
+                    if (backButton) {
+                        backButton.style.background = '#10b981';
+                        backButton.textContent = '완료 (뒤로가기)';
+                    }
+                }, 2000);
+                
+            }, 1500);
+        }
+
+        function goBack() {
+            // 현재 문제 정보 삭제
+            localStorage.removeItem('currentTeacherProblem');
+            window.location.href = '/student/today';
+        }
+
+        function logout() {
+            AuthManager.logout();
+        }
+
+        // 페이지 로드 시 문제 로드
+        loadProblem();
+
+        // 페이지 떠나기 전 임시 저장 확인
+        window.addEventListener('beforeunload', function(e) {
+            const code = document.getElementById('codeTextarea').value.trim();
+            if (code && currentProblem) {
+                localStorage.setItem(`code_${currentProblem.id}`, code);
+            }
+        });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/common/websocket.js"></script>
+    <script src="/js/common/student-activity.js"></script>
+</body>
+</html>

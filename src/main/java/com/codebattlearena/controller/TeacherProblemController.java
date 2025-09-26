@@ -1,61 +1,57 @@
 package com.codebattlearena.controller;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
-
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/teacher")
 public class TeacherProblemController {
 
+    @Autowired
+    private SimpMessagingTemplate messagingTemplate;
+
     @PostMapping("/create-problem")
-    public ResponseEntity<?> createProblem(@RequestBody CreateProblemRequest request) {
+    public Map<String, Object> createProblem(@RequestBody ProblemRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        
         try {
-            String problemId = UUID.randomUUID().toString();
-            
-            Map<String, Object> response = new HashMap<>();
+            Map<String, Object> problem = new HashMap<>();
+            problem.put("id", System.currentTimeMillis());
+            problem.put("title", request.getTitle());
+            problem.put("description", request.getDescription());
+            problem.put("difficulty", request.getDifficulty());
+            problem.put("points", request.getPoints());
+            problem.put("type", request.getType());
+            problem.put("createdAt", LocalDateTime.now().toString());
+
+            Map<String, Object> notification = new HashMap<>();
+            notification.put("type", "new_problem");
+            notification.put("message", "새로운 문제가 출제되었습니다: " + request.getTitle());
+            notification.put("problem", problem);
+            notification.put("timestamp", LocalDateTime.now().toString());
+
+            messagingTemplate.convertAndSend("/topic/notifications", notification);
+
             response.put("success", true);
-            response.put("problemId", problemId);
-            response.put("message", "문제가 성공적으로 출제되었습니다.");
-            response.put("title", request.getTitle());
-            response.put("difficulty", request.getDifficulty());
-            response.put("points", request.getPoints());
-            response.put("createdAt", LocalDateTime.now().toString());
-            
-            return ResponseEntity.ok(response);
+            response.put("message", "문제가 출제되었습니다");
+            response.put("problem", problem);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "문제 출제에 실패했습니다."));
+            response.put("success", false);
+            response.put("message", "문제 출제 실패: " + e.getMessage());
         }
+
+        return response;
     }
 
-    @PostMapping("/create-quiz")
-    public ResponseEntity<?> createQuiz(@RequestBody CreateQuizRequest request) {
-        try {
-            String quizId = UUID.randomUUID().toString();
-            
-            Map<String, Object> response = new HashMap<>();
-            response.put("success", true);
-            response.put("quizId", quizId);
-            response.put("message", "퀴즈가 시작되었습니다.");
-            response.put("title", request.getTitle());
-            response.put("duration", request.getDuration());
-            response.put("questionCount", request.getQuestions().size());
-            
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "퀴즈 생성에 실패했습니다."));
-        }
-    }
-
-    public static class CreateProblemRequest {
+    public static class ProblemRequest {
         private String title;
         private String description;
         private String difficulty;
-        private int points;
+        private Integer points;
         private String type;
 
         public String getTitle() { return title; }
@@ -64,22 +60,9 @@ public class TeacherProblemController {
         public void setDescription(String description) { this.description = description; }
         public String getDifficulty() { return difficulty; }
         public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
-        public int getPoints() { return points; }
-        public void setPoints(int points) { this.points = points; }
+        public Integer getPoints() { return points; }
+        public void setPoints(Integer points) { this.points = points; }
         public String getType() { return type; }
         public void setType(String type) { this.type = type; }
-    }
-
-    public static class CreateQuizRequest {
-        private String title;
-        private int duration;
-        private java.util.List<String> questions;
-
-        public String getTitle() { return title; }
-        public void setTitle(String title) { this.title = title; }
-        public int getDuration() { return duration; }
-        public void setDuration(int duration) { this.duration = duration; }
-        public java.util.List<String> getQuestions() { return questions; }
-        public void setQuestions(java.util.List<String> questions) { this.questions = questions; }
     }
 }
