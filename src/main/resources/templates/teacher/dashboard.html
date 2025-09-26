@@ -3,262 +3,472 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>강사 대시보드 - 코드배틀아레나</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/teacher.css">
+    <title>강사 대시보드 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
     <style>
-        .modal {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #f8fafc;
+            font-size: 16px;
+            line-height: 1.6;
+        }
+        
+        .teacher-header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             position: fixed;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.5);
-            display: none;
-            z-index: 1000;
+            right: 0;
+            z-index: 100;
         }
-        .modal-content {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 2rem;
-            border-radius: 0.5rem;
-            width: 90%;
-            max-width: 500px;
-        }
-        .modal-header {
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 1rem;
         }
-        .close {
-            font-size: 1.5rem;
+        
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a202c;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 1.1rem;
+            color: #4a5568;
+        }
+        
+        .main-container {
+            margin-top: 80px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 30px;
+        }
+        
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 40px;
+            text-align: center;
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .dashboard-section {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+            border: 1px solid #e2e8f0;
+        }
+        
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-icon {
+            width: 40px;
+            height: 40px;
+            background: #ebf8ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+        
+        .students-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .student-card {
+            background: #f7fafc;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            border: 2px solid #e2e8f0;
+            transition: all 0.2s;
+        }
+        
+        .student-card:hover {
+            border-color: #cbd5e0;
+        }
+        
+        .student-status {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin: 0 auto 12px;
+        }
+        
+        .status-online { background: #48bb78; }
+        .status-away { background: #ed8936; }
+        .status-offline { background: #a0aec0; }
+        
+        .student-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .student-activity {
+            font-size: 0.95rem;
+            color: #718096;
+        }
+        
+        .quick-actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .action-btn {
+            padding: 20px;
+            background: white;
+            border: 2px solid #3182ce;
+            color: #3182ce;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .action-btn:hover {
+            background: #3182ce;
+            color: white;
+        }
+        
+        .action-btn.primary {
+            background: #3182ce;
+            color: white;
+        }
+        
+        .action-btn.primary:hover {
+            background: #2c5282;
+        }
+        
+        .full-width-section {
+            grid-column: 1 / -1;
+        }
+        
+        .announcement-form {
+            display: flex;
+            gap: 20px;
+            align-items: flex-end;
+        }
+        
+        .form-group {
+            flex: 1;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1rem;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 16px 20px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3182ce;
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .send-btn {
+            padding: 16px 30px;
+            background: #48bb78;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .send-btn:hover {
+            background: #38a169;
+        }
+        
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .announcement-form {
+                flex-direction: column;
+                align-items: stretch;
+            }
         }
     </style>
 </head>
-<body class="teacher-page">
-    <div class="header">
-        <div class="nav">
-            <a href="/" class="logo">코드배틀아레나</a>
-            <ul class="nav-links">
-                <li><a href="/teacher">대시보드</a></li>
-                <li><a href="/teacher/class">수업관리</a></li>
-                <li><a href="/teacher/grades">성적관리</a></li>
-                <li><a href="#" onclick="logout()">로그아웃</a></li>
-            </ul>
+<body>
+    <div class="teacher-header">
+        <div class="header-content">
+            <div class="logo">CodeBattleArena</div>
+            <div class="user-info">
+                <span>강사님 환영합니다</span>
+                <button onclick="logout()" style="padding: 8px 16px; background: #f56565; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
+            </div>
         </div>
     </div>
 
-    <div class="teacher-dashboard">
-        <div class="teacher-header">
-            <h1 class="teacher-title">강사 실시간 모니터링</h1>
-            <p class="teacher-subtitle">학생들의 실시간 학습 현황을 확인하세요</p>
-        </div>
-
-        <div class="card">
-            <h3>실시간 학생 현황</h3>
-            <div id="studentGrid">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    학생 데이터를 불러오는 중...
+    <div class="main-container">
+        <h1 class="dashboard-title">실시간 학습 모니터링</h1>
+        
+        <div class="dashboard-grid">
+            <div class="dashboard-section">
+                <h2 class="section-title">
+                    <div class="section-icon">👥</div>
+                    학생 현황 (접속: <span id="onlineCount">0</span>/25명)
+                </h2>
+                
+                <div class="students-grid" id="studentsGrid">
+                    <!-- 학생들이 여기에 동적으로 표시됩니다 -->
                 </div>
             </div>
-
-            <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
-                <button class="btn" onclick="showAnnouncementModal()">전체 공지사항</button>
-                <button class="btn btn-secondary" onclick="showMaterialModal()">자료 공유</button>
-                <button class="btn" onclick="showProblemModal()">즉석 문제 출제</button>
-                <button class="btn btn-secondary" onclick="showQuizModal()">퀴즈 시작</button>
+            
+            <div class="dashboard-section">
+                <h2 class="section-title">
+                    <div class="section-icon">⚡</div>
+                    빠른 실행
+                </h2>
+                
+                <div class="quick-actions">
+                    <button class="action-btn primary" onclick="sendQuickAnnouncement()">
+                        📢 전체 공지
+                    </button>
+                    <button class="action-btn" onclick="shareQuickMaterial()">
+                        📎 자료 공유
+                    </button>
+                    <button class="action-btn" onclick="createQuickProblem()">
+                        📝 즉석 문제
+                    </button>
+                    <button class="action-btn" onclick="startQuickQuiz()">
+                        ⏱️ 퀴즈 시작
+                    </button>
+                </div>
+            </div>
+            
+            <div class="dashboard-section full-width-section">
+                <h2 class="section-title">
+                    <div class="section-icon">💬</div>
+                    실시간 공지사항 전송
+                </h2>
+                
+                <div class="announcement-form">
+                    <div class="form-group">
+                        <label class="form-label">공지 제목</label>
+                        <input type="text" class="form-input" id="announcementTitle" placeholder="공지사항 제목을 입력하세요">
+                    </div>
+                    <div class="form-group" style="flex: 2;">
+                        <label class="form-label">공지 내용</label>
+                        <textarea class="form-input form-textarea" id="announcementContent" placeholder="학생들에게 전달할 내용을 입력하세요"></textarea>
+                    </div>
+                    <button class="send-btn" onclick="sendAnnouncement()">전송</button>
+                </div>
             </div>
         </div>
     </div>
 
-    <div id="announcementModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>전체 공지사항</h3>
-                <span class="close" onclick="closeModal('announcementModal')">&times;</span>
-            </div>
-            <textarea id="announcementText" placeholder="공지사항 내용을 입력하세요..." style="width: 100%; height: 120px; margin-bottom: 1rem; padding: 1rem; border: 1px solid #ccc; border-radius: 0.25rem;"></textarea>
-            <div style="display: flex; gap: 1rem;">
-                <button class="btn" onclick="sendAnnouncement()">전송</button>
-                <button class="btn" style="background: #6b7280;" onclick="closeModal('announcementModal')">취소</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="materialModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>자료 공유</h3>
-                <span class="close" onclick="closeModal('materialModal')">&times;</span>
-            </div>
-            <input type="file" id="materialFile" multiple style="width: 100%; margin-bottom: 1rem;">
-            <input type="text" id="materialTitle" placeholder="자료 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;">
-            <div style="display: flex; gap: 1rem;">
-                <button class="btn" onclick="shareMaterial()">공유</button>
-                <button class="btn" style="background: #6b7280;" onclick="closeModal('materialModal')">취소</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="problemModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>즉석 문제 출제</h3>
-                <span class="close" onclick="closeModal('problemModal')">&times;</span>
-            </div>
-            <input type="text" id="problemTitle" placeholder="문제 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;">
-            <textarea id="problemDescription" placeholder="문제 설명" style="width: 100%; height: 100px; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;"></textarea>
-            <select id="problemDifficulty" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem;">
-                <option value="하">하</option>
-                <option value="중">중</option>
-                <option value="상">상</option>
-            </select>
-            <div style="display: flex; gap: 1rem;">
-                <button class="btn" onclick="createProblem()">출제</button>
-                <button class="btn" style="background: #6b7280;" onclick="closeModal('problemModal')">취소</button>
-            </div>
-        </div>
-    </div>
-
-    <div id="quizModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>퀴즈 시작</h3>
-                <span class="close" onclick="closeModal('quizModal')">&times;</span>
-            </div>
-            <input type="text" id="quizTitle" placeholder="퀴즈 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;">
-            <textarea id="quizQuestions" placeholder="문제들을 한 줄씩 입력하세요..." style="width: 100%; height: 100px; margin-bottom: 1rem; padding: 0.5rem; border: 1px solid #ccc; border-radius: 0.25rem;"></textarea>
-            <div style="display: flex; gap: 1rem;">
-                <button class="btn" onclick="startQuiz()">퀴즈 시작</button>
-                <button class="btn" style="background: #6b7280;" onclick="closeModal('quizModal')">취소</button>
-            </div>
-        </div>
-    </div>
-
-    <script src="/js/common/auth.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
-        function showAnnouncementModal() {
-            document.getElementById('announcementModal').style.display = 'block';
-        }
-
-        function showMaterialModal() {
-            document.getElementById('materialModal').style.display = 'block';
-        }
-
-        function showProblemModal() {
-            document.getElementById('problemModal').style.display = 'block';
-        }
-
-        function showQuizModal() {
-            document.getElementById('quizModal').style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            clearInputs(modalId);
-        }
-
-        function clearInputs(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.querySelectorAll('input, textarea, select').forEach(input => {
-                input.value = '';
+        let stompClient = null;
+        
+        const sampleStudents = [
+            {id: 1, name: '김철수', status: 'online', activity: '코딩연습'},
+            {id: 2, name: '박영희', status: 'online', activity: 'AI 문제풀이'},
+            {id: 3, name: '이민수', status: 'away', activity: '복습노트 작성'},
+            {id: 4, name: '최지훈', status: 'offline', activity: '오프라인'},
+            {id: 5, name: '정수빈', status: 'online', activity: '배틀 대기'},
+            {id: 6, name: '한민지', status: 'online', activity: '강사 문제 풀이'},
+            {id: 7, name: '김영수', status: 'away', activity: '휴식중'},
+            {id: 8, name: '이하늘', status: 'online', activity: '코딩연습'},
+            {id: 9, name: '박서준', status: 'online', activity: 'AI 튜터 대화'},
+            {id: 10, name: '윤지원', status: 'offline', activity: '오프라인'}
+        ];
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            connectWebSocket();
+            loadStudents();
+        });
+        
+        function connectWebSocket() {
+            const socket = new SockJS('/ws');
+            stompClient = Stomp.over(socket);
+            
+            stompClient.connect({}, function(frame) {
+                console.log('웹소켓 연결됨: ' + frame);
+            }, function(error) {
+                console.error('웹소켓 연결 실패:', error);
             });
         }
-
+        
+        function loadStudents() {
+            const grid = document.getElementById('studentsGrid');
+            const onlineStudents = sampleStudents.filter(s => s.status === 'online');
+            
+            document.getElementById('onlineCount').textContent = onlineStudents.length;
+            
+            grid.innerHTML = sampleStudents.map(student => `
+                <div class="student-card">
+                    <div class="student-status status-${student.status}"></div>
+                    <div class="student-name">${student.name}</div>
+                    <div class="student-activity">${student.activity}</div>
+                </div>
+            `).join('');
+        }
+        
         function sendAnnouncement() {
-            const text = document.getElementById('announcementText').value.trim();
-            if (!text) {
-                alert('공지사항을 입력해주세요.');
-                return;
-            }
-            alert('공지사항이 전송되었습니다: ' + text);
-            closeModal('announcementModal');
-        }
-
-        function shareMaterial() {
-            const file = document.getElementById('materialFile').files[0];
-            const title = document.getElementById('materialTitle').value.trim();
+            const title = document.getElementById('announcementTitle').value;
+            const content = document.getElementById('announcementContent').value;
             
-            if (file && title) {
-                alert('자료가 공유되었습니다: ' + title);
-            } else {
-                alert('파일과 제목을 입력해주세요.');
+            if (!title.trim() || !content.trim()) {
+                alert('제목과 내용을 모두 입력해주세요.');
                 return;
             }
-            closeModal('materialModal');
-        }
-
-        function createProblem() {
-            const title = document.getElementById('problemTitle').value.trim();
-            const description = document.getElementById('problemDescription').value.trim();
-            const difficulty = document.getElementById('problemDifficulty').value;
             
-            if (!title || !description) {
-                alert('제목과 설명을 입력해주세요.');
-                return;
-            }
-            alert(`문제가 출제되었습니다!\n제목: ${title}\n난이도: ${difficulty}`);
-            closeModal('problemModal');
-        }
-
-        function startQuiz() {
-            const title = document.getElementById('quizTitle').value.trim();
-            const questions = document.getElementById('quizQuestions').value.trim();
+            const announcement = {
+                type: 'announcement',
+                title: title,
+                message: content,
+                timestamp: new Date().toISOString()
+            };
             
-            if (!title || !questions) {
-                alert('퀴즈 제목과 문제를 입력해주세요.');
-                return;
-            }
-            alert('퀴즈가 시작되었습니다: ' + title);
-            closeModal('quizModal');
-        }
-
-        async function loadStudents() {
-            try {
-                const response = await fetch('/api/teacher/students', {
-                    headers: AuthManager.getAuthHeaders()
-                });
-                const students = await response.json();
+            if (stompClient) {
+                stompClient.send('/app/announce', {}, JSON.stringify(announcement));
+                alert('공지사항이 전송되었습니다!');
                 
-                const grid = document.getElementById('studentGrid');
-                if (students.length === 0) {
-                    grid.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">등록된 학생이 없습니다.</div>';
-                    return;
+                document.getElementById('announcementTitle').value = '';
+                document.getElementById('announcementContent').value = '';
+            }
+        }
+        
+        function sendQuickAnnouncement() {
+            const message = prompt('전체 공지 내용을 입력하세요:');
+            if (message) {
+                const announcement = {
+                    type: 'announcement',
+                    title: '긴급 공지',
+                    message: message,
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (stompClient) {
+                    stompClient.send('/app/announce', {}, JSON.stringify(announcement));
+                    alert('긴급 공지가 전송되었습니다!');
                 }
-
-                grid.innerHTML = students.map(student => `
-                    <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid #e2e8f0;">
-                        <div style="font-weight: bold;">
-                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${student.onlineStatus ? '#10b981' : '#6b7280'}; margin-right: 0.5rem;"></span>
-                            ${student.name}
-                        </div>
-                        <div style="color: #64748b; font-size: 0.9rem;">
-                            상태: ${student.onlineStatus ? '온라인' : '오프라인'}
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                document.getElementById('studentGrid').innerHTML = 
-                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">학생 목록을 불러올 수 없습니다.</div>';
             }
         }
-
+        
+        function shareQuickMaterial() {
+            const title = prompt('공유할 자료 제목:');
+            const url = prompt('자료 링크 URL:');
+            
+            if (title && url) {
+                const material = {
+                    type: 'new_material',
+                    title: title,
+                    url: url,
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (stompClient) {
+                    stompClient.send('/app/share-material', {}, JSON.stringify(material));
+                    alert('자료가 공유되었습니다!');
+                }
+            }
+        }
+        
+        function createQuickProblem() {
+            const title = prompt('문제 제목:');
+            const description = prompt('문제 설명:');
+            
+            if (title && description) {
+                const problem = {
+                    type: 'new_problem',
+                    title: title,
+                    description: description,
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (stompClient) {
+                    stompClient.send('/app/create-problem', {}, JSON.stringify(problem));
+                    alert('문제가 출제되었습니다!');
+                }
+            }
+        }
+        
+        function startQuickQuiz() {
+            const title = prompt('퀴즈 제목:');
+            const duration = prompt('제한시간(분):');
+            
+            if (title && duration) {
+                const quiz = {
+                    type: 'new_quiz',
+                    title: title,
+                    duration: parseInt(duration),
+                    timestamp: new Date().toISOString()
+                };
+                
+                if (stompClient) {
+                    stompClient.send('/app/start-quiz', {}, JSON.stringify(quiz));
+                    alert('퀴즈가 시작되었습니다!');
+                }
+            }
+        }
+        
         function logout() {
-            AuthManager.logout();
+            localStorage.clear();
+            window.location.href = '/';
         }
-
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
-            }
-        }
-
-        loadStudents();
     </script>
 </body>
 </html>
