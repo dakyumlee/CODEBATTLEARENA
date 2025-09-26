@@ -3,448 +3,656 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>코딩연습 - 코드배틀아레나</title>
+    <title>코딩연습 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/student.css">
     <style>
-        .modal {
+        .practice-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        
+        .practice-header {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .practice-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 10px;
+        }
+        
+        .practice-subtitle {
+            font-size: 1.1rem;
+            color: #718096;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding: 8px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+        
+        .category-tab {
+            padding: 12px 24px;
+            border: none;
+            background: #f7fafc;
+            color: #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .category-tab.active {
+            background: #3182ce;
+            color: white;
+        }
+        
+        .category-tab:hover {
+            background: #e2e8f0;
+        }
+        
+        .category-tab.active:hover {
+            background: #2c5282;
+        }
+        
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        
+        .problem-card {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+            transition: all 0.3s;
+            border: 1px solid #e2e8f0;
+        }
+        
+        .problem-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.12);
+        }
+        
+        .problem-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 16px;
+        }
+        
+        .problem-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+        
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .difficulty-easy {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+        
+        .difficulty-medium {
+            background: #fed7aa;
+            color: #c05621;
+        }
+        
+        .difficulty-hard {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        
+        .problem-description {
+            color: #4a5568;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .problem-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        .problem-stats {
+            display: flex;
+            gap: 16px;
+        }
+        
+        .problem-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn-solve {
+            flex: 1;
+            padding: 12px 20px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-solve:hover {
+            background: #2c5282;
+        }
+        
+        .btn-solution {
+            padding: 12px 16px;
+            background: #f7fafc;
+            color: #4a5568;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-solution:hover {
+            background: #e2e8f0;
+        }
+        
+        .problem-modal {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.9);
+            background: rgba(0,0,0,0.8);
             display: none;
             z-index: 1000;
         }
+        
         .modal-content {
-            position: fixed;
-            top: 2%;
-            left: 2%;
-            width: 96%;
-            height: 96%;
-            background: #1e293b;
-            color: white;
-            border-radius: 0.5rem;
+            width: 95%;
+            height: 95%;
+            background: white;
+            margin: 2.5% auto;
+            border-radius: 12px;
+            display: flex;
             overflow: hidden;
+        }
+        
+        .problem-section {
+            width: 50%;
+            padding: 30px;
+            overflow-y: auto;
+            border-right: 1px solid #e2e8f0;
+        }
+        
+        .code-section {
+            width: 50%;
             display: flex;
             flex-direction: column;
         }
-        .modal-header {
+        
+        .code-header {
+            padding: 20px 30px;
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 1.5rem;
-            border-bottom: 1px solid #475569;
-            flex-shrink: 0;
         }
-        .modal-body {
+        
+        .code-editor {
             flex: 1;
-            padding: 1.5rem;
-            overflow: hidden;
+            padding: 20px;
+            background: #1a202c;
         }
-        .close {
-            font-size: 1.5rem;
-            cursor: pointer;
-            color: #cbd5e1;
-            background: none;
-            border: none;
-        }
-        .close:hover {
-            color: #ef4444;
-        }
-        .problem-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 2rem;
+        
+        .code-textarea {
+            width: 100%;
             height: 100%;
-        }
-        .problem-content {
-            overflow-y: auto;
-            padding-right: 1rem;
-        }
-        .code-section {
-            display: flex;
-            flex-direction: column;
-        }
-        #solutionCode {
-            flex: 1;
-            min-height: 400px;
-            background: #0f172a;
+            background: #2d3748;
             color: #e2e8f0;
-            border: 1px solid #475569;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            font-family: 'Courier New', monospace;
+            border: none;
+            padding: 20px;
+            font-family: 'Fira Code', monospace;
             font-size: 14px;
-            line-height: 1.5;
+            line-height: 1.6;
             resize: none;
+            outline: none;
         }
-        .button-group {
+        
+        .code-actions {
+            padding: 20px 30px;
+            background: #f7fafc;
+            border-top: 1px solid #e2e8f0;
             display: flex;
-            gap: 1rem;
-            margin-top: 1rem;
-            flex-shrink: 0;
+            gap: 12px;
+            justify-content: flex-end;
         }
-        .result-panel {
-            margin-top: 1rem;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            background: #334155;
-            display: none;
-            flex-shrink: 0;
+        
+        .btn-run {
+            padding: 10px 20px;
+            background: #38a169;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-submit {
+            padding: 10px 20px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: #f56565;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="nav">
-            <a href="/" class="logo">코드배틀아레나</a>
-            <ul class="nav-links">
-                <li><a href="/student">대시보드</a></li>
-                <li><a href="#" onclick="logout()">로그아웃</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="student-dashboard">
-        <div class="student-header">
-            <h1 class="student-title">코딩연습</h1>
-            <p class="student-subtitle">다양한 문제로 실력을 키워보세요</p>
-        </div>
-
-        <div class="study-stats">
-            <h3>나의 연습 통계</h3>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="totalAttempts">0</div>
-                    <div class="stat-label">총 시도</div>
+    <div class="student-layout">
+        <div th:replace="~{common/student-sidebar}"></div>
+        
+        <div class="main-content">
+            <div class="practice-container">
+                <div class="practice-header">
+                    <h1 class="practice-title">코딩연습</h1>
+                    <p class="practice-subtitle">다양한 알고리즘 문제로 실력을 향상시키세요</p>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="solvedCount">0</div>
-                    <div class="stat-label">해결 문제</div>
+                
+                <div class="category-tabs">
+                    <button class="category-tab active" data-category="all">전체</button>
+                    <button class="category-tab" data-category="array">배열</button>
+                    <button class="category-tab" data-category="string">문자열</button>
+                    <button class="category-tab" data-category="loop">반복문</button>
+                    <button class="category-tab" data-category="condition">조건문</button>
+                    <button class="category-tab" data-category="function">함수</button>
+                    <button class="category-tab" data-category="recursion">재귀</button>
+                    <button class="category-tab" data-category="sorting">정렬</button>
+                    <button class="category-tab" data-category="search">탐색</button>
+                    <button class="category-tab" data-category="graph">그래프</button>
+                    <button class="category-tab" data-category="dp">동적계획법</button>
+                    <button class="category-tab" data-category="greedy">그리디</button>
                 </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="successRate">0%</div>
-                    <div class="stat-label">정답률</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="avgScore">0점</div>
-                    <div class="stat-label">평균 점수</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="category-tabs">
-                <button class="tab active" onclick="showCategory('all', this)">전체</button>
-                <button class="tab" onclick="showCategory('basic', this)">기초</button>
-                <button class="tab" onclick="showCategory('array', this)">배열</button>
-                <button class="tab" onclick="showCategory('string', this)">문자열</button>
-                <button class="tab" onclick="showCategory('algorithm', this)">알고리즘</button>
-            </div>
-            
-            <div id="problemsList">
-                <!-- 문제 목록이 여기에 표시됩니다 -->
-            </div>
-        </div>
-    </div>
-
-    <div id="problemModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="problemTitle">문제 제목</h3>
-                <button class="close" onclick="closeProblemModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="problem-grid">
-                    <div class="problem-content">
-                        <h4>문제 설명</h4>
-                        <div id="problemDescription" style="background: #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; line-height: 1.6;"></div>
-                        
-                        <h4>예제</h4>
-                        <div id="problemExample" style="background: #334155; padding: 1rem; border-radius: 0.5rem; font-family: monospace; white-space: pre-line;"></div>
-                    </div>
-                    <div class="code-section">
-                        <h4>코드 작성</h4>
-                        <textarea id="solutionCode" placeholder="여기에 코드를 작성하세요...
-
-public class Solution {
-    public static void main(String[] args) {
-        // 코드를 작성하세요
-    }
-}"></textarea>
-                        
-                        <div class="button-group">
-                            <button onclick="testCode()" class="btn btn-secondary">테스트</button>
-                            <button onclick="submitCode()" class="btn">제출</button>
-                            <button onclick="closeProblemModal()" class="btn" style="background: #6b7280;">닫기</button>
-                        </div>
-                        
-                        <div id="testResult" class="result-panel"></div>
-                    </div>
+                
+                <div class="problems-grid" id="problemsGrid">
+                    <!-- 문제들이 여기에 동적으로 로드됩니다 -->
                 </div>
             </div>
         </div>
     </div>
-
-    <script src="/js/common/auth.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script src="/js/common/websocket.js"></script>
-    <script src="/js/common/websocket-validator.js"></script>
-    <script src="/js/common/student-activity.js"></script>
     
-    <script>
-        let stats = { attempts: 0, solved: 0 };
-        let currentProblem = null;
-        let isWebSocketReady = false;
+    <!-- 문제 풀이 모달 -->
+    <div class="problem-modal" id="problemModal">
+        <button class="btn-close" onclick="closeProblemModal()">×</button>
+        <div class="modal-content">
+            <div class="problem-section">
+                <h2 id="modalProblemTitle"></h2>
+                <div id="modalProblemContent"></div>
+            </div>
+            <div class="code-section">
+                <div class="code-header">
+                    <h3>코드 작성</h3>
+                    <select id="languageSelect">
+                        <option value="java">Java</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                    </select>
+                </div>
+                <div class="code-editor">
+                    <textarea class="code-textarea" id="codeTextarea" placeholder="여기에 코드를 작성하세요..."></textarea>
+                </div>
+                <div class="code-actions">
+                    <button class="btn-run" onclick="runCode()">실행</button>
+                    <button class="btn-submit" onclick="submitCode()">제출</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    <script src="/js/common/websocket.js"></script>
+    <script>
         const problems = {
-            all: [
-                { id: 1, title: "두 수의 합", difficulty: "하", description: "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오.", example: "입력: 1 2\n출력: 3", category: "basic", testCases: [{ input: "1 2", output: "3" }, { input: "5 7", output: "12" }] },
-                { id: 2, title: "배열 최댓값", difficulty: "중", description: "N개의 정수가 주어졌을 때, 그 중 가장 큰 값을 출력하시오.", example: "입력:\n5\n3 7 2 9 1\n\n출력:\n9", category: "array", testCases: [{ input: "5\n3 7 2 9 1", output: "9" }] },
-                { id: 3, title: "문자열 뒤집기", difficulty: "중", description: "주어진 문자열을 뒤집어서 출력하시오.", example: "입력: hello\n출력: olleh", category: "string", testCases: [{ input: "hello", output: "olleh" }] },
-                { id: 4, title: "버블 정렬", difficulty: "상", description: "버블 정렬로 배열을 오름차순 정렬하시오.", example: "입력:\n5\n5 2 8 1 9\n\n출력:\n1 2 5 8 9", category: "algorithm", testCases: [{ input: "5\n5 2 8 1 9", output: "1 2 5 8 9" }] }
-            ],
-            basic: [
-                { id: 1, title: "두 수의 합", difficulty: "하", description: "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오.", example: "입력: 1 2\n출력: 3", category: "basic", testCases: [{ input: "1 2", output: "3" }, { input: "5 7", output: "12" }] }
-            ],
             array: [
-                { id: 2, title: "배열 최댓값", difficulty: "중", description: "N개의 정수가 주어졌을 때, 그 중 가장 큰 값을 출력하시오.", example: "입력:\n5\n3 7 2 9 1\n\n출력:\n9", category: "array", testCases: [{ input: "5\n3 7 2 9 1", output: "9" }] }
+                {
+                    id: 1,
+                    title: "두 수의 합",
+                    difficulty: "easy",
+                    description: "배열에서 두 수의 합이 target이 되는 인덱스를 찾으세요.",
+                    solvedCount: 1234,
+                    totalCount: 2000,
+                    points: 10
+                },
+                {
+                    id: 2,
+                    title: "배열 회전",
+                    difficulty: "medium",
+                    description: "배열을 k번 오른쪽으로 회전시키세요.",
+                    solvedCount: 890,
+                    totalCount: 1500,
+                    points: 15
+                },
+                {
+                    id: 3,
+                    title: "최대 부분 배열",
+                    difficulty: "hard",
+                    description: "연속된 부분 배열의 최대 합을 구하세요.",
+                    solvedCount: 456,
+                    totalCount: 1200,
+                    points: 25
+                }
             ],
             string: [
-                { id: 3, title: "문자열 뒤집기", difficulty: "중", description: "주어진 문자열을 뒤집어서 출력하시오.", example: "입력: hello\n출력: olleh", category: "string", testCases: [{ input: "hello", output: "olleh" }] }
+                {
+                    id: 4,
+                    title: "회문 확인",
+                    difficulty: "easy",
+                    description: "주어진 문자열이 회문인지 확인하세요.",
+                    solvedCount: 987,
+                    totalCount: 1300,
+                    points: 10
+                },
+                {
+                    id: 5,
+                    title: "문자열 압축",
+                    difficulty: "medium",
+                    description: "연속된 문자를 숫자로 압축하세요.",
+                    solvedCount: 654,
+                    totalCount: 900,
+                    points: 15
+                }
             ],
-            algorithm: [
-                { id: 4, title: "버블 정렬", difficulty: "상", description: "버블 정렬로 배열을 오름차순 정렬하시오.", example: "입력:\n5\n5 2 8 1 9\n\n출력:\n1 2 5 8 9", category: "algorithm", testCases: [{ input: "5\n5 2 8 1 9", output: "1 2 5 8 9" }] }
+            loop: [
+                {
+                    id: 6,
+                    title: "구구단 출력",
+                    difficulty: "easy",
+                    description: "1부터 9단까지 구구단을 출력하세요.",
+                    solvedCount: 1500,
+                    totalCount: 1600,
+                    points: 5
+                },
+                {
+                    id: 7,
+                    title: "별찍기 패턴",
+                    difficulty: "medium",
+                    description: "주어진 높이만큼 별로 삼각형을 그리세요.",
+                    solvedCount: 800,
+                    totalCount: 1000,
+                    points: 12
+                }
+            ],
+            condition: [
+                {
+                    id: 8,
+                    title: "학점 계산기",
+                    difficulty: "easy",
+                    description: "점수에 따른 학점을 계산하세요.",
+                    solvedCount: 1200,
+                    totalCount: 1400,
+                    points: 8
+                }
+            ],
+            function: [
+                {
+                    id: 9,
+                    title: "팩토리얼 계산",
+                    difficulty: "medium",
+                    description: "주어진 수의 팩토리얼을 계산하세요.",
+                    solvedCount: 700,
+                    totalCount: 900,
+                    points: 15
+                }
+            ],
+            recursion: [
+                {
+                    id: 10,
+                    title: "피보나치 수열",
+                    difficulty: "medium",
+                    description: "재귀를 사용해 피보나치 수열을 구현하세요.",
+                    solvedCount: 600,
+                    totalCount: 800,
+                    points: 18
+                }
+            ],
+            sorting: [
+                {
+                    id: 11,
+                    title: "버블 정렬",
+                    difficulty: "medium",
+                    description: "버블 정렬 알고리즘을 구현하세요.",
+                    solvedCount: 500,
+                    totalCount: 700,
+                    points: 20
+                }
+            ],
+            search: [
+                {
+                    id: 12,
+                    title: "이진 탐색",
+                    difficulty: "hard",
+                    description: "정렬된 배열에서 이진 탐색을 구현하세요.",
+                    solvedCount: 300,
+                    totalCount: 600,
+                    points: 25
+                }
+            ],
+            graph: [
+                {
+                    id: 13,
+                    title: "DFS 구현",
+                    difficulty: "hard",
+                    description: "깊이 우선 탐색을 구현하세요.",
+                    solvedCount: 200,
+                    totalCount: 500,
+                    points: 30
+                }
+            ],
+            dp: [
+                {
+                    id: 14,
+                    title: "동전 교환",
+                    difficulty: "hard",
+                    description: "최소 동전 개수로 금액을 만드세요.",
+                    solvedCount: 150,
+                    totalCount: 400,
+                    points: 35
+                }
+            ],
+            greedy: [
+                {
+                    id: 15,
+                    title: "회의실 배정",
+                    difficulty: "medium",
+                    description: "최대 회의 수를 배정하세요.",
+                    solvedCount: 250,
+                    totalCount: 500,
+                    points: 22
+                }
             ]
         };
-
-        async function initializePage() {
-            console.log('코딩연습 페이지 초기화 중...');
-            
-            // WebSocket 연결 확인
-            isWebSocketReady = await WebSocketValidator.checkConnection();
-            if (isWebSocketReady) {
-                console.log('WebSocket 연결 확인 - 실시간 기능 활성화');
-            } else {
-                console.warn('WebSocket 연결 실패 - 오프라인 모드');
-            }
-
-            // 통계 로드
-            await loadPracticeStats();
-            
-            // 전체 카테고리 표시
-            showCategory('all', document.querySelector('.tab.active'));
-        }
-
-        async function loadPracticeStats() {
-            try {
-                const response = await fetch('/api/student/practice-stats', {
-                    headers: AuthManager.getAuthHeaders()
+        
+        let currentCategory = 'all';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            setupCategoryTabs();
+            loadProblems();
+        });
+        
+        function setupCategoryTabs() {
+            const tabs = document.querySelectorAll('.category-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCategory = this.dataset.category;
+                    loadProblems();
                 });
-                const statsData = await response.json();
-                
-                stats.attempts = statsData.totalAttempts || 0;
-                stats.solved = statsData.solvedCount || 0;
-                
-                updateStatsDisplay();
-            } catch (error) {
-                console.error('통계 로드 실패:', error);
-                // 로컬 스토리지에서 통계 복원
-                const localStats = localStorage.getItem('practiceStats');
-                if (localStats) {
-                    const parsed = JSON.parse(localStats);
-                    stats = parsed;
-                    updateStatsDisplay();
-                }
-            }
+            });
         }
-
-        function updateStatsDisplay() {
-            document.getElementById('totalAttempts').textContent = stats.attempts;
-            document.getElementById('solvedCount').textContent = stats.solved;
-            document.getElementById('successRate').textContent = stats.attempts > 0 ? Math.round((stats.solved / stats.attempts) * 100) + '%' : '0%';
-            document.getElementById('avgScore').textContent = '85점';
+        
+        function loadProblems() {
+            const grid = document.getElementById('problemsGrid');
+            let problemsToShow = [];
             
-            // 로컬 스토리지에 저장
-            localStorage.setItem('practiceStats', JSON.stringify(stats));
-        }
-
-        function showCategory(category, element) {
-            // 모든 탭에서 active 클래스 제거
-            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
-            // 클릭된 탭에 active 클래스 추가
-            if (element) element.classList.add('active');
-
-            const categoryProblems = problems[category] || problems.all;
-            const problemsList = document.getElementById('problemsList');
-            
-            if (categoryProblems.length === 0) {
-                problemsList.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">해당 카테고리에 문제가 없습니다.</div>';
-                return;
+            if (currentCategory === 'all') {
+                Object.values(problems).forEach(categoryProblems => {
+                    problemsToShow = problemsToShow.concat(categoryProblems);
+                });
+            } else {
+                problemsToShow = problems[currentCategory] || [];
             }
-
-            problemsList.innerHTML = categoryProblems.map(problem => `
-                <div style="background: #334155; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s ease;" onclick="openProblem(${problem.id})">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+            
+            grid.innerHTML = problemsToShow.map(problem => `
+                <div class="problem-card">
+                    <div class="problem-header">
                         <div>
-                            <h3 style="color: #e2e8f0; margin-bottom: 0.5rem;">${problem.title}</h3>
-                            <p style="color: #cbd5e1; margin-bottom: 0.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">${problem.description}</p>
-                            <span style="background: ${getDifficultyColor(problem.difficulty)}; color: white; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem;">${problem.difficulty}</span>
+                            <h3 class="problem-title">${problem.title}</h3>
                         </div>
-                        <button class="btn" onclick="event.stopPropagation(); openProblem(${problem.id})" style="margin-left: 1rem;">문제 풀기</button>
+                        <span class="difficulty-badge difficulty-${problem.difficulty}">
+                            ${problem.difficulty === 'easy' ? '쉬움' : problem.difficulty === 'medium' ? '보통' : '어려움'}
+                        </span>
+                    </div>
+                    
+                    <p class="problem-description">${problem.description}</p>
+                    
+                    <div class="problem-meta">
+                        <div class="problem-stats">
+                            <span>해결: ${problem.solvedCount}/${problem.totalCount}</span>
+                            <span>정답률: ${Math.round(problem.solvedCount/problem.totalCount*100)}%</span>
+                        </div>
+                        <span class="points">+${problem.points}점</span>
+                    </div>
+                    
+                    <div class="problem-actions">
+                        <button class="btn-solve" onclick="solveProblem(${problem.id}, '${problem.title}')">문제 풀기</button>
+                        <button class="btn-solution" onclick="viewSolution(${problem.id})">💡</button>
                     </div>
                 </div>
             `).join('');
         }
-
-        function getDifficultyColor(difficulty) {
-            switch(difficulty) {
-                case '하': return '#10b981';
-                case '중': return '#f59e0b';
-                case '상': return '#ef4444';
-                default: return '#6b7280';
-            }
-        }
-
-        function openProblem(id) {
-            const allProblems = [...problems.all];
-            currentProblem = allProblems.find(p => p.id === id);
+        
+        function solveProblem(problemId, title) {
+            document.getElementById('modalProblemTitle').textContent = title;
+            document.getElementById('modalProblemContent').innerHTML = `
+                <h3>문제 설명</h3>
+                <p>이곳에 상세한 문제 설명이 들어갑니다.</p>
+                
+                <h3>입력</h3>
+                <p>입력 형식에 대한 설명</p>
+                
+                <h3>출력</h3>
+                <p>출력 형식에 대한 설명</p>
+                
+                <h3>예제</h3>
+                <div style="background: #f7fafc; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <strong>입력:</strong><br>
+                    3 5<br>
+                    <strong>출력:</strong><br>
+                    8
+                </div>
+            `;
             
-            if (!currentProblem) return;
-
-            document.getElementById('problemTitle').textContent = currentProblem.title;
-            document.getElementById('problemDescription').textContent = currentProblem.description;
-            document.getElementById('problemExample').textContent = currentProblem.example;
-            document.getElementById('solutionCode').value = '';
-            document.getElementById('testResult').style.display = 'none';
-            
+            document.getElementById('codeTextarea').value = getStarterCode();
             document.getElementById('problemModal').style.display = 'block';
         }
+        
+        function getStarterCode() {
+            const language = document.getElementById('languageSelect').value;
+            
+            const templates = {
+                java: `public class Solution {
+    public static void main(String[] args) {
+        // 코드를 작성하세요
+    }
+}`,
+                python: `# 코드를 작성하세요
+def solution():
+    pass
 
+if __name__ == "__main__":
+    solution()`,
+                javascript: `// 코드를 작성하세요
+function solution() {
+    
+}
+
+solution();`
+            };
+            
+            return templates[language] || templates.java;
+        }
+        
         function closeProblemModal() {
             document.getElementById('problemModal').style.display = 'none';
-            currentProblem = null;
         }
-
-        function testCode() {
-            const code = document.getElementById('solutionCode').value.trim();
-            const resultDiv = document.getElementById('testResult');
-            
-            if (!code) {
-                resultDiv.innerHTML = '<div style="color: #ef4444;">코드를 입력해주세요.</div>';
-                resultDiv.style.display = 'block';
+        
+        function runCode() {
+            alert('코드 실행 기능은 개발 중입니다.');
+        }
+        
+        function submitCode() {
+            const code = document.getElementById('codeTextarea').value;
+            if (!code.trim()) {
+                alert('코드를 작성해주세요.');
                 return;
             }
-
-            resultDiv.innerHTML = '<div style="color: #3b82f6;">테스트 실행 중...</div>';
-            resultDiv.style.display = 'block';
             
+            // 간단한 성공 시뮬레이션
             setTimeout(() => {
-                const testResults = runSmartTest(code, currentProblem);
-                resultDiv.innerHTML = testResults;
+                alert('정답입니다! +15점이 추가되었습니다.');
+                closeProblemModal();
             }, 1000);
         }
-
-        function runSmartTest(code, problem) {
-            // 정합성 높은 AI 기반 테스트
-            let passedTests = 0;
-            let totalTests = problem.testCases.length;
-            
-            // 코드 품질 체크
-            if (code.length < 30) {
-                return '<div style="color: #f59e0b;">⚠️ 코드가 너무 짧습니다. 더 자세히 작성해보세요.</div>';
-            }
-
-            // 문제별 특화 검증
-            switch(problem.id) {
-                case 1: // 두 수의 합
-                    if (code.includes('+') || code.includes('add')) {
-                        passedTests = totalTests;
-                    }
-                    break;
-                case 2: // 배열 최댓값
-                    if (code.includes('Math.max') || (code.includes('for') && code.includes('>'))) {
-                        passedTests = totalTests;
-                    }
-                    break;
-                case 3: // 문자열 뒤집기
-                    if (code.includes('reverse') || code.includes('charAt') || code.includes('substring')) {
-                        passedTests = totalTests;
-                    }
-                    break;
-                case 4: // 버블 정렬
-                    if (code.includes('for') && code.includes('for') && code.includes('>')) {
-                        passedTests = Math.floor(totalTests * 0.8); // 80% 성공
-                    }
-                    break;
-                default:
-                    passedTests = Math.random() > 0.3 ? totalTests : Math.floor(totalTests * 0.6);
-            }
-
-            if (passedTests === totalTests) {
-                return '<div style="color: #10b981;">✅ 모든 테스트 케이스 통과! 제출해보세요.</div>';
-            } else if (passedTests > 0) {
-                return `<div style="color: #f59e0b;">⚠️ ${passedTests}/${totalTests} 테스트 통과. 일부 케이스에서 실패했습니다.</div>`;
-            } else {
-                return '<div style="color: #ef4444;">❌ 모든 테스트 실패. 로직을 다시 확인해보세요.</div>';
-            }
+        
+        function viewSolution(problemId) {
+            alert('해답 보기 기능은 개발 중입니다.');
         }
-
-        function submitCode() {
-            const code = document.getElementById('solutionCode').value.trim();
-            
-            if (!code) {
-                alert('코드를 입력해주세요.');
-                return;
-            }
-
-            if (code.length < 30) {
-                alert('코드를 더 자세히 작성해주세요.');
-                return;
-            }
-
-            if (!currentProblem) return;
-
-            // 정합성 높은 채점
-            stats.attempts++;
-            
-            const testResult = runSmartTest(code, currentProblem);
-            const isCorrect = testResult.includes('모든 테스트 케이스 통과');
-            const score = isCorrect ? Math.floor(Math.random() * 21) + 80 : Math.floor(Math.random() * 40) + 40;
-            
-            if (isCorrect) {
-                stats.solved++;
-            }
-
-            updateStatsDisplay();
-            
-            // WebSocket으로 활동 전송
-            if (isWebSocketReady && window.studentActivityTracker) {
-                window.studentActivityTracker.updateActivity(`문제 풀이: ${currentProblem.title}`);
-            }
-
-            alert(`제출 완료!\n결과: ${isCorrect ? '정답' : '오답'}\n점수: ${score}점`);
-            closeProblemModal();
-        }
-
-        function logout() {
-            AuthManager.logout();
-        }
-
-        // 모달 외부 클릭시 닫기
-        window.onclick = function(event) {
-            if (event.target.id === 'problemModal') {
-                closeProblemModal();
-            }
-        }
-
-        // 페이지 초기화
-        document.addEventListener('DOMContentLoaded', function() {
-            WebSocketValidator.initialize();
-            initializePage();
+        
+        // 언어 변경 시 템플릿 변경
+        document.getElementById('languageSelect').addEventListener('change', function() {
+            document.getElementById('codeTextarea').value = getStarterCode();
         });
     </script>
 </body>
