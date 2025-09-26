@@ -4,20 +4,16 @@ class WebSocketManager {
         this.connected = false;
         this.reconnectAttempts = 0;
         this.maxReconnectAttempts = 5;
-        this.reconnectInterval = 5000;
-        this.connect();
+        this.reconnectInterval = 3000;
     }
 
     connect() {
-        console.log('WebSocket 연결 시도 중...');
         const socket = new SockJS('/ws');
         this.stompClient = Stomp.over(socket);
         
-        this.stompClient.debug = null;
-        
         this.stompClient.connect({}, 
             (frame) => {
-                console.log('WebSocket 연결 성공:', frame);
+                console.log('WebSocket 연결됨: ' + frame);
                 this.connected = true;
                 this.reconnectAttempts = 0;
                 this.subscribeToNotifications();
@@ -25,7 +21,7 @@ class WebSocketManager {
             (error) => {
                 console.error('WebSocket 연결 실패:', error);
                 this.connected = false;
-                this.attemptReconnect();
+                this.reconnect();
             }
         );
     }
@@ -34,78 +30,101 @@ class WebSocketManager {
         if (this.stompClient && this.connected) {
             this.stompClient.subscribe('/topic/notifications', (message) => {
                 const notification = JSON.parse(message.body);
-                console.log('알림 수신:', notification);
                 this.handleNotification(notification);
+            });
+            
+            this.stompClient.subscribe('/topic/activities', (message) => {
+                const activity = JSON.parse(message.body);
+                this.handleActivity(activity);
             });
         }
     }
 
     handleNotification(notification) {
-        const event = new CustomEvent('websocket-notification', { 
-            detail: notification 
-        });
-        window.dispatchEvent(event);
+        console.log('알림 수신:', notification);
         
-        this.showToast(notification.message);
+        // 화면에 알림 표시
+        this.showNotification(notification.message);
+        
+        // 타입별 처리
+        switch(notification.type) {
+            case 'new_material':
+                this.handleNewMaterial(notification.material);
+                break;
+            case 'new_problem':
+                this.handleNewProblem(notification.problem);
+                break;
+            case 'new_quiz':
+                this.handleNewQuiz(notification.quiz);
+                break;
+            case 'announcement':
+                this.handleAnnouncement(notification.message);
+                break;
+        }
     }
 
-    showToast(message) {
-        const toast = document.createElement('div');
-        toast.className = 'notification-toast';
-        toast.style.cssText = `
+    handleActivity(activity) {
+        // 강사 대시보드용 활동 업데이트
+        if (window.updateStudentActivity) {
+            window.updateStudentActivity(activity);
+        }
+    }
+
+    showNotification(message) {
+        // 간단한 토스트 알림 생성
+        const notification = document.createElement('div');
+        notification.className = 'notification-toast';
+        notification.textContent = message;
+        notification.style.cssText = `
             position: fixed;
             top: 20px;
             right: 20px;
-            background: #10b981;
+            background: #007bff;
             color: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            z-index: 10000;
-            max-width: 300px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            animation: slideInRight 0.3s ease-out;
+            padding: 15px 20px;
+            border-radius: 8px;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            animation: slideIn 0.3s ease;
         `;
-        toast.textContent = message;
         
-        const style = document.createElement('style');
-        style.textContent = `
-            @keyframes slideInRight {
-                from { transform: translateX(100%); opacity: 0; }
-                to { transform: translateX(0); opacity: 1; }
-            }
-        `;
-        document.head.appendChild(style);
-        
-        document.body.appendChild(toast);
+        document.body.appendChild(notification);
         
         setTimeout(() => {
-            toast.remove();
+            notification.remove();
         }, 5000);
     }
 
-    sendNotification(message) {
-        if (this.stompClient && this.connected) {
-            this.stompClient.send('/app/notification', {}, JSON.stringify({
-                message: message,
-                timestamp: new Date().toISOString()
-            }));
+    handleNewMaterial(material) {
+        // 오늘의 학습 페이지 새로고침
+        if (window.location.pathname.includes('/student/today')) {
+            this.refreshTodayPage();
         }
     }
 
-    attemptReconnect() {
+    handleNewProblem(problem) {
+        // 문제 목록 새로고침
+        if (window.location.pathname.includes('/student/today') || 
+            window.location.pathname.includes('/student/practice')) {
+            this.refreshTodayPage();
+        }
+    }
+
+    refreshTodayPage() {
+        if (typeof loadTodayContent === 'function') {
+            loadTodayContent();
+        }
+    }
+
+    reconnect() {
         if (this.reconnectAttempts < this.maxReconnectAttempts) {
             this.reconnectAttempts++;
-            console.log(`재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+            console.log(`WebSocket 재연결 시도 ${this.reconnectAttempts}/${this.maxReconnectAttempts}`);
+            
             setTimeout(() => {
                 this.connect();
             }, this.reconnectInterval);
-        } else {
-            console.error('WebSocket 재연결 포기');
         }
-    }
-
-    isConnected() {
-        return this.connected;
     }
 
     disconnect() {
@@ -116,4 +135,15 @@ class WebSocketManager {
     }
 }
 
-window.webSocketManager = new WebSocketManager();
+// 전역 WebSocket 매니저
+const wsManager = new WebSocketManager();
+
+// 페이지 로드 시 연결
+document.addEventListener('DOMContentLoaded', () => {
+    wsManager.connect();
+});
+
+// 페이지 언로드 시 연결 해제
+window.addEventListener('beforeunload', () => {
+    wsManager.disconnect();
+});
