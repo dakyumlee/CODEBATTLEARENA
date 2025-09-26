@@ -1,10 +1,12 @@
 package com.codebattlearena.controller;
 
 import com.codebattlearena.model.User;
+import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -29,9 +31,21 @@ public class AuthController {
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 
-                if (passwordEncoder.matches(request.getPassword(), user.getPassword()) || 
-                    request.getPassword().equals("aa667788!!")) {
-                    
+                // 테스트 계정들에 대한 간단한 비밀번호 체크
+                boolean passwordMatch = false;
+                
+                if (request.getEmail().equals("oicrcutie@gmail.com") && request.getPassword().equals("aa667788!!")) {
+                    passwordMatch = true;
+                } else if (request.getEmail().equals("teacher@test.com") && request.getPassword().equals("password")) {
+                    passwordMatch = true;
+                } else if (request.getEmail().equals("student@test.com") && request.getPassword().equals("password")) {
+                    passwordMatch = true;
+                } else {
+                    // 실제 암호화된 비밀번호 체크 (새로 가입한 사용자)
+                    passwordMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
+                }
+                
+                if (passwordMatch) {
                     user.setOnlineStatus(true);
                     userRepository.save(user);
                     
@@ -50,7 +64,68 @@ public class AuthController {
             }
         } catch (Exception e) {
             response.put("success", false);
-            response.put("message", "로그인 처리 중 오류가 발생했습니다.");
+            response.put("message", "로그인 처리 중 오류가 발생했습니다: " + e.getMessage());
+        }
+        
+        return response;
+    }
+    
+    @PostMapping("/register")
+    public Map<String, Object> register(@RequestBody RegisterRequest request) {
+        Map<String, Object> response = new HashMap<>();
+        
+        try {
+            // 입력값 검증
+            if (request.getName() == null || request.getName().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "이름을 입력해주세요.");
+                response.put("field", "name");
+                return response;
+            }
+            
+            if (request.getEmail() == null || request.getEmail().trim().isEmpty()) {
+                response.put("success", false);
+                response.put("message", "이메일을 입력해주세요.");
+                response.put("field", "email");
+                return response;
+            }
+            
+            if (request.getPassword() == null || request.getPassword().length() < 4) {
+                response.put("success", false);
+                response.put("message", "비밀번호는 최소 4자 이상이어야 합니다.");
+                response.put("field", "password");
+                return response;
+            }
+            
+            // 이메일 중복 체크
+            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+                response.put("success", false);
+                response.put("message", "이미 사용 중인 이메일입니다.");
+                response.put("field", "email");
+                return response;
+            }
+            
+            // 사용자 생성
+            User user = new User();
+            user.setName(request.getName().trim());
+            user.setEmail(request.getEmail().trim().toLowerCase());
+            user.setPassword(passwordEncoder.encode(request.getPassword())); // 비밀번호 암호화
+            user.setRole(UserRole.valueOf(request.getRole()));
+            user.setOnlineStatus(false);
+            user.setCreatedAt(LocalDateTime.now());
+            
+            userRepository.save(user);
+            
+            response.put("success", true);
+            response.put("message", "회원가입이 완료되었습니다!");
+            
+        } catch (IllegalArgumentException e) {
+            response.put("success", false);
+            response.put("message", "올바르지 않은 역할입니다.");
+            response.put("field", "role");
+        } catch (Exception e) {
+            response.put("success", false);
+            response.put("message", "회원가입 처리 중 오류가 발생했습니다: " + e.getMessage());
         }
         
         return response;
@@ -64,5 +139,21 @@ public class AuthController {
         public void setEmail(String email) { this.email = email; }
         public String getPassword() { return password; }
         public void setPassword(String password) { this.password = password; }
+    }
+    
+    public static class RegisterRequest {
+        private String name;
+        private String email;
+        private String password;
+        private String role;
+        
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        public String getRole() { return role; }
+        public void setRole(String role) { this.role = role; }
     }
 }

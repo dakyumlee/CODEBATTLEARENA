@@ -10,9 +10,19 @@ public class PageController {
     public String home() {
         return "index";
     }
+    
+    @GetMapping("/register")
+    public String register() {
+        return "register";
+    }
 
     @GetMapping("/student")
     public String studentDashboard() {
+        return "student/dashboard";
+    }
+
+    @GetMapping("/student/dashboard")
+    public String studentDashboardFull() {
         return "student/dashboard";
     }
 

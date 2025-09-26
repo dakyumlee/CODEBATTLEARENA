@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>회원가입 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #f8fafc;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .register-container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .register-header {
+            background: #3182ce;
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            opacity: 0.9;
+        }
+        
+        .register-form {
+            padding: 40px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.2s;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #3182ce;
+        }
+        
+        .form-select {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 10px;
+            font-size: 1rem;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .btn-register {
+            width: 100%;
+            padding: 15px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-register:hover {
+            background: #2c5282;
+        }
+        
+        .btn-register:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+        }
+        
+        .login-link {
+            text-align: center;
+            margin-top: 20px;
+            color: #718096;
+        }
+        
+        .login-link a {
+            color: #3182ce;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .login-link a:hover {
+            text-decoration: underline;
+        }
+        
+        .error-message {
+            color: #e53e3e;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        .success-message {
+            color: #38a169;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="register-container">
+        <div class="register-header">
+            <div class="logo">CodeBattleArena</div>
+            <div class="subtitle">새 계정을 만들어보세요</div>
+        </div>
+        
+        <div class="register-form">
+            <div class="form-group">
+                <label class="form-label">이름</label>
+                <input type="text" class="form-input" id="name" placeholder="실명을 입력하세요" required>
+                <div class="error-message" id="nameError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">이메일</label>
+                <input type="email" class="form-input" id="email" placeholder="이메일 주소를 입력하세요" required>
+                <div class="error-message" id="emailError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">비밀번호</label>
+                <input type="password" class="form-input" id="password" placeholder="비밀번호를 입력하세요" required>
+                <div class="error-message" id="passwordError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">비밀번호 확인</label>
+                <input type="password" class="form-input" id="confirmPassword" placeholder="비밀번호를 다시 입력하세요" required>
+                <div class="error-message" id="confirmPasswordError"></div>
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">역할</label>
+                <select class="form-select" id="role" required>
+                    <option value="STUDENT" selected>학생</option>
+                    <option value="TEACHER">강사</option>
+                </select>
+            </div>
+            
+            <button class="btn-register" id="registerBtn" onclick="register()">회원가입</button>
+            
+            <div class="login-link">
+                이미 계정이 있으신가요? <a href="/">로그인</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function clearErrors() {
+            document.getElementById('nameError').textContent = '';
+            document.getElementById('emailError').textContent = '';
+            document.getElementById('passwordError').textContent = '';
+            document.getElementById('confirmPasswordError').textContent = '';
+        }
+        
+        function validateForm() {
+            clearErrors();
+            let isValid = true;
+            
+            const name = document.getElementById('name').value.trim();
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (!name) {
+                document.getElementById('nameError').textContent = '이름을 입력해주세요.';
+                isValid = false;
+            }
+            
+            if (!email) {
+                document.getElementById('emailError').textContent = '이메일을 입력해주세요.';
+                isValid = false;
+            } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                document.getElementById('emailError').textContent = '올바른 이메일 형식이 아닙니다.';
+                isValid = false;
+            }
+            
+            if (!password) {
+                document.getElementById('passwordError').textContent = '비밀번호를 입력해주세요.';
+                isValid = false;
+            } else if (password.length < 4) {
+                document.getElementById('passwordError').textContent = '비밀번호는 최소 4자 이상이어야 합니다.';
+                isValid = false;
+            }
+            
+            if (!confirmPassword) {
+                document.getElementById('confirmPasswordError').textContent = '비밀번호 확인을 입력해주세요.';
+                isValid = false;
+            } else if (password !== confirmPassword) {
+                document.getElementById('confirmPasswordError').textContent = '비밀번호가 일치하지 않습니다.';
+                isValid = false;
+            }
+            
+            return isValid;
+        }
+        
+        async function register() {
+            if (!validateForm()) {
+                return;
+            }
+            
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.disabled = true;
+            registerBtn.textContent = '처리 중...';
+            
+            const formData = {
+                name: document.getElementById('name').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                password: document.getElementById('password').value,
+                role: document.getElementById('role').value
+            };
+            
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    alert('회원가입이 완료되었습니다! 로그인 페이지로 이동합니다.');
+                    window.location.href = '/';
+                } else {
+                    if (data.field) {
+                        document.getElementById(data.field + 'Error').textContent = data.message;
+                    } else {
+                        alert(data.message || '회원가입에 실패했습니다.');
+                    }
+                }
+            } catch (error) {
+                console.error('회원가입 오류:', error);
+                alert('회원가입 처리 중 오류가 발생했습니다.');
+            } finally {
+                registerBtn.disabled = false;
+                registerBtn.textContent = '회원가입';
+            }
+        }
+        
+        // Enter 키로 회원가입
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                register();
+            }
+        });
+    </script>
+</body>
+</html>

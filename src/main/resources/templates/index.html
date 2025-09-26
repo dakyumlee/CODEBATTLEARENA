@@ -223,7 +223,7 @@
         <div class="left-content">
             <h1 class="main-title">CodeBattleArena</h1>
             <p class="main-subtitle">
-                스마트 코딩 학습 플랫폼<br>
+                국비학원을 위한 스마트 코딩 학습 플랫폼<br>
                 AI와 함께하는 실시간 코딩 교육 시스템
             </p>
             
@@ -271,7 +271,7 @@
                 <button class="login-btn" onclick="login()">로그인</button>
                 
                 <div class="register-link">
-                    계정이 없으신가요? <a href="#" onclick="showRegister()">회원가입</a>
+                    계정이 없으신가요? <a href="/register">회원가입</a>
                 </div>
             </div>
         </div>
@@ -303,6 +303,7 @@
                     localStorage.setItem('userRole', data.role);
                     localStorage.setItem('userName', data.name);
                     
+                    // 역할별 페이지 이동
                     switch(data.role) {
                         case 'ADMIN':
                             window.location.href = '/admin';
@@ -322,10 +323,6 @@
                 console.error('로그인 에러:', error);
                 alert('로그인 처리 중 오류가 발생했습니다.');
             }
-        }
-        
-        function showRegister() {
-            alert('회원가입 기능은 개발 중입니다.\n\n테스트 계정:\n• 관리자: oicrcutie@gmail.com / aa667788!!\n• 강사: teacher@test.com / password\n• 학생: student@test.com / password');
         }
         
         document.addEventListener('keypress', function(e) {
