@@ -1,5 +1,6 @@
 package com.codebattlearena.controller;
 
+import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.User;
 import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
@@ -21,6 +22,9 @@ public class AuthController {
     @Autowired
     private PasswordEncoder passwordEncoder;
     
+    @Autowired
+    private JwtUtil jwtUtil;
+    
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody LoginRequest request) {
         Map<String, Object> response = new HashMap<>();
@@ -31,7 +35,6 @@ public class AuthController {
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
                 
-                // 테스트 계정들에 대한 간단한 비밀번호 체크
                 boolean passwordMatch = false;
                 
                 if (request.getEmail().equals("oicrcutie@gmail.com") && request.getPassword().equals("aa667788!!")) {
@@ -41,7 +44,6 @@ public class AuthController {
                 } else if (request.getEmail().equals("student@test.com") && request.getPassword().equals("password")) {
                     passwordMatch = true;
                 } else {
-                    // 실제 암호화된 비밀번호 체크 (새로 가입한 사용자)
                     passwordMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
                 }
                 
@@ -49,8 +51,10 @@ public class AuthController {
                     user.setOnlineStatus(true);
                     userRepository.save(user);
                     
+                    String token = jwtUtil.generateToken(user.getEmail(), user.getRole().toString(), user.getId());
+                    
                     response.put("success", true);
-                    response.put("token", "dummy-jwt-token-" + user.getId());
+                    response.put("token", token);
                     response.put("role", user.getRole().toString());
                     response.put("name", user.getName());
                     response.put("message", "로그인 성공");
@@ -75,7 +79,6 @@ public class AuthController {
         Map<String, Object> response = new HashMap<>();
         
         try {
-            // 입력값 검증
             if (request.getName() == null || request.getName().trim().isEmpty()) {
                 response.put("success", false);
                 response.put("message", "이름을 입력해주세요.");
@@ -97,7 +100,6 @@ public class AuthController {
                 return response;
             }
             
-            // 이메일 중복 체크
             if (userRepository.findByEmail(request.getEmail()).isPresent()) {
                 response.put("success", false);
                 response.put("message", "이미 사용 중인 이메일입니다.");
@@ -105,12 +107,11 @@ public class AuthController {
                 return response;
             }
             
-            // 사용자 생성 (항상 학생으로)
             User user = new User();
             user.setName(request.getName().trim());
             user.setEmail(request.getEmail().trim().toLowerCase());
-            user.setPassword(passwordEncoder.encode(request.getPassword())); // 비밀번호 암호화
-            user.setRole(UserRole.STUDENT); // 항상 학생으로 설정
+            user.setPassword(passwordEncoder.encode(request.getPassword()));
+            user.setRole(UserRole.STUDENT);
             user.setOnlineStatus(false);
             user.setCreatedAt(LocalDateTime.now());
             
@@ -141,7 +142,7 @@ public class AuthController {
         private String name;
         private String email;
         private String password;
-        private String role; // 사용하지 않지만 호환성을 위해 남겨둠
+        private String role;
         
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
