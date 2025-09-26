@@ -6,38 +6,6 @@
     <title>오늘의 학습 - 코드배틀아레나</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/student.css">
-    <style>
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #10b981;
-            color: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            z-index: 1000;
-            max-width: 300px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-            animation: slideIn 0.3s ease-out;
-        }
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        .new-badge {
-            background: #ef4444;
-            color: white;
-            font-size: 0.7rem;
-            padding: 0.2rem 0.4rem;
-            border-radius: 0.2rem;
-            margin-left: 0.5rem;
-            animation: pulse 2s infinite;
-        }
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-    </style>
 </head>
 <body>
     <div class="header">
@@ -61,7 +29,7 @@
             <div id="aiProblem">
                 <div style="padding: 1.5rem; background: #334155; border-radius: 0.75rem; margin: 1rem 0;">
                     <h4 style="color: #e2e8f0; margin-bottom: 1rem;">오늘의 AI 추천 문제</h4>
-                    <p style="margin: 1rem 0; color: #cbd5e1; line-height: 1.6;">AI가 당신의 학습 수준을 분석하여 맞춤형 문제를 추천해드립니다. 문제는 매번 다르게 출제됩니다.</p>
+                    <p style="margin: 1rem 0; color: #cbd5e1; line-height: 1.6;">AI가 당신의 학습 수준을 분석하여 맞춤형 문제를 추천해드립니다.</p>
                     <div style="display: flex; gap: 1rem; margin-top: 1rem;">
                         <span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">AI 맞춤형</span>
                         <span style="color: #64748b;">10-30점</span>
@@ -72,7 +40,7 @@
         </div>
 
         <div class="card">
-            <h3>📚 강사님 공유 자료</h3>
+            <h3>📚 강사님 공유 자료 <span id="newMaterialBadge" style="display: none; background: #ef4444; color: white; font-size: 0.7rem; padding: 0.2rem 0.4rem; border-radius: 0.2rem; margin-left: 0.5rem;">NEW</span></h3>
             <div id="sharedMaterials">
                 <div style="text-align: center; color: #64748b; padding: 2rem;">
                     공유 자료를 불러오는 중...
@@ -81,21 +49,39 @@
         </div>
 
         <div class="card">
-            <h3>📝 강사 출제 문제 <span id="newProblemBadge" style="display: none;" class="new-badge">NEW</span></h3>
+            <h3>📝 강사 출제 문제 <span id="newProblemBadge" style="display: none; background: #ef4444; color: white; font-size: 0.7rem; padding: 0.2rem 0.4rem; border-radius: 0.2rem; margin-left: 0.5rem; animation: pulse 2s infinite;">NEW</span></h3>
             <div id="teacherProblems">
                 <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    출제된 문제를 확인하는 중...
+                    강사님이 문제를 출제하면 여기에 표시됩니다.
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- JavaScript 로딩 순서가 중요함 -->
     <script src="/js/common/auth.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/common/websocket.js"></script>
+    <script src="/js/common/websocket-validator.js"></script>
+    <script src="/js/common/student-activity.js"></script>
+    
     <script>
+        let materialsLoadAttempts = 0;
+        const maxLoadAttempts = 3;
+
         async function loadTodayContent() {
             document.getElementById('todayDate').textContent = new Date().toLocaleDateString('ko-KR', {
                 year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
             });
+
+            // WebSocket 연결 확인 후 데이터 로드
+            const isConnected = await WebSocketValidator.checkConnection();
+            if (isConnected) {
+                console.log('WebSocket 연결 확인됨 - 데이터 로드 시작');
+            } else {
+                console.warn('WebSocket 연결 실패 - 오프라인 모드로 진행');
+            }
 
             loadSharedMaterials();
             loadTeacherProblems();
@@ -103,15 +89,33 @@
 
         async function loadSharedMaterials() {
             try {
+                materialsLoadAttempts++;
+                console.log(`공유 자료 로드 시도 ${materialsLoadAttempts}/${maxLoadAttempts}`);
+                
                 const response = await fetch('/api/teacher/materials', {
-                    headers: AuthManager.getAuthHeaders()
+                    headers: AuthManager.getAuthHeaders(),
+                    timeout: 10000 // 10초 타임아웃
                 });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
                 const materials = await response.json();
+                console.log('공유 자료 로드 성공:', materials.length + '개');
                 displayMaterials(materials);
+                materialsLoadAttempts = 0; // 성공 시 재설정
+                
             } catch (error) {
                 console.error('공유 자료 로드 실패:', error);
-                document.getElementById('sharedMaterials').innerHTML = 
-                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">공유 자료를 불러올 수 없습니다.</div>';
+                
+                if (materialsLoadAttempts < maxLoadAttempts) {
+                    console.log(`5초 후 재시도...`);
+                    setTimeout(loadSharedMaterials, 5000);
+                } else {
+                    document.getElementById('sharedMaterials').innerHTML = 
+                        '<div style="text-align: center; color: #ef4444; padding: 2rem;">공유 자료를 불러올 수 없습니다. 새로고침 후 다시 시도해주세요.</div>';
+                }
             }
         }
 
@@ -129,15 +133,15 @@
                         <div>
                             <h5 style="color: #e2e8f0; margin-bottom: 0.25rem;">${material.title}</h5>
                             <div style="color: #64748b; font-size: 0.9rem;">
-                                ${material.fileType === 'link' ? '링크' : '파일'} | 
+                                ${material.fileType === 'link' ? '🔗 링크' : '📄 파일'} | 
                                 ${new Date(material.createdAt).toLocaleDateString('ko-KR')}
                             </div>
                             ${material.description ? `<p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.5rem;">${material.description}</p>` : ''}
                         </div>
                         <div>
                             ${material.fileType === 'link' ? 
-                                `<button class="btn" onclick="window.open('${material.url}', '_blank')">링크 열기</button>` :
-                                `<button class="btn" onclick="downloadFile(${material.id})">다운로드</button>`
+                                `<button class="btn" onclick="openLink('${material.url}', '${material.title}')">링크 열기</button>` :
+                                `<button class="btn" onclick="downloadFile(${material.id}, '${material.title}')">다운로드</button>`
                             }
                         </div>
                     </div>
@@ -146,52 +150,19 @@
         }
 
         function loadTeacherProblems() {
-            // 초기 상태 표시
-            document.getElementById('teacherProblems').innerHTML = 
-                '<div style="text-align: center; color: #64748b; padding: 2rem;">강사님이 문제를 출제하면 여기에 표시됩니다.</div>';
+            const problemsDiv = document.getElementById('teacherProblems');
+            problemsDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">강사님이 문제를 출제하면 여기에 표시됩니다.</div>';
         }
 
-        // WebSocket 알림 처리
-        window.addEventListener('websocket-notification', (event) => {
-            const notification = event.detail;
+        // WebSocket 알림 처리 함수들을 전역으로 정의
+        window.loadSharedMaterials = loadSharedMaterials;
+        
+        window.updateTeacherProblems = function(problem) {
+            console.log('새 문제 수신:', problem);
             
-            if (notification.type === 'new_material') {
-                loadSharedMaterials();
-                showNotification('새로운 자료가 공유되었습니다: ' + notification.problem.title);
-            } else if (notification.type === 'new_problem') {
-                showNewProblemNotification(notification);
-                updateTeacherProblems(notification.problem);
-            }
-        });
-
-        function showNotification(message) {
-            const notification = document.createElement('div');
-            notification.className = 'notification';
-            notification.textContent = message;
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.remove();
-            }, 5000);
-        }
-
-        function showNewProblemNotification(notification) {
-            showNotification(notification.message);
-            
-            // NEW 뱃지 표시
-            const badge = document.getElementById('newProblemBadge');
-            badge.style.display = 'inline';
-            
-            // 10초 후 뱃지 숨김
-            setTimeout(() => {
-                badge.style.display = 'none';
-            }, 10000);
-        }
-
-        function updateTeacherProblems(problem) {
             const problemsDiv = document.getElementById('teacherProblems');
             const newProblem = `
-                <div style="padding: 1.5rem; background: #065f46; border: 2px solid #10b981; border-radius: 0.75rem; margin-bottom: 1rem; position: relative;">
+                <div style="padding: 1.5rem; background: #065f46; border: 2px solid #10b981; border-radius: 0.75rem; margin-bottom: 1rem; position: relative; animation: slideInLeft 0.5s ease-out;">
                     <div style="position: absolute; top: -8px; right: 10px; background: #ef4444; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: bold;">NEW</div>
                     <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="flex: 1;">
@@ -203,7 +174,7 @@
                                 <span style="color: #a7f3d0; font-size: 0.8rem;">방금 출제됨</span>
                             </div>
                         </div>
-                        <button class="btn" onclick="solveProblem('${problem.id}', '${problem.title}', '${problem.description}', '${problem.difficulty}')" style="background: #10b981; margin-left: 1rem; white-space: nowrap;">문제 풀기</button>
+                        <button class="btn" onclick="solveProblem('${problem.id}', '${problem.title}', '${problem.description}', '${problem.difficulty}', ${problem.points})" style="background: #10b981; margin-left: 1rem; white-space: nowrap;">문제 풀기</button>
                     </div>
                 </div>
             `;
@@ -213,42 +184,79 @@
             } else {
                 problemsDiv.innerHTML = newProblem + problemsDiv.innerHTML;
             }
-        }
 
-        function solveProblem(id, title, description, difficulty) {
-            // 문제 정보를 localStorage에 저장
+            // NEW 뱃지 표시
+            const badge = document.getElementById('newProblemBadge');
+            if (badge) {
+                badge.style.display = 'inline';
+                setTimeout(() => {
+                    badge.style.display = 'none';
+                }, 10000);
+            }
+
+            WebSocketValidator.showNotification('새로운 문제가 출제되었습니다: ' + problem.title);
+        };
+
+        function solveProblem(id, title, description, difficulty, points) {
             const problemData = {
                 id: id,
                 title: title,
                 description: description,
                 difficulty: difficulty,
+                points: points,
                 type: 'teacher',
                 timestamp: Date.now()
             };
             localStorage.setItem('currentTeacherProblem', JSON.stringify(problemData));
-            
-            // 강사 문제 전용 페이지로 이동
             location.href = '/student/teacher-problem';
         }
 
-        function downloadFile(fileId) {
-            window.open(`/api/files/download/${fileId}`, '_blank');
+        function openLink(url, title) {
+            console.log(`링크 열기: ${title} - ${url}`);
+            window.open(url, '_blank');
+        }
+
+        function downloadFile(id, title) {
+            console.log(`파일 다운로드: ${title} (ID: ${id})`);
+            window.open(`/api/files/download/${id}`, '_blank');
         }
 
         function logout() {
             AuthManager.logout();
         }
 
-        loadTodayContent();
+        // 페이지 초기화
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('오늘의 학습 페이지 로드됨');
+            
+            // CSS 애니메이션 추가
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideInLeft {
+                    from { transform: translateX(-100%); opacity: 0; }
+                    to { transform: translateX(0); opacity: 1; }
+                }
+                @keyframes pulse {
+                    0%, 100% { opacity: 1; }
+                    50% { opacity: 0.5; }
+                }
+            `;
+            document.head.appendChild(style);
 
-        // WebSocket 연결 확인
-        if (window.webSocketManager) {
-            console.log('WebSocket 연결 상태:', window.webSocketManager.isConnected());
-        }
+            // WebSocket 검증기 초기화
+            WebSocketValidator.initialize();
+            
+            // 콘텐츠 로드
+            loadTodayContent();
+        });
+
+        // 페이지 가시성 변경 시 처리
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                console.log('페이지가 다시 활성화됨 - 연결 상태 확인');
+                WebSocketValidator.checkConnection();
+            }
+        });
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script src="/js/common/websocket.js"></script>
-    <script src="/js/common/student-activity.js"></script>
 </body>
 </html>

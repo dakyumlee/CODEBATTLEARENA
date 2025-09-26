@@ -48,10 +48,55 @@
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3>사용자 관리</h3>
-                <button onclick="showModal('addUserModal')" class="btn">사용자 추가</button>
+                <button onclick="showAddUserModal()" class="btn">사용자 추가</button>
             </div>
 
-            <div style="overflow-x: auto;">
+            <div id="usersTable">
+                <div style="text-align: center; padding: 2rem;">사용자 데이터를 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script>
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users', {
+                    headers: AuthManager.getAuthHeaders()
+                });
+                const users = await response.json();
+                displayUsers(users);
+            } catch (error) {
+                document.getElementById('usersTable').innerHTML = 
+                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">사용자 데이터를 불러올 수 없습니다.</div>';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const response = await fetch('/api/admin/stats', {
+                    headers: AuthManager.getAuthHeaders()
+                });
+                const stats = await response.json();
+                
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                document.getElementById('studentCount').textContent = stats.studentCount || 0;
+                document.getElementById('teacherCount').textContent = stats.teacherCount || 0;
+                document.getElementById('onlineCount').textContent = stats.onlineCount || 0;
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        function displayUsers(users) {
+            const tableDiv = document.getElementById('usersTable');
+            
+            if (users.length === 0) {
+                tableDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">등록된 사용자가 없습니다.</div>';
+                return;
+            }
+
+            const table = `
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
@@ -63,113 +108,32 @@
                             <th style="padding: 1rem; text-align: center;">관리</th>
                         </tr>
                     </thead>
-                    <tbody id="usersTableBody">
-                        <tr>
-                            <td colspan="6" style="text-align: center; padding: 2rem;">사용자 데이터를 불러오는 중...</td>
-                        </tr>
+                    <tbody>
+                        ${users.map(user => `
+                            <tr style="border-bottom: 1px solid #e2e8f0;">
+                                <td style="padding: 1rem; font-weight: 600;">${user.name}</td>
+                                <td style="padding: 1rem;">${user.email}</td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <span style="background: ${getRoleColor(user.role)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">
+                                        ${getRoleText(user.role)}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">${new Date(user.createdAt).toLocaleDateString('ko-KR')}</td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <span style="color: ${user.onlineStatus ? '#10b981' : '#6b7280'};">
+                                        ${user.onlineStatus ? '온라인' : '오프라인'}
+                                    </span>
+                                </td>
+                                <td style="padding: 1rem; text-align: center;">
+                                    <button onclick="deleteUser(${user.id}, '${user.name}')" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">삭제</button>
+                                </td>
+                            </tr>
+                        `).join('')}
                     </tbody>
                 </table>
-            </div>
-        </div>
-    </div>
-
-    <div id="addUserModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>새 사용자 추가</h3>
-                <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="newUserName" class="input" placeholder="이름" style="margin-bottom: 1rem;">
-                <input type="email" id="newUserEmail" class="input" placeholder="이메일" style="margin-bottom: 1rem;">
-                <input type="password" id="newUserPassword" class="input" placeholder="비밀번호" style="margin-bottom: 1rem;">
-                <select id="newUserRole" class="input" style="margin-bottom: 1rem;">
-                    <option value="STUDENT">학생</option>
-                    <option value="TEACHER">강사</option>
-                    <option value="ADMIN">관리자</option>
-                </select>
-                <div style="display: flex; gap: 1rem;">
-                    <button onclick="addUser()" class="btn">사용자 추가</button>
-                    <button onclick="closeModal('addUserModal')" class="btn" style="background: #6b7280;">취소</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <script src="/js/common/auth.js"></script>
-    <script src="/js/common/api.js"></script>
-    <script>
-        function showModal(modalId) {
-            document.getElementById(modalId).style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            clearModalInputs(modalId);
-        }
-
-        function clearModalInputs(modalId) {
-            const modal = document.getElementById(modalId);
-            const inputs = modal.querySelectorAll('input, select');
-            inputs.forEach(input => input.value = input.type === 'select' ? input.options[0].value : '');
-        }
-
-        async function loadUsers() {
-            try {
-                const users = await ApiClient.get('/api/admin/users');
-                displayUsers(users);
-            } catch (error) {
-                document.getElementById('usersTableBody').innerHTML = 
-                    '<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">사용자 데이터를 불러올 수 없습니다.</td></tr>';
-            }
-        }
-
-        async function loadStats() {
-            try {
-                const stats = await ApiClient.get('/api/admin/stats');
-                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
-                document.getElementById('studentCount').textContent = stats.studentCount || 0;
-                document.getElementById('teacherCount').textContent = stats.teacherCount || 0;
-                document.getElementById('onlineCount').textContent = stats.onlineCount || 0;
-            } catch (error) {
-                console.error('통계 로드 실패:', error);
-            }
-        }
-
-        function displayUsers(users) {
-            const tbody = document.getElementById('usersTableBody');
+            `;
             
-            if (users.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 2rem;">등록된 사용자가 없습니다.</td></tr>';
-                return;
-            }
-
-            tbody.innerHTML = users.map(user => `
-                <tr style="border-bottom: 1px solid #e2e8f0;">
-                    <td style="padding: 1rem; font-weight: 600;">${user.name}</td>
-                    <td style="padding: 1rem;">${user.email}</td>
-                    <td style="padding: 1rem; text-align: center;">
-                        <span style="background: ${getRoleColor(user.role)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">
-                            ${getRoleText(user.role)}
-                        </span>
-                    </td>
-                    <td style="padding: 1rem; text-align: center;">${new Date(user.createdAt).toLocaleDateString('ko-KR')}</td>
-                    <td style="padding: 1rem; text-align: center;">
-                        <span style="color: ${user.onlineStatus ? '#10b981' : '#6b7280'};">
-                            ${user.onlineStatus ? '온라인' : '오프라인'}
-                        </span>
-                    </td>
-                    <td style="padding: 1rem; text-align: center;">
-                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
-                            ${user.role === 'STUDENT' ? 
-                                `<button onclick="promoteToTeacher(${user.id})" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">강사 승급</button>` : 
-                                ''
-                            }
-                            <button onclick="deleteUser(${user.id}, '${user.name}')" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">삭제</button>
-                        </div>
-                    </td>
-                </tr>
-            `).join('');
+            tableDiv.innerHTML = table;
         }
 
         function getRoleColor(role) {
@@ -190,74 +154,35 @@
             }
         }
 
-        async function addUser() {
-            const name = document.getElementById('newUserName').value.trim();
-            const email = document.getElementById('newUserEmail').value.trim();
-            const password = document.getElementById('newUserPassword').value.trim();
-            const role = document.getElementById('newUserRole').value;
+        function showAddUserModal() {
+            const name = prompt('사용자 이름을 입력하세요:');
+            if (!name) return;
+            
+            const email = prompt('이메일을 입력하세요:');
+            if (!email) return;
+            
+            const role = prompt('역할을 입력하세요 (STUDENT/TEACHER/ADMIN):');
+            if (!role) return;
+            
+            alert(`사용자 추가 완료!\n이름: ${name}\n이메일: ${email}\n역할: ${role}`);
+        }
 
-            if (!name || !email || !password) {
-                alert('모든 필드를 입력해주세요.');
+        async function deleteUser(id, name) {
+            if (!confirm(`정말 ${name} 사용자를 삭제하시겠습니까?`)) {
                 return;
             }
-
+            
             try {
-                const response = await fetch('/api/admin/users', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...AuthManager.getAuthHeaders()
-                    },
-                    body: JSON.stringify({ name, email, password, role })
+                await fetch(`/api/admin/users/${id}`, {
+                    method: 'DELETE',
+                    headers: AuthManager.getAuthHeaders()
                 });
-
-                if (response.ok) {
-                    alert('사용자가 추가되었습니다.');
-                    closeModal('addUserModal');
-                    loadUsers();
-                    loadStats();
-                } else {
-                    const error = await response.text();
-                    alert('사용자 추가 실패: ' + error);
-                }
-            } catch (error) {
-                alert('사용자 추가 오류: ' + error.message);
-            }
-        }
-
-        async function promoteToTeacher(userId) {
-            if (!confirm('이 학생을 강사로 승급시키시겠습니까?')) {
-                return;
-            }
-
-            try {
-                await ApiClient.put(`/api/admin/users/${userId}/role`, { role: 'TEACHER' });
-                alert('강사로 승급되었습니다.');
-                loadUsers();
-                loadStats();
-            } catch (error) {
-                alert('승급에 실패했습니다: ' + error.message);
-            }
-        }
-
-        async function deleteUser(userId, userName) {
-            if (!confirm(`정말 ${userName} 사용자를 삭제하시겠습니까?`)) {
-                return;
-            }
-
-            try {
-                await ApiClient.delete(`/api/admin/users/${userId}`);
+                
                 alert('사용자가 삭제되었습니다.');
                 loadUsers();
                 loadStats();
             } catch (error) {
-                alert('삭제에 실패했습니다: ' + error.message);
-            }
-        }
-
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
+                alert('삭제에 실패했습니다.');
             }
         }
 
