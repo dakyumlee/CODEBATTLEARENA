@@ -13,26 +13,25 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
-    }
-
-    @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf(csrf -> csrf.disable())
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/", "/register", "/css/**", "/js/**", "/images/**", "/h2-console/**").permitAll()
+                .requestMatchers("/", "/register", "/css/**", "/js/**", "/images/**", "/ws/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
-                .requestMatchers("/ws/**", "/topic/**", "/app/**").permitAll()
-                .requestMatchers("/student/**", "/api/student/**").permitAll()
-                .requestMatchers("/teacher/**", "/api/teacher/**").permitAll()
-                .requestMatchers("/admin/**", "/api/admin/**").permitAll()
+                .requestMatchers("/api/student/**").permitAll()
+                .requestMatchers("/api/teacher/**").permitAll()
+                .requestMatchers("/api/admin/**").permitAll()
                 .requestMatchers("/api/ai/**").permitAll()
+                .requestMatchers("/student/**", "/teacher/**", "/admin/**").permitAll()
                 .anyRequest().authenticated()
-            )
-            .headers(headers -> headers.frameOptions(frame -> frame.disable()));
+            );
 
         return http.build();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
     }
 }
