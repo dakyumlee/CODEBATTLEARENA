@@ -6,6 +6,99 @@
     <title>오늘의 학습 - 코드배틀아레나</title>
     <link rel="stylesheet" href="/css/common.css">
     <link rel="stylesheet" href="/css/student.css">
+    <style>
+        .ai-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            z-index: 1000;
+        }
+        .ai-modal-content {
+            position: fixed;
+            top: 2%;
+            left: 2%;
+            width: 96%;
+            height: 96%;
+            background: #1e293b;
+            color: white;
+            border-radius: 0.5rem;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .ai-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.5rem;
+            border-bottom: 1px solid #475569;
+            flex-shrink: 0;
+        }
+        .ai-modal-body {
+            flex: 1;
+            padding: 1.5rem;
+            overflow: hidden;
+        }
+        .ai-problem-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            height: 100%;
+        }
+        .ai-problem-content {
+            overflow-y: auto;
+            padding-right: 1rem;
+        }
+        .ai-code-section {
+            display: flex;
+            flex-direction: column;
+        }
+        #aiSolutionCode {
+            flex: 1;
+            min-height: 400px;
+            background: #0f172a;
+            color: #e2e8f0;
+            border: 1px solid #475569;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+        }
+        .ai-button-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-shrink: 0;
+        }
+        .ai-result-panel {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            background: #334155;
+            display: none;
+            flex-shrink: 0;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #475569;
+            border-radius: 50%;
+            border-top-color: #3b82f6;
+            animation: spin 1s ease-in-out infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -28,37 +121,105 @@
             <h3>🤖 AI 추천 문제</h3>
             <div id="aiProblem">
                 <div style="padding: 1.5rem; background: #334155; border-radius: 0.75rem; margin: 1rem 0;">
-                    <h4 style="color: #e2e8f0; margin-bottom: 1rem;">오늘의 AI 추천 문제</h4>
-                    <p style="margin: 1rem 0; color: #cbd5e1; line-height: 1.6;">AI가 당신의 학습 수준을 분석하여 맞춤형 문제를 추천해드립니다.</p>
-                    <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                        <span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">AI 맞춤형</span>
-                        <span style="color: #64748b;">10-30점</span>
+                    <h4 style="color: #e2e8f0; margin-bottom: 1rem;">실시간 AI 문제 생성</h4>
+                    <p style="margin: 1rem 0; color: #cbd5e1; line-height: 1.6;">당신의 수준에 맞는 문제를 실시간으로 생성합니다. 매번 새로운 문제가 출제됩니다.</p>
+                    
+                    <div style="display: flex; gap: 1rem; margin: 1rem 0;">
+                        <select id="aiDifficulty" style="padding: 0.5rem; border: 1px solid #475569; border-radius: 0.25rem; background: #1e293b; color: #e2e8f0;">
+                            <option value="하">하 - 기초 수준</option>
+                            <option value="중" selected>중 - 중급 수준</option>
+                            <option value="상">상 - 고급 수준</option>
+                        </select>
+                        <select id="aiTopic" style="padding: 0.5rem; border: 1px solid #475569; border-radius: 0.25rem; background: #1e293b; color: #e2e8f0;">
+                            <option value="기본">기본 - 변수, 조건문, 반복문</option>
+                            <option value="배열">배열 - 배열 처리</option>
+                            <option value="문자열">문자열 - 문자열 조작</option>
+                            <option value="알고리즘">알고리즘 - 정렬, 탐색</option>
+                            <option value="수학">수학 - 수학적 계산</option>
+                        </select>
                     </div>
-                    <button class="btn" onclick="location.href='/student/ai-problem'" style="margin-top: 1rem;">AI 문제 풀기</button>
+                    
+                    <button class="btn" onclick="openAiProblemModal()" style="margin-top: 1rem;">
+                        🤖 AI 문제 생성하기
+                    </button>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h3>📚 강사님 공유 자료 <span id="newMaterialBadge" style="display: none; background: #ef4444; color: white; font-size: 0.7rem; padding: 0.2rem 0.4rem; border-radius: 0.2rem; margin-left: 0.5rem;">NEW</span></h3>
+            <h3>📚 강사님 공유 자료</h3>
             <div id="sharedMaterials">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    공유 자료를 불러오는 중...
-                </div>
+                <div style="text-align: center; color: #64748b; padding: 2rem;">공유 자료를 불러오는 중...</div>
             </div>
         </div>
 
         <div class="card">
-            <h3>📝 강사 출제 문제 <span id="newProblemBadge" style="display: none; background: #ef4444; color: white; font-size: 0.7rem; padding: 0.2rem 0.4rem; border-radius: 0.2rem; margin-left: 0.5rem; animation: pulse 2s infinite;">NEW</span></h3>
+            <h3>📝 강사 출제 문제</h3>
             <div id="teacherProblems">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    강사님이 문제를 출제하면 여기에 표시됩니다.
+                <div style="text-align: center; color: #64748b; padding: 2rem;">강사님이 문제를 출제하면 여기에 표시됩니다.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI 문제 풀이 모달 -->
+    <div id="aiProblemModal" class="ai-modal">
+        <div class="ai-modal-content">
+            <div class="ai-modal-header">
+                <h3 id="aiProblemTitle">AI 문제 생성 중...</h3>
+                <button style="background: none; border: none; color: #cbd5e1; font-size: 1.5rem; cursor: pointer;" onclick="closeAiProblemModal()">&times;</button>
+            </div>
+            <div class="ai-modal-body">
+                <div class="ai-problem-grid">
+                    <div class="ai-problem-content">
+                        <div id="aiLoadingSection" style="text-align: center; padding: 2rem;">
+                            <div class="loading-spinner"></div>
+                            <div style="margin-top: 1rem; color: #3b82f6;">ChatGPT가 문제를 생성하고 있습니다...</div>
+                            <div style="margin-top: 0.5rem; color: #64748b; font-size: 0.9rem;">잠시만 기다려주세요</div>
+                        </div>
+                        
+                        <div id="aiProblemSection" style="display: none;">
+                            <div style="background: #3b82f6; color: white; padding: 0.5rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; text-align: center;">
+                                🤖 맞춤형 문제
+                            </div>
+                            
+                            <h4>문제 설명</h4>
+                            <div id="aiProblemDescription" style="background: #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; line-height: 1.6;"></div>
+                            
+                            <h4>입출력 예제</h4>
+                            <div id="aiProblemExample" style="background: #334155; padding: 1rem; border-radius: 0.5rem; font-family: monospace; white-space: pre-line; margin-bottom: 1rem;"></div>
+                            
+                            <h4>AI 힌트</h4>
+                            <div id="aiProblemHint" style="background: #065f46; padding: 1rem; border-radius: 0.5rem; border-left: 4px solid #10b981;">
+                                <div style="color: #d1fae5; font-weight: bold;">💡 AI 조언:</div>
+                                <div id="aiHintText" style="color: #a7f3d0; margin-top: 0.5rem;"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="ai-code-section">
+                        <h4>코드 작성</h4>
+                        <textarea id="aiSolutionCode" placeholder="ChatGPT가 문제를 생성하면 여기에 코드를 작성하세요...
+
+public class Solution {
+    public static void main(String[] args) {
+        // AI가 생성한 문제를 해결해보세요
+        
+    }
+}"></textarea>
+                        
+                        <div class="ai-button-group">
+                            <button onclick="testAiCode()" class="btn btn-secondary" disabled id="testBtn">AI 테스트</button>
+                            <button onclick="submitAiCode()" class="btn" disabled id="submitBtn">제출하기</button>
+                            <button onclick="getNewProblem()" class="btn" style="background: #3b82f6;">새 문제</button>
+                            <button onclick="closeAiProblemModal()" class="btn" style="background: #6b7280;">닫기</button>
+                        </div>
+                        
+                        <div id="aiTestResult" class="ai-result-panel"></div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- JavaScript 로딩 순서가 중요함 -->
     <script src="/js/common/auth.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
@@ -67,21 +228,13 @@
     <script src="/js/common/student-activity.js"></script>
     
     <script>
-        let materialsLoadAttempts = 0;
-        const maxLoadAttempts = 3;
+        let currentAiProblem = null;
+        let isGeneratingProblem = false;
 
         async function loadTodayContent() {
             document.getElementById('todayDate').textContent = new Date().toLocaleDateString('ko-KR', {
                 year: 'numeric', month: 'long', day: 'numeric', weekday: 'long'
             });
-
-            // WebSocket 연결 확인 후 데이터 로드
-            const isConnected = await WebSocketValidator.checkConnection();
-            if (isConnected) {
-                console.log('WebSocket 연결 확인됨 - 데이터 로드 시작');
-            } else {
-                console.warn('WebSocket 연결 실패 - 오프라인 모드로 진행');
-            }
 
             loadSharedMaterials();
             loadTeacherProblems();
@@ -89,33 +242,14 @@
 
         async function loadSharedMaterials() {
             try {
-                materialsLoadAttempts++;
-                console.log(`공유 자료 로드 시도 ${materialsLoadAttempts}/${maxLoadAttempts}`);
-                
                 const response = await fetch('/api/teacher/materials', {
-                    headers: AuthManager.getAuthHeaders(),
-                    timeout: 10000 // 10초 타임아웃
+                    headers: AuthManager.getAuthHeaders()
                 });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-                }
-                
                 const materials = await response.json();
-                console.log('공유 자료 로드 성공:', materials.length + '개');
                 displayMaterials(materials);
-                materialsLoadAttempts = 0; // 성공 시 재설정
-                
             } catch (error) {
-                console.error('공유 자료 로드 실패:', error);
-                
-                if (materialsLoadAttempts < maxLoadAttempts) {
-                    console.log(`5초 후 재시도...`);
-                    setTimeout(loadSharedMaterials, 5000);
-                } else {
-                    document.getElementById('sharedMaterials').innerHTML = 
-                        '<div style="text-align: center; color: #ef4444; padding: 2rem;">공유 자료를 불러올 수 없습니다. 새로고침 후 다시 시도해주세요.</div>';
-                }
+                document.getElementById('sharedMaterials').innerHTML = 
+                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">공유 자료를 불러올 수 없습니다.</div>';
             }
         }
 
@@ -136,12 +270,11 @@
                                 ${material.fileType === 'link' ? '🔗 링크' : '📄 파일'} | 
                                 ${new Date(material.createdAt).toLocaleDateString('ko-KR')}
                             </div>
-                            ${material.description ? `<p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.5rem;">${material.description}</p>` : ''}
                         </div>
                         <div>
                             ${material.fileType === 'link' ? 
-                                `<button class="btn" onclick="openLink('${material.url}', '${material.title}')">링크 열기</button>` :
-                                `<button class="btn" onclick="downloadFile(${material.id}, '${material.title}')">다운로드</button>`
+                                `<button class="btn" onclick="window.open('${material.url}', '_blank')">링크 열기</button>` :
+                                `<button class="btn" onclick="downloadFile(${material.id})">다운로드</button>`
                             }
                         </div>
                     </div>
@@ -150,74 +283,191 @@
         }
 
         function loadTeacherProblems() {
-            const problemsDiv = document.getElementById('teacherProblems');
-            problemsDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">강사님이 문제를 출제하면 여기에 표시됩니다.</div>';
+            document.getElementById('teacherProblems').innerHTML = 
+                '<div style="text-align: center; color: #64748b; padding: 2rem;">강사님이 문제를 출제하면 여기에 표시됩니다.</div>';
         }
 
-        // WebSocket 알림 처리 함수들을 전역으로 정의
-        window.loadSharedMaterials = loadSharedMaterials;
-        
-        window.updateTeacherProblems = function(problem) {
-            console.log('새 문제 수신:', problem);
+        // AI 문제 모달 관련 함수들
+        async function openAiProblemModal() {
+            document.getElementById('aiProblemModal').style.display = 'block';
+            await generateAiProblem();
+        }
+
+        function closeAiProblemModal() {
+            document.getElementById('aiProblemModal').style.display = 'none';
+            currentAiProblem = null;
+            resetModal();
+        }
+
+        function resetModal() {
+            document.getElementById('aiLoadingSection').style.display = 'block';
+            document.getElementById('aiProblemSection').style.display = 'none';
+            document.getElementById('aiSolutionCode').value = '';
+            document.getElementById('aiTestResult').style.display = 'none';
+            document.getElementById('testBtn').disabled = true;
+            document.getElementById('submitBtn').disabled = true;
+        }
+
+        async function generateAiProblem() {
+            if (isGeneratingProblem) return;
             
-            const problemsDiv = document.getElementById('teacherProblems');
-            const newProblem = `
-                <div style="padding: 1.5rem; background: #065f46; border: 2px solid #10b981; border-radius: 0.75rem; margin-bottom: 1rem; position: relative; animation: slideInLeft 0.5s ease-out;">
-                    <div style="position: absolute; top: -8px; right: 10px; background: #ef4444; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: bold;">NEW</div>
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="flex: 1;">
-                            <h4 style="color: #d1fae5; margin-bottom: 0.5rem;">🆕 ${problem.title}</h4>
-                            <p style="color: #a7f3d0; margin-bottom: 1rem; line-height: 1.5;">${problem.description}</p>
-                            <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                                <span style="background: #10b981; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">${problem.difficulty}</span>
-                                <span style="color: #a7f3d0;">${problem.points}점</span>
-                                <span style="color: #a7f3d0; font-size: 0.8rem;">방금 출제됨</span>
-                            </div>
-                        </div>
-                        <button class="btn" onclick="solveProblem('${problem.id}', '${problem.title}', '${problem.description}', '${problem.difficulty}', ${problem.points})" style="background: #10b981; margin-left: 1rem; white-space: nowrap;">문제 풀기</button>
+            isGeneratingProblem = true;
+            resetModal();
+            
+            const difficulty = document.getElementById('aiDifficulty').value;
+            const topic = document.getElementById('aiTopic').value;
+            
+            try {
+                const response = await fetch('/api/ai/generate-problem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        difficulty: difficulty,
+                        topic: topic
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('AI 문제 생성 실패');
+                }
+
+                currentAiProblem = await response.json();
+                displayAiProblem(currentAiProblem);
+                
+            } catch (error) {
+                console.error('AI 문제 생성 오류:', error);
+                document.getElementById('aiLoadingSection').innerHTML = `
+                    <div style="text-align: center; padding: 2rem; color: #ef4444;">
+                        <div style="font-size: 2rem; margin-bottom: 1rem;">❌</div>
+                        <div>AI 문제 생성에 실패했습니다</div>
+                        <div style="margin-top: 0.5rem; font-size: 0.9rem; color: #64748b;">네트워크를 확인하고 다시 시도해주세요</div>
+                        <button onclick="generateAiProblem()" class="btn" style="margin-top: 1rem;">다시 시도</button>
                     </div>
+                `;
+            } finally {
+                isGeneratingProblem = false;
+            }
+        }
+
+        function displayAiProblem(problem) {
+            document.getElementById('aiProblemTitle').textContent = problem.title + " (AI 생성)";
+            document.getElementById('aiProblemDescription').textContent = problem.description;
+            document.getElementById('aiProblemExample').textContent = problem.example;
+            document.getElementById('aiHintText').textContent = problem.hint;
+            
+            document.getElementById('aiLoadingSection').style.display = 'none';
+            document.getElementById('aiProblemSection').style.display = 'block';
+            document.getElementById('testBtn').disabled = false;
+            document.getElementById('submitBtn').disabled = false;
+            
+            // WebSocket으로 활동 전송
+            if (window.studentActivityTracker) {
+                window.studentActivityTracker.updateActivity('AI 문제 풀이 시작: ' + problem.title);
+            }
+        }
+
+        async function testAiCode() {
+            const code = document.getElementById('aiSolutionCode').value.trim();
+            const resultDiv = document.getElementById('aiTestResult');
+            
+            if (!code) {
+                resultDiv.innerHTML = '<div style="color: #ef4444;">코드를 입력해주세요.</div>';
+                resultDiv.style.display = 'block';
+                return;
+            }
+
+            resultDiv.innerHTML = '<div style="color: #3b82f6;"><div class="loading-spinner" style="display: inline-block; margin-right: 0.5rem;"></div>ChatGPT가 코드를 분석 중...</div>';
+            resultDiv.style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/ai/analyze-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        problemId: currentAiProblem.id
+                    })
+                });
+
+                const analysis = await response.json();
+                displayTestResults(analysis);
+                
+            } catch (error) {
+                resultDiv.innerHTML = '<div style="color: #ef4444;">코드 분석에 실패했습니다. 다시 시도해주세요.</div>';
+            }
+        }
+
+        function displayTestResults(analysis) {
+            const resultDiv = document.getElementById('aiTestResult');
+            const score = analysis.score;
+            const color = score >= 80 ? '#10b981' : score >= 60 ? '#f59e0b' : '#ef4444';
+            
+            resultDiv.innerHTML = `
+                <div style="background: #0f172a; padding: 1rem; border-radius: 0.5rem;">
+                    <div style="color: #3b82f6; font-weight: bold; margin-bottom: 0.5rem;">🤖 AI 분석 결과:</div>
+                    <div style="color: ${color}; margin-bottom: 0.5rem;">점수: ${score}/100점</div>
+                    <div style="color: #cbd5e1; margin-bottom: 0.5rem;">피드백: ${analysis.feedback}</div>
+                    <div style="color: #94a3b8; font-size: 0.9rem;">제안: ${analysis.suggestions}</div>
                 </div>
             `;
+        }
+
+        async function submitAiCode() {
+            const code = document.getElementById('aiSolutionCode').value.trim();
             
-            if (problemsDiv.innerHTML.includes('강사님이 문제를 출제하면')) {
-                problemsDiv.innerHTML = newProblem;
-            } else {
-                problemsDiv.innerHTML = newProblem + problemsDiv.innerHTML;
+            if (!code) {
+                alert('코드를 입력해주세요.');
+                return;
             }
 
-            // NEW 뱃지 표시
-            const badge = document.getElementById('newProblemBadge');
-            if (badge) {
-                badge.style.display = 'inline';
-                setTimeout(() => {
-                    badge.style.display = 'none';
-                }, 10000);
+            if (code.length < 30) {
+                alert('코드를 더 자세히 작성해주세요.');
+                return;
             }
 
-            WebSocketValidator.showNotification('새로운 문제가 출제되었습니다: ' + problem.title);
-        };
+            // 최종 분석
+            try {
+                const response = await fetch('/api/ai/analyze-code', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        code: code,
+                        problemId: currentAiProblem.id
+                    })
+                });
 
-        function solveProblem(id, title, description, difficulty, points) {
-            const problemData = {
-                id: id,
-                title: title,
-                description: description,
-                difficulty: difficulty,
-                points: points,
-                type: 'teacher',
-                timestamp: Date.now()
-            };
-            localStorage.setItem('currentTeacherProblem', JSON.stringify(problemData));
-            location.href = '/student/teacher-problem';
+                const analysis = await response.json();
+                const score = Math.round(currentAiProblem.points * (analysis.score / 100));
+                const isCorrect = analysis.score >= 80;
+                
+                alert(`🤖 AI 채점 완료!\n\n결과: ${isCorrect ? '정답' : '부분 정답'}\n점수: ${score}/${currentAiProblem.points}점\n\n피드백: ${analysis.feedback}`);
+                
+                // WebSocket으로 활동 전송
+                if (window.studentActivityTracker) {
+                    window.studentActivityTracker.updateActivity('AI 문제 제출 완료: ' + currentAiProblem.title);
+                }
+                
+            } catch (error) {
+                alert('코드 분석에 실패했습니다. 그래도 제출은 완료되었습니다.');
+            }
         }
 
-        function openLink(url, title) {
-            console.log(`링크 열기: ${title} - ${url}`);
-            window.open(url, '_blank');
+        async function getNewProblem() {
+            if (confirm('새로운 문제를 생성하시겠습니까? 현재 작성 중인 코드는 사라집니다.')) {
+                await generateAiProblem();
+            }
         }
 
-        function downloadFile(id, title) {
-            console.log(`파일 다운로드: ${title} (ID: ${id})`);
+        function downloadFile(id) {
             window.open(`/api/files/download/${id}`, '_blank');
         }
 
@@ -225,37 +475,19 @@
             AuthManager.logout();
         }
 
+        // 모달 외부 클릭시 닫기
+        window.onclick = function(event) {
+            if (event.target.id === 'aiProblemModal') {
+                if (confirm('문제 풀이를 종료하시겠습니까?')) {
+                    closeAiProblemModal();
+                }
+            }
+        }
+
         // 페이지 초기화
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('오늘의 학습 페이지 로드됨');
-            
-            // CSS 애니메이션 추가
-            const style = document.createElement('style');
-            style.textContent = `
-                @keyframes slideInLeft {
-                    from { transform: translateX(-100%); opacity: 0; }
-                    to { transform: translateX(0); opacity: 1; }
-                }
-                @keyframes pulse {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0.5; }
-                }
-            `;
-            document.head.appendChild(style);
-
-            // WebSocket 검증기 초기화
             WebSocketValidator.initialize();
-            
-            // 콘텐츠 로드
             loadTodayContent();
-        });
-
-        // 페이지 가시성 변경 시 처리
-        document.addEventListener('visibilitychange', function() {
-            if (!document.hidden) {
-                console.log('페이지가 다시 활성화됨 - 연결 상태 확인');
-                WebSocketValidator.checkConnection();
-            }
         });
     </script>
 </body>
