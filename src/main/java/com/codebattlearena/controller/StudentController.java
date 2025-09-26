@@ -28,44 +28,35 @@ public class StudentController {
     @GetMapping("/stats")
     public Map<String, Object> getStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("solvedProblems", 15);
-        stats.put("battleWins", 8);
-        stats.put("accuracy", 75);
-        stats.put("studyDays", 12);
+        stats.put("solvedProblems", 0);
+        stats.put("battleWins", 0);
+        stats.put("accuracy", 0);
+        stats.put("studyDays", 0);
         return stats;
     }
 
     @GetMapping("/battle-stats")
     public Map<String, Object> getBattleStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("rating", 1250);
-        stats.put("wins", 8);
-        stats.put("losses", 5);
+        stats.put("rating", 1000);
+        stats.put("wins", 0);
+        stats.put("losses", 0);
         return stats;
     }
 
     @GetMapping("/practice-stats")
     public Map<String, Object> getPracticeStats() {
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalAttempts", 25);
-        stats.put("solvedCount", 18);
-        stats.put("successRate", 72);
-        stats.put("avgScore", 84);
+        stats.put("totalAttempts", 0);
+        stats.put("solvedCount", 0);
+        stats.put("successRate", 0);
+        stats.put("avgScore", 0);
         return stats;
     }
 
     @GetMapping("/notes")
     public List<Map<String, Object>> getNotes() {
-        List<Map<String, Object>> notes = new ArrayList<>();
-        
-        Map<String, Object> note1 = new HashMap<>();
-        note1.put("id", 1);
-        note1.put("title", "Java 기초 정리");
-        note1.put("content", "변수, 조건문, 반복문에 대해 학습했습니다.");
-        note1.put("createdAt", "2025-09-25T10:30:00");
-        notes.add(note1);
-        
-        return notes;
+        return new ArrayList<>();
     }
 
     @PostMapping("/notes")
