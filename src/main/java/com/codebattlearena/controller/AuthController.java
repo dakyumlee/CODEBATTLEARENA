@@ -105,24 +105,20 @@ public class AuthController {
                 return response;
             }
             
-            // 사용자 생성
+            // 사용자 생성 (항상 학생으로)
             User user = new User();
             user.setName(request.getName().trim());
             user.setEmail(request.getEmail().trim().toLowerCase());
             user.setPassword(passwordEncoder.encode(request.getPassword())); // 비밀번호 암호화
-            user.setRole(UserRole.valueOf(request.getRole()));
+            user.setRole(UserRole.STUDENT); // 항상 학생으로 설정
             user.setOnlineStatus(false);
             user.setCreatedAt(LocalDateTime.now());
             
             userRepository.save(user);
             
             response.put("success", true);
-            response.put("message", "회원가입이 완료되었습니다!");
+            response.put("message", "학생 계정이 생성되었습니다!");
             
-        } catch (IllegalArgumentException e) {
-            response.put("success", false);
-            response.put("message", "올바르지 않은 역할입니다.");
-            response.put("field", "role");
         } catch (Exception e) {
             response.put("success", false);
             response.put("message", "회원가입 처리 중 오류가 발생했습니다: " + e.getMessage());
@@ -145,7 +141,7 @@ public class AuthController {
         private String name;
         private String email;
         private String password;
-        private String role;
+        private String role; // 사용하지 않지만 호환성을 위해 남겨둠
         
         public String getName() { return name; }
         public void setName(String name) { this.name = name; }
