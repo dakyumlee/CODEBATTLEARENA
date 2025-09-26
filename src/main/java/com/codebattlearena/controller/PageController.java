@@ -10,7 +10,7 @@ public class PageController {
     public String home() {
         return "index";
     }
-    
+
     @GetMapping("/register")
     public String register() {
         return "register";
@@ -18,12 +18,7 @@ public class PageController {
 
     @GetMapping("/student")
     public String studentDashboard() {
-        return "student/dashboard";
-    }
-
-    @GetMapping("/student/dashboard")
-    public String studentDashboardFull() {
-        return "student/dashboard";
+        return "redirect:/student/today";
     }
 
     @GetMapping("/student/today")
@@ -51,23 +46,8 @@ public class PageController {
         return "student/battle";
     }
 
-    @GetMapping("/student/ai-problem")
-    public String studentAiProblem() {
-        return "student/ai-problem";
-    }
-    
-    @GetMapping("/student/teacher-problem")
-    public String studentTeacherProblem() {
-        return "student/teacher-problem";
-    }
-
     @GetMapping("/teacher")
     public String teacherDashboard() {
-        return "teacher/dashboard";
-    }
-
-    @GetMapping("/teacher/dashboard")
-    public String teacherDashboardFull() {
         return "teacher/dashboard";
     }
 
@@ -81,13 +61,13 @@ public class PageController {
         return "teacher/grades";
     }
 
-    @GetMapping("/admin")
-    public String adminDashboard() {
-        return "admin/dashboard";
+    @GetMapping("/teacher/create-problem")
+    public String teacherCreateProblem() {
+        return "teacher/create-problem";
     }
 
-    @GetMapping("/admin/dashboard")
-    public String adminDashboardFull() {
+    @GetMapping("/admin")
+    public String adminDashboard() {
         return "admin/dashboard";
     }
 }
