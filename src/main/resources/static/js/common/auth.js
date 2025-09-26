@@ -1,49 +1,57 @@
 class AuthManager {
-    static setToken(token) {
-        localStorage.setItem('authToken', token);
+    static login(email, password) {
+        return fetch('/api/auth/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                localStorage.setItem('authToken', data.token);
+                localStorage.setItem('userRole', data.role);
+                localStorage.setItem('userName', data.name);
+                return data;
+            }
+            throw new Error(data.message);
+        });
     }
-    
-    static getToken() {
-        return localStorage.getItem('authToken');
-    }
-    
-    static setUserRole(role) {
-        localStorage.setItem('userRole', role);
-    }
-    
-    static setUserInfo(userInfo) {
-        localStorage.setItem('userId', userInfo.id);
-        localStorage.setItem('userName', userInfo.name);
-        localStorage.setItem('userEmail', userInfo.email);
-    }
-    
-    static getCurrentUserRole() {
-        return localStorage.getItem('userRole');
-    }
-    
-    static getCurrentUserId() {
-        return localStorage.getItem('userId');
-    }
-    
-    static getCurrentUserName() {
-        return localStorage.getItem('userName');
-    }
-    
-    static getAuthHeaders() {
-        const token = this.getToken();
-        return token ? { 'Authorization': `Bearer ${token}` } : {};
-    }
-    
+
     static logout() {
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('userRole');
-        localStorage.removeItem('userId');
-        localStorage.removeItem('userName');
-        localStorage.removeItem('userEmail');
+        localStorage.clear();
         window.location.href = '/';
     }
-    
-    static isLoggedIn() {
-        return !!this.getToken();
+
+    static getAuthToken() {
+        return localStorage.getItem('authToken');
+    }
+
+    static getUserRole() {
+        return localStorage.getItem('userRole');
+    }
+
+    static getUserName() {
+        return localStorage.getItem('userName');
+    }
+
+    static isAuthenticated() {
+        return !!this.getAuthToken();
+    }
+
+    static getAuthHeaders() {
+        const token = this.getAuthToken();
+        return token ? { 'Authorization': `Bearer ${token}` } : {};
+    }
+
+    static redirectByRole() {
+        const role = this.getUserRole();
+        switch(role) {
+            case 'STUDENT': window.location.href = '/student'; break;
+            case 'TEACHER': window.location.href = '/teacher'; break;
+            case 'ADMIN': window.location.href = '/admin'; break;
+            default: window.location.href = '/'; break;
+        }
     }
 }
+
+window.AuthManager = AuthManager;
