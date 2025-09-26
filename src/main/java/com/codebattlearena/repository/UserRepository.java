@@ -14,8 +14,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     List<User> findByRole(UserRole role);
     
-    @Query("SELECT u FROM User u WHERE u.role = :role AND u.groupId = :groupId")
-    List<User> findByRoleAndGroupId(@Param("role") String role, @Param("groupId") Long groupId);
+    @Query("SELECT u FROM User u WHERE u.role = 'STUDENT'")
+    List<User> findAllStudents();
     
     long countByRole(UserRole role);
     long countByOnlineStatus(boolean onlineStatus);

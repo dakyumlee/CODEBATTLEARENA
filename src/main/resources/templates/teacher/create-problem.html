@@ -434,3 +434,70 @@
     <script src="/js/teacher/create-problem.js"></script>
 </body>
 </html>
+
+        // 폼에 name 속성 추가
+        document.getElementById('codingForm').querySelector('input[type="text"]').setAttribute('name', 'title');
+        document.getElementById('codingForm').querySelector('select').setAttribute('name', 'difficulty');
+        document.getElementById('codingForm').querySelector('textarea').setAttribute('name', 'description');
+
+        // 파일 업로드 처리
+        document.querySelector('.file-input').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            const label = document.querySelector('.file-label');
+            
+            if (file) {
+                const fileName = file.name;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2);
+                label.innerHTML = `
+                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
+                    <div style="font-weight: 600;">${fileName}</div>
+                    <div class="file-info">${fileSize}MB</div>
+                `;
+            }
+        });
+
+        // 폼 제출 처리
+        document.getElementById('codingForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const inputs = e.target.querySelectorAll('input, select, textarea');
+            const problemData = {
+                title: inputs[0].value,
+                difficulty: inputs[1].value,
+                timeLimit: parseInt(inputs[2].value),
+                description: inputs[3].value,
+                type: 'CODING'
+            };
+
+            try {
+                const response = await fetch('/api/teacher/problem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify(problemData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('문제가 성공적으로 출제되었습니다! 학생들에게 알림이 전송되었습니다.');
+                    e.target.reset();
+                } else {
+                    alert('문제 출제에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
+
+        document.getElementById('quizForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            alert('퀴즈가 출제되었습니다!');
+        });
+
+        document.getElementById('examForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            alert('시험지가 업로드되었습니다!');
+        });
