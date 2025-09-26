@@ -97,7 +97,7 @@ public class TeacherController {
         return response;
     }
 
-    @PostMapping("/create-problem")
+    @PostMapping("/problems")
     public Map<String, Object> createProblem(@RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
         
@@ -130,7 +130,7 @@ public class TeacherController {
         return response;
     }
 
-    @PostMapping("/create-quiz")
+    @PostMapping("/quiz")
     public Map<String, Object> createQuiz(@RequestBody Map<String, Object> request) {
         Map<String, Object> response = new HashMap<>();
         
@@ -161,8 +161,8 @@ public class TeacherController {
         return response;
     }
 
-    @PostMapping("/notification")
-    public Map<String, Object> sendNotification(@RequestBody Map<String, String> request) {
+    @PostMapping("/announce")
+    public Map<String, Object> sendAnnouncement(@RequestBody Map<String, String> request) {
         Map<String, Object> response = new HashMap<>();
         
         try {
