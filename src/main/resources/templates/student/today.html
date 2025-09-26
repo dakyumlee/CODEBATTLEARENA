@@ -37,16 +37,16 @@
             <h3>📚 강사님 공유 자료</h3>
             <div id="sharedMaterials">
                 <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    공유된 자료가 없습니다.
+                    공유 자료를 불러오는 중...
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <h3>📝 강사 출제 문제/퀴즈/시험</h3>
+            <h3>📝 강사 출제 문제</h3>
             <div id="teacherProblems">
                 <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    출제된 문제가 없습니다.
+                    출제된 문제를 확인하는 중...
                 </div>
             </div>
         </div>
@@ -63,6 +63,7 @@
             try {
                 const response = await ApiClient.get('/api/student/today');
                 
+                // AI 문제
                 const aiProblemDiv = document.getElementById('aiProblem');
                 if (response.aiProblem) {
                     aiProblemDiv.innerHTML = `
@@ -73,50 +74,97 @@
                                 <span style="background: #3b82f6; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">${response.aiProblem.difficulty}</span>
                                 <span style="color: #64748b;">${response.aiProblem.points}점</span>
                             </div>
-                            <button class="btn" onclick="solveProblem(${response.aiProblem.id})" style="margin-top: 1rem;">문제 풀기</button>
+                            <button class="btn" onclick="location.href='/student/practice'" style="margin-top: 1rem;">문제 풀기</button>
                         </div>
                     `;
                 } else {
-                    aiProblemDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">AI 문제 생성 중입니다...</div>';
+                    aiProblemDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">AI 문제 준비 중...</div>';
                 }
 
-                const materialsDiv = document.getElementById('sharedMaterials');
-                if (response.materials && response.materials.length > 0) {
-                    materialsDiv.innerHTML = response.materials.map(material => `
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #334155; border-radius: 0.5rem; margin-bottom: 0.5rem;">
-                            <div>
-                                <h5 style="color: #e2e8f0; margin-bottom: 0.25rem;">${material.title}</h5>
-                                <div style="color: #64748b; font-size: 0.9rem;">${material.type || '파일'}</div>
-                            </div>
-                            <button class="btn" onclick="downloadFile('${material.id}')">다운로드</button>
-                        </div>
-                    `).join('');
-                }
+                loadSharedMaterials();
 
             } catch (error) {
                 console.error('오늘의 학습 내용 로드 실패:', error);
             }
         }
 
-        // WebSocket 알림 처리 - 강사가 출제한 문제 실시간 수신
+        async function loadSharedMaterials() {
+            try {
+                const response = await ApiClient.get('/api/teacher/materials');
+                displayMaterials(response);
+            } catch (error) {
+                console.error('공유 자료 로드 실패:', error);
+                document.getElementById('sharedMaterials').innerHTML = 
+                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">공유 자료를 불러올 수 없습니다.</div>';
+            }
+        }
+
+        function displayMaterials(materials) {
+            const materialsDiv = document.getElementById('sharedMaterials');
+            
+            if (!materials || materials.length === 0) {
+                materialsDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">공유된 자료가 없습니다.</div>';
+                return;
+            }
+
+            materialsDiv.innerHTML = materials.map(material => `
+                <div style="padding: 1rem; background: #334155; border-radius: 0.5rem; margin-bottom: 0.5rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h5 style="color: #e2e8f0; margin-bottom: 0.25rem;">${material.title}</h5>
+                            <div style="color: #64748b; font-size: 0.9rem;">
+                                ${material.fileType === 'link' ? '링크' : '파일'} | 
+                                ${new Date(material.createdAt).toLocaleDateString('ko-KR')}
+                            </div>
+                            ${material.description ? `<p style="color: #cbd5e1; font-size: 0.9rem; margin-top: 0.5rem;">${material.description}</p>` : ''}
+                        </div>
+                        <div>
+                            ${material.fileType === 'link' ? 
+                                `<button class="btn" onclick="window.open('${material.url}', '_blank')">링크 열기</button>` :
+                                `<button class="btn" onclick="downloadFile(${material.id})">다운로드</button>`
+                            }
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // WebSocket 알림 처리
         window.addEventListener('websocket-notification', (event) => {
             const notification = event.detail;
-            if (notification.type === 'new_problem') {
+            
+            if (notification.type === 'new_material') {
+                // 새 자료가 공유되면 목록 새로고침
+                loadSharedMaterials();
+                showNotification(notification.message);
+            } else if (notification.type === 'new_problem') {
                 showNewProblemNotification(notification);
                 updateTeacherProblems(notification.problem);
             }
         });
 
+        function showNotification(message) {
+            // 간단한 알림 표시
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed; top: 20px; right: 20px; background: #10b981; color: white;
+                padding: 1rem; border-radius: 0.5rem; z-index: 1000; max-width: 300px;
+            `;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 5000);
+        }
+
         function showNewProblemNotification(notification) {
-            // 알림 표시 로직
-            alert(`새로운 문제가 출제되었습니다!\n${notification.message}`);
+            showNotification(notification.message);
         }
 
         function updateTeacherProblems(problem) {
             const problemsDiv = document.getElementById('teacherProblems');
             const newProblem = `
                 <div style="padding: 1.5rem; background: #065f46; border: 2px solid #10b981; border-radius: 0.75rem; margin-bottom: 1rem;">
-                    <div style="display: flex; justify-content: between; align-items: center;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
                         <div style="flex: 1;">
                             <h4 style="color: #d1fae5; margin-bottom: 0.5rem;">🆕 ${problem.title}</h4>
                             <p style="color: #a7f3d0; margin-bottom: 1rem;">${problem.description}</p>
@@ -125,20 +173,16 @@
                                 <span style="color: #a7f3d0;">${problem.points}점</span>
                             </div>
                         </div>
-                        <button class="btn" onclick="solveProblem('${problem.id}')" style="background: #10b981; margin-left: 1rem;">문제 풀기</button>
+                        <button class="btn" onclick="location.href='/student/practice'" style="background: #10b981; margin-left: 1rem;">문제 풀기</button>
                     </div>
                 </div>
             `;
             
-            if (problemsDiv.innerHTML.includes('출제된 문제가 없습니다')) {
+            if (problemsDiv.innerHTML.includes('출제된 문제를 확인하는 중')) {
                 problemsDiv.innerHTML = newProblem;
             } else {
                 problemsDiv.innerHTML = newProblem + problemsDiv.innerHTML;
             }
-        }
-
-        function solveProblem(problemId) {
-            location.href = `/student/practice`;
         }
 
         function downloadFile(fileId) {

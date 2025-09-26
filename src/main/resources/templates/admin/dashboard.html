@@ -12,150 +12,257 @@
         <div class="nav">
             <a href="/" class="logo">코드배틀아레나</a>
             <ul class="nav-links">
-                <li><a href="#" onclick="logout()">로그아웃</a></li>
+                <li><a href="/admin">관리자</a></li>
+                <li><a href="/teacher">강사 체험</a></li>
+                <li><a href="/student">학생 체험</a></li>
+                <li><a href="#" onclick="AuthManager.logout()">로그아웃</a></li>
             </ul>
         </div>
     </div>
 
     <div class="admin-dashboard">
         <div class="admin-header">
-            <h1 class="admin-title">시스템 관리자</h1>
-            <p class="admin-subtitle">전체 시스템 현황 및 사용자 관리</p>
+            <h1 class="admin-title">시스템 관리</h1>
+            <p class="admin-subtitle">사용자 관리 및 시스템 통계</p>
         </div>
 
-        <div class="system-stats">
+        <div class="admin-stats">
             <div class="stat-card">
-                <div class="stat-number" id="totalUsers">-</div>
-                <div class="stat-description">전체 사용자</div>
+                <div class="stat-value" id="totalUsers">-</div>
+                <div class="stat-label">전체 사용자</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="totalStudents">-</div>
-                <div class="stat-description">학생</div>
+                <div class="stat-value" id="studentCount">-</div>
+                <div class="stat-label">학생</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="totalTeachers">-</div>
-                <div class="stat-description">강사</div>
+                <div class="stat-value" id="teacherCount">-</div>
+                <div class="stat-label">강사</div>
             </div>
             <div class="stat-card">
-                <div class="stat-number" id="todayUsers">-</div>
-                <div class="stat-description">오늘 접속자</div>
+                <div class="stat-value" id="onlineCount">-</div>
+                <div class="stat-label">현재 접속</div>
             </div>
         </div>
 
-        <div class="user-table">
-            <div style="padding: 1.5rem; display: flex; justify-content: space-between; align-items: center;">
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
                 <h3>사용자 관리</h3>
-                <button class="btn btn-success" onclick="addUser()">사용자 추가</button>
+                <button onclick="showModal('addUserModal')" class="btn">사용자 추가</button>
             </div>
-            
-            <table>
-                <thead>
-                    <tr>
-                        <th>이름</th>
-                        <th>이메일</th>
-                        <th>역할</th>
-                        <th>가입일</th>
-                        <th>관리</th>
-                    </tr>
-                </thead>
-                <tbody id="userTableBody">
-                    <tr>
-                        <td colspan="5" style="text-align: center; padding: 2rem;">사용자 데이터를 불러오는 중...</td>
-                    </tr>
-                </tbody>
-            </table>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
+                            <th style="padding: 1rem; text-align: left;">이름</th>
+                            <th style="padding: 1rem; text-align: left;">이메일</th>
+                            <th style="padding: 1rem; text-align: center;">역할</th>
+                            <th style="padding: 1rem; text-align: center;">가입일</th>
+                            <th style="padding: 1rem; text-align: center;">상태</th>
+                            <th style="padding: 1rem; text-align: center;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="usersTableBody">
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 2rem;">사용자 데이터를 불러오는 중...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div id="addUserModal" class="modal-overlay" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>새 사용자 추가</h3>
+                <button class="modal-close" onclick="closeModal('addUserModal')">&times;</button>
+            </div>
+            <div class="modal-body">
+                <input type="text" id="newUserName" class="input" placeholder="이름" style="margin-bottom: 1rem;">
+                <input type="email" id="newUserEmail" class="input" placeholder="이메일" style="margin-bottom: 1rem;">
+                <input type="password" id="newUserPassword" class="input" placeholder="비밀번호" style="margin-bottom: 1rem;">
+                <select id="newUserRole" class="input" style="margin-bottom: 1rem;">
+                    <option value="STUDENT">학생</option>
+                    <option value="TEACHER">강사</option>
+                    <option value="ADMIN">관리자</option>
+                </select>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="addUser()" class="btn">사용자 추가</button>
+                    <button onclick="closeModal('addUserModal')" class="btn" style="background: #6b7280;">취소</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script src="/js/common/auth.js"></script>
     <script src="/js/common/api.js"></script>
     <script>
-        async function loadStats() {
-            try {
-                const stats = await ApiClient.get('/api/admin/stats');
-                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
-                document.getElementById('totalStudents').textContent = stats.totalStudents || 0;
-                document.getElementById('totalTeachers').textContent = stats.totalTeachers || 0;
-                document.getElementById('todayUsers').textContent = stats.todayUsers || 0;
-            } catch (error) {
-                console.error('통계 로드 실패:', error);
-            }
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            clearModalInputs(modalId);
+        }
+
+        function clearModalInputs(modalId) {
+            const modal = document.getElementById(modalId);
+            const inputs = modal.querySelectorAll('input, select');
+            inputs.forEach(input => input.value = input.type === 'select' ? input.options[0].value : '');
         }
 
         async function loadUsers() {
             try {
                 const users = await ApiClient.get('/api/admin/users');
-                const tbody = document.getElementById('userTableBody');
-                
-                if (users.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; padding: 2rem;">등록된 사용자가 없습니다.</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = users.map(user => `
-                    <tr>
-                        <td>${user.name}</td>
-                        <td>${user.email}</td>
-                        <td><span class="role-badge role-${user.role.toLowerCase()}">${getRoleText(user.role)}</span></td>
-                        <td>${formatDate(user.createdAt)}</td>
-                        <td>
-                            ${user.role === 'STUDENT' ? `<button class="btn btn-success" style="padding: 0.25rem 0.75rem; margin-right: 0.5rem;" onclick="promoteUser(${user.id})">강사 승급</button>` : ''}
-                            <button class="btn btn-danger" style="padding: 0.25rem 0.75rem;" onclick="deleteUser(${user.id})">삭제</button>
-                        </td>
-                    </tr>
-                `).join('');
+                displayUsers(users);
             } catch (error) {
-                console.error('사용자 목록 로드 실패:', error);
-                document.getElementById('userTableBody').innerHTML = 
-                    '<tr><td colspan="5" style="text-align: center; color: #ef4444; padding: 2rem;">사용자 목록을 불러올 수 없습니다.</td></tr>';
+                document.getElementById('usersTableBody').innerHTML = 
+                    '<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 2rem;">사용자 데이터를 불러올 수 없습니다.</td></tr>';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                const stats = await ApiClient.get('/api/admin/stats');
+                document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
+                document.getElementById('studentCount').textContent = stats.studentCount || 0;
+                document.getElementById('teacherCount').textContent = stats.teacherCount || 0;
+                document.getElementById('onlineCount').textContent = stats.onlineCount || 0;
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        function displayUsers(users) {
+            const tbody = document.getElementById('usersTableBody');
+            
+            if (users.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #64748b; padding: 2rem;">등록된 사용자가 없습니다.</td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = users.map(user => `
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                    <td style="padding: 1rem; font-weight: 600;">${user.name}</td>
+                    <td style="padding: 1rem;">${user.email}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="background: ${getRoleColor(user.role)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">
+                            ${getRoleText(user.role)}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">${new Date(user.createdAt).toLocaleDateString('ko-KR')}</td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <span style="color: ${user.onlineStatus ? '#10b981' : '#6b7280'};">
+                            ${user.onlineStatus ? '온라인' : '오프라인'}
+                        </span>
+                    </td>
+                    <td style="padding: 1rem; text-align: center;">
+                        <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                            ${user.role === 'STUDENT' ? 
+                                `<button onclick="promoteToTeacher(${user.id})" class="btn btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">강사 승급</button>` : 
+                                ''
+                            }
+                            <button onclick="deleteUser(${user.id}, '${user.name}')" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">삭제</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function getRoleColor(role) {
+            switch(role) {
+                case 'ADMIN': return '#ef4444';
+                case 'TEACHER': return '#3b82f6';
+                case 'STUDENT': return '#10b981';
+                default: return '#6b7280';
             }
         }
 
         function getRoleText(role) {
-            const roleMap = { 'STUDENT': '학생', 'TEACHER': '강사', 'ADMIN': '관리자' };
-            return roleMap[role] || role;
-        }
-
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleDateString('ko-KR');
-        }
-
-        async function promoteUser(userId) {
-            if (confirm('이 사용자를 강사로 승급하시겠습니까?')) {
-                try {
-                    await ApiClient.put(`/api/admin/users/${userId}/role`, { role: 'TEACHER' });
-                    alert('강사로 승급되었습니다.');
-                    loadUsers();
-                    loadStats();
-                } catch (error) {
-                    alert('승급 실패: ' + error.message);
-                }
+            switch(role) {
+                case 'ADMIN': return '관리자';
+                case 'TEACHER': return '강사';
+                case 'STUDENT': return '학생';
+                default: return role;
             }
         }
 
-        async function deleteUser(userId) {
-            if (confirm('이 사용자를 삭제하시겠습니까?')) {
-                try {
-                    await ApiClient.delete(`/api/admin/users/${userId}`);
-                    alert('사용자가 삭제되었습니다.');
+        async function addUser() {
+            const name = document.getElementById('newUserName').value.trim();
+            const email = document.getElementById('newUserEmail').value.trim();
+            const password = document.getElementById('newUserPassword').value.trim();
+            const role = document.getElementById('newUserRole').value;
+
+            if (!name || !email || !password) {
+                alert('모든 필드를 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({ name, email, password, role })
+                });
+
+                if (response.ok) {
+                    alert('사용자가 추가되었습니다.');
+                    closeModal('addUserModal');
                     loadUsers();
                     loadStats();
-                } catch (error) {
-                    alert('삭제 실패: ' + error.message);
+                } else {
+                    const error = await response.text();
+                    alert('사용자 추가 실패: ' + error);
                 }
+            } catch (error) {
+                alert('사용자 추가 오류: ' + error.message);
             }
         }
 
-        function addUser() {
-            alert('사용자 추가 기능은 준비 중입니다.');
+        async function promoteToTeacher(userId) {
+            if (!confirm('이 학생을 강사로 승급시키시겠습니까?')) {
+                return;
+            }
+
+            try {
+                await ApiClient.put(`/api/admin/users/${userId}/role`, { role: 'TEACHER' });
+                alert('강사로 승급되었습니다.');
+                loadUsers();
+                loadStats();
+            } catch (error) {
+                alert('승급에 실패했습니다: ' + error.message);
+            }
         }
 
-        function logout() {
-            AuthManager.logout();
+        async function deleteUser(userId, userName) {
+            if (!confirm(`정말 ${userName} 사용자를 삭제하시겠습니까?`)) {
+                return;
+            }
+
+            try {
+                await ApiClient.delete(`/api/admin/users/${userId}`);
+                alert('사용자가 삭제되었습니다.');
+                loadUsers();
+                loadStats();
+            } catch (error) {
+                alert('삭제에 실패했습니다: ' + error.message);
+            }
         }
 
-        loadStats();
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        }
+
         loadUsers();
+        loadStats();
     </script>
 </body>
 </html>

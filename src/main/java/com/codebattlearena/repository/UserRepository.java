@@ -16,5 +16,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByRole(UserRole role);
     long countByRoleAndOnlineStatus(UserRole role, boolean onlineStatus);
     long countByLastActivityAfter(LocalDateTime dateTime);
+    long countByOnlineStatus(boolean onlineStatus);
     void deleteByEmail(String email);
 }

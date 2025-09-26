@@ -15,7 +15,7 @@
                 <li><a href="/teacher">대시보드</a></li>
                 <li><a href="/teacher/class">수업관리</a></li>
                 <li><a href="/teacher/grades">성적관리</a></li>
-                <li><a href="#" onclick="logout()">로그아웃</a></li>
+                <li><a href="#" onclick="AuthManager.logout()">로그아웃</a></li>
             </ul>
         </div>
     </div>
@@ -26,58 +26,35 @@
             <p class="teacher-subtitle">학습 자료를 공유하고 문제를 출제하세요</p>
         </div>
 
-        <!-- 자료 관리 섹션 -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h3>📁 학습 자료 관리</h3>
+                <h3>학습 자료 관리</h3>
                 <div style="display: flex; gap: 1rem;">
-                    <button onclick="openUploadModal()" class="btn">파일 업로드</button>
-                    <button onclick="openLinkModal()" class="btn btn-secondary">링크 공유</button>
+                    <button onclick="showModal('uploadModal')" class="btn">파일 업로드</button>
+                    <button onclick="showModal('linkModal')" class="btn btn-secondary">링크 공유</button>
                 </div>
             </div>
-
             <div id="materialsList">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    자료를 불러오는 중...
-                </div>
+                <div style="text-align: center; color: #64748b; padding: 2rem;">자료를 불러오는 중...</div>
             </div>
         </div>
 
-        <!-- 문제 출제 섹션 -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h3>📝 문제/퀴즈/시험 관리</h3>
-                <div style="display: flex; gap: 1rem;">
-                    <button onclick="openProblemModal()" class="btn">문제 출제</button>
-                    <button onclick="openQuizModal()" class="btn btn-secondary">퀴즈 만들기</button>
-                    <button onclick="openExamModal()" class="btn">시험 출제</button>
-                </div>
+                <h3>문제 출제</h3>
+                <button onclick="showModal('problemModal')" class="btn">문제 출제</button>
             </div>
-
             <div id="problemsList">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    출제한 문제가 없습니다.
-                </div>
-            </div>
-        </div>
-
-        <!-- 채점 대기 섹션 -->
-        <div class="card">
-            <h3>✅ 채점 대기 목록</h3>
-            <div id="gradingQueue" style="margin-top: 2rem;">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">
-                    채점 대기 중인 과제가 없습니다.
-                </div>
+                <div style="text-align: center; color: #64748b; padding: 2rem;">출제한 문제가 없습니다.</div>
             </div>
         </div>
     </div>
 
-    <!-- 파일 업로드 모달 -->
-    <div id="uploadModal" class="modal" style="display: none;">
+    <div id="uploadModal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>파일 업로드</h3>
-                <span class="modal-close" onclick="closeModal('uploadModal')">&times;</span>
+                <button class="modal-close" onclick="closeModal('uploadModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="file" id="uploadFiles" multiple class="input" style="margin-bottom: 1rem;">
@@ -91,12 +68,11 @@
         </div>
     </div>
 
-    <!-- 링크 공유 모달 -->
-    <div id="linkModal" class="modal" style="display: none;">
+    <div id="linkModal" class="modal-overlay" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
                 <h3>링크 공유</h3>
-                <span class="modal-close" onclick="closeModal('linkModal')">&times;</span>
+                <button class="modal-close" onclick="closeModal('linkModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <input type="url" id="linkUrl" class="input" placeholder="https://example.com" style="margin-bottom: 1rem;">
@@ -110,12 +86,11 @@
         </div>
     </div>
 
-    <!-- 문제 출제 모달 -->
-    <div id="problemModal" class="modal" style="display: none;">
+    <div id="problemModal" class="modal-overlay" style="display: none;">
         <div class="modal-content" style="max-width: 800px;">
             <div class="modal-header">
                 <h3>문제 출제</h3>
-                <span class="modal-close" onclick="closeModal('problemModal')">&times;</span>
+                <button class="modal-close" onclick="closeModal('problemModal')">&times;</button>
             </div>
             <div class="modal-body">
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
@@ -128,10 +103,7 @@
                 </div>
                 <textarea id="problemDescription" class="input" placeholder="문제 설명" style="min-height: 120px; margin-bottom: 1rem;"></textarea>
                 <textarea id="problemExample" class="input" placeholder="예제 입출력" style="min-height: 80px; margin-bottom: 1rem;"></textarea>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <input type="number" id="problemPoints" class="input" placeholder="점수" value="10" min="1" max="100">
-                    <input type="datetime-local" id="problemDeadline" class="input">
-                </div>
+                <input type="number" id="problemPoints" class="input" placeholder="점수" value="10" min="1" max="100" style="margin-bottom: 1rem;">
                 <div style="display: flex; gap: 1rem;">
                     <button onclick="createProblem()" class="btn">문제 출제</button>
                     <button onclick="closeModal('problemModal')" class="btn" style="background: #6b7280;">취소</button>
@@ -140,124 +112,64 @@
         </div>
     </div>
 
-    <style>
-        .modal {
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-
-        .modal-content {
-            background-color: white;
-            margin: 5% auto;
-            border-radius: 0.75rem;
-            width: 90%;
-            max-width: 600px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-            max-height: 80vh;
-            overflow-y: auto;
-        }
-
-        .modal-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid #e2e8f0;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .modal-body {
-            padding: 1.5rem;
-        }
-
-        .modal-close {
-            color: #64748b;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        .modal-close:hover {
-            color: #ef4444;
-        }
-
-        .material-item, .problem-item {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 0.5rem;
-            padding: 1rem;
-            margin-bottom: 1rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .material-item:hover, .problem-item:hover {
-            background: #f1f5f9;
-        }
-    </style>
-
     <script src="/js/common/auth.js"></script>
     <script>
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+            clearModalInputs(modalId);
+        }
+
+        function clearModalInputs(modalId) {
+            const modal = document.getElementById(modalId);
+            const inputs = modal.querySelectorAll('input, textarea, select');
+            inputs.forEach(input => {
+                if (input.type !== 'number') {
+                    input.value = '';
+                } else if (input.id === 'problemPoints') {
+                    input.value = '10';
+                }
+            });
+        }
+
         async function loadMaterials() {
             try {
-                const materials = await fetch('/api/teacher/materials', {
+                const response = await fetch('/api/teacher/materials', {
                     headers: AuthManager.getAuthHeaders()
-                }).then(r => r.json());
-
-                const materialsList = document.getElementById('materialsList');
-                
-                if (materials.length === 0) {
-                    materialsList.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">공유한 자료가 없습니다.</div>';
-                    return;
-                }
-
-                materialsList.innerHTML = materials.map(material => `
-                    <div class="material-item">
-                        <div>
-                            <h4>${material.title}</h4>
-                            <div style="color: #64748b; font-size: 0.9rem;">
-                                업로드: ${new Date(material.createdAt).toLocaleDateString('ko-KR')} | 
-                                다운로드: ${material.downloadsCount || 0}회
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 0.5rem;">
-                            <button onclick="deleteMaterial(${material.id})" class="btn btn-danger" style="padding: 0.5rem;">삭제</button>
-                        </div>
-                    </div>
-                `).join('');
+                });
+                const materials = await response.json();
+                displayMaterials(materials);
             } catch (error) {
                 document.getElementById('materialsList').innerHTML = 
                     '<div style="text-align: center; color: #ef4444; padding: 2rem;">자료를 불러올 수 없습니다.</div>';
             }
         }
 
-        function openUploadModal() {
-            document.getElementById('uploadModal').style.display = 'block';
-        }
+        function displayMaterials(materials) {
+            const materialsList = document.getElementById('materialsList');
+            
+            if (materials.length === 0) {
+                materialsList.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">공유한 자료가 없습니다.</div>';
+                return;
+            }
 
-        function openLinkModal() {
-            document.getElementById('linkModal').style.display = 'block';
-        }
-
-        function openProblemModal() {
-            document.getElementById('problemModal').style.display = 'block';
-        }
-
-        function openQuizModal() {
-            alert('퀴즈 기능은 대시보드에서 이용하실 수 있습니다.');
-        }
-
-        function openExamModal() {
-            alert('시험 출제 기능 개발 중입니다.');
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+            materialsList.innerHTML = materials.map(material => `
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: #f8fafc; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid #e2e8f0;">
+                    <div>
+                        <h4 style="margin-bottom: 0.5rem;">${material.title}</h4>
+                        <div style="color: #64748b; font-size: 0.9rem;">
+                            ${material.fileType === 'link' ? '링크' : '파일'} | 
+                            ${new Date(material.createdAt).toLocaleDateString('ko-KR')} | 
+                            다운로드: ${material.downloadsCount || 0}회
+                        </div>
+                        ${material.description ? `<p style="color: #475569; font-size: 0.9rem; margin-top: 0.5rem;">${material.description}</p>` : ''}
+                    </div>
+                    <button onclick="deleteMaterial(${material.id})" class="btn btn-danger" style="padding: 0.5rem;">삭제</button>
+                </div>
+            `).join('');
         }
 
         async function uploadFiles() {
@@ -289,11 +201,8 @@
                 });
 
                 if (response.ok) {
-                    alert('파일이 업로드되었습니다.');
+                    alert('파일이 업로드되어 학생들에게 공유되었습니다.');
                     closeModal('uploadModal');
-                    document.getElementById('uploadFiles').value = '';
-                    document.getElementById('uploadTitle').value = '';
-                    document.getElementById('uploadDescription').value = '';
                     loadMaterials();
                 } else {
                     throw new Error('업로드 실패');
@@ -327,11 +236,8 @@
                 });
 
                 if (response.ok) {
-                    alert('링크가 공유되었습니다.');
+                    alert('링크가 공유되어 학생들에게 전송되었습니다.');
                     closeModal('linkModal');
-                    document.getElementById('linkUrl').value = '';
-                    document.getElementById('linkTitle').value = '';
-                    document.getElementById('linkDescription').value = '';
                     loadMaterials();
                 } else {
                     throw new Error('공유 실패');
@@ -362,19 +268,13 @@
                         description: description,
                         difficulty: document.getElementById('problemDifficulty').value,
                         points: parseInt(document.getElementById('problemPoints').value),
-                        deadline: document.getElementById('problemDeadline').value,
                         type: 'assignment'
                     })
                 });
 
                 if (response.ok) {
-                    alert('문제가 출제되었습니다.');
+                    alert('문제가 출제되어 모든 학생에게 전송되었습니다.');
                     closeModal('problemModal');
-                    document.getElementById('problemTitle').value = '';
-                    document.getElementById('problemDescription').value = '';
-                    document.getElementById('problemExample').value = '';
-                    document.getElementById('problemPoints').value = '10';
-                    document.getElementById('problemDeadline').value = '';
                 } else {
                     throw new Error('문제 출제 실패');
                 }
@@ -405,12 +305,8 @@
             }
         }
 
-        function logout() {
-            AuthManager.logout();
-        }
-
         window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
+            if (event.target.classList.contains('modal-overlay')) {
                 event.target.style.display = 'none';
             }
         }
