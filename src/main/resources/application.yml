@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/codebattlearena}
-    username: ${DATABASE_USERNAME:postgres}
-    password: ${DATABASE_PASSWORD:password}
+    url: jdbc:postgresql://localhost:5433/codebattlearena
+    username: postgres
+    password: password
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -21,25 +21,24 @@ spring:
   
   servlet:
     multipart:
-      max-file-size: ${MAX_FILE_SIZE:10MB}
-      max-request-size: ${MAX_REQUEST_SIZE:10MB}
+      max-file-size: 10MB
+      max-request-size: 10MB
 
 server:
-  port: ${SERVER_PORT:8080}
+  port: 8080
 
 jwt:
-  secret: ${JWT_SECRET:codebattlearena-secret-key-2025-very-long-and-secure-key}
-  expiration: ${JWT_EXPIRATION:86400000}
+  secret: codebattlearena-secret-key-2025-very-long-and-secure-key
+  expiration: 86400000
 
 ai:
   openai:
     api-key: ${OPENAI_API_KEY:}
 
+upload:
+  path: ./uploads
+
 logging:
   level:
-    com.codebattlearena: ${LOGGING_LEVEL:INFO}
-  file:
-    name: ${LOGGING_FILE:./logs/application.log}
-
-upload:
-  path: ${UPLOAD_PATH:./uploads}
+    com.codebattlearena: DEBUG
+    org.springframework.security: DEBUG
