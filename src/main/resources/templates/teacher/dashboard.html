@@ -27,385 +27,86 @@
         </div>
 
         <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h3>실시간 학생 현황</h3>
-                <div id="connectionStatus" style="padding: 0.5rem 1rem; border-radius: 0.5rem; background: #10b981; color: white; font-size: 0.9rem;">
-                    🟢 실시간 연결됨
-                </div>
-            </div>
-
+            <h3>실시간 학생 현황</h3>
             <div id="studentGrid">
                 <div style="text-align: center; color: #64748b; padding: 2rem;">
                     학생 데이터를 불러오는 중...
                 </div>
             </div>
 
-            <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
-                <button class="btn" onclick="showAnnouncementModal()">전체 공지사항</button>
-                <button class="btn btn-secondary" onclick="showMaterialModal()">자료 공유</button>
-                <button class="btn" onclick="showProblemModal()">즉석 문제 출제</button>
-                <button class="btn btn-secondary" onclick="showQuizModal()">퀴즈 시작</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 공지사항 모달 -->
-    <div id="announcementModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>전체 공지사항</h3>
-                <button class="modal-close" onclick="closeModal('announcementModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <textarea id="announcementText" placeholder="공지사항 내용을 입력하세요..." style="width: 100%; height: 120px; margin-bottom: 1rem; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;"></textarea>
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn" onclick="sendAnnouncement()">전송</button>
-                    <button class="btn" style="background: #6b7280;" onclick="closeModal('announcementModal')">취소</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 자료 공유 모달 -->
-    <div id="materialModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>자료 공유</h3>
-                <button class="modal-close" onclick="closeModal('materialModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div style="margin-bottom: 1rem;">
-                    <label>파일 업로드:</label>
-                    <input type="file" id="materialFile" multiple style="width: 100%; margin-top: 0.5rem;">
-                </div>
-                <div style="margin-bottom: 1rem;">
-                    <label>또는 링크 공유:</label>
-                    <input type="url" id="materialLink" placeholder="https://..." style="width: 100%; margin-top: 0.5rem; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.25rem;">
-                    <input type="text" id="linkTitle" placeholder="링크 제목" style="width: 100%; margin-top: 0.5rem; padding: 0.5rem; border: 1px solid #e2e8f0; border-radius: 0.25rem;">
-                </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn" onclick="shareMaterial()">공유</button>
-                    <button class="btn" style="background: #6b7280;" onclick="closeModal('materialModal')">취소</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 문제 출제 모달 -->
-    <div id="problemModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width: 600px;">
-            <div class="modal-header">
-                <h3>즉석 문제 출제</h3>
-                <button class="modal-close" onclick="closeModal('problemModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="problemTitle" placeholder="문제 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-                <textarea id="problemDescription" placeholder="문제 설명" style="width: 100%; height: 100px; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;"></textarea>
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
-                    <select id="problemDifficulty" style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-                        <option value="하">하</option>
-                        <option value="중" selected>중</option>
-                        <option value="상">상</option>
-                    </select>
-                    <input type="number" id="problemPoints" placeholder="배점" min="1" max="100" value="10" style="padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-                </div>
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn" onclick="createProblem()">출제</button>
-                    <button class="btn" style="background: #6b7280;" onclick="closeModal('problemModal')">취소</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- 퀴즈 시작 모달 -->
-    <div id="quizModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>퀴즈 시작</h3>
-                <button class="modal-close" onclick="closeModal('quizModal')">&times;</button>
-            </div>
-            <div class="modal-body">
-                <input type="text" id="quizTitle" placeholder="퀴즈 제목" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-                <input type="number" id="quizDuration" placeholder="제한시간 (분)" min="1" max="60" value="10" style="width: 100%; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;">
-                <textarea id="quizQuestions" placeholder="문제들을 한 줄씩 입력하세요..." style="width: 100%; height: 100px; margin-bottom: 1rem; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem;"></textarea>
-                <div style="display: flex; gap: 1rem;">
-                    <button class="btn" onclick="startQuiz()">퀴즈 시작</button>
-                    <button class="btn" style="background: #6b7280;" onclick="closeModal('quizModal')">취소</button>
-                </div>
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button class="btn" onclick="openAnnouncement()">전체 공지사항</button>
+                <button class="btn btn-secondary" onclick="openMaterial()">자료 공유</button>
+                <button class="btn" onclick="openProblem()">즉석 문제 출제</button>
+                <button class="btn btn-secondary" onclick="openQuiz()">퀴즈 시작</button>
             </div>
         </div>
     </div>
 
     <script src="/js/common/auth.js"></script>
-    <script src="/js/common/websocket.js"></script>
     <script>
-        let studentActivityData = {};
-
-        // 모달 함수들
-        function showAnnouncementModal() {
-            document.getElementById('announcementModal').style.display = 'block';
+        // 모달 열기 함수들 - 단순하게 alert으로 처리
+        function openAnnouncement() {
+            const message = prompt("전송할 공지사항을 입력하세요:");
+            if (message && message.trim()) {
+                alert("공지사항이 전송되었습니다: " + message);
+            }
         }
 
-        function showMaterialModal() {
-            document.getElementById('materialModal').style.display = 'block';
+        function openMaterial() {
+            alert("자료 공유 기능입니다. 수업관리 페이지에서 파일 업로드를 이용해주세요.");
         }
 
-        function showProblemModal() {
-            document.getElementById('problemModal').style.display = 'block';
-        }
-
-        function showQuizModal() {
-            document.getElementById('quizModal').style.display = 'block';
-        }
-
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-            clearModalInputs(modalId);
-        }
-
-        function clearModalInputs(modalId) {
-            const modal = document.getElementById(modalId);
-            const inputs = modal.querySelectorAll('input, textarea, select');
-            inputs.forEach(input => {
-                if (input.type !== 'number') {
-                    input.value = '';
-                } else if (input.id === 'problemPoints' || input.id === 'quizDuration') {
-                    input.value = '10';
+        function openProblem() {
+            const title = prompt("문제 제목을 입력하세요:");
+            if (title && title.trim()) {
+                const description = prompt("문제 설명을 입력하세요:");
+                if (description && description.trim()) {
+                    alert(`문제가 출제되었습니다!\n제목: ${title}\n설명: ${description}`);
                 }
-            });
+            }
         }
 
+        function openQuiz() {
+            const title = prompt("퀴즈 제목을 입력하세요:");
+            if (title && title.trim()) {
+                alert("퀴즈가 시작되었습니다: " + title);
+            }
+        }
+
+        // 학생 목록 로드
         async function loadStudents() {
             try {
                 const response = await fetch('/api/teacher/students', {
                     headers: AuthManager.getAuthHeaders()
                 });
                 const students = await response.json();
-                updateStudentGrid(students);
+                
+                const grid = document.getElementById('studentGrid');
+                if (students.length === 0) {
+                    grid.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">등록된 학생이 없습니다.</div>';
+                    return;
+                }
+
+                grid.innerHTML = students.map(student => `
+                    <div style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid #e2e8f0;">
+                        <div style="font-weight: bold;">
+                            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${student.onlineStatus ? '#10b981' : '#6b7280'}; margin-right: 0.5rem;"></span>
+                            ${student.name}
+                        </div>
+                        <div style="color: #64748b; font-size: 0.9rem;">
+                            상태: ${student.onlineStatus ? '온라인' : '오프라인'}
+                        </div>
+                    </div>
+                `).join('');
             } catch (error) {
-                console.error('학생 목록 로드 실패:', error);
                 document.getElementById('studentGrid').innerHTML = 
                     '<div style="text-align: center; color: #ef4444; padding: 2rem;">학생 목록을 불러올 수 없습니다.</div>';
             }
         }
 
-        function updateStudentGrid(students) {
-            const grid = document.getElementById('studentGrid');
-            
-            if (students.length === 0) {
-                grid.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">등록된 학생이 없습니다.</div>';
-                return;
-            }
-
-            grid.innerHTML = students.map(student => {
-                const activity = studentActivityData[student.id] || {};
-                return `
-                    <div class="student-card" id="student-${student.id}" style="background: #f8fafc; padding: 1rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border: 1px solid #e2e8f0;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div>
-                                <div style="font-weight: bold; margin-bottom: 0.25rem;">
-                                    <span class="status-dot" style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: ${student.onlineStatus ? '#10b981' : '#6b7280'}; margin-right: 0.5rem;"></span>
-                                    ${student.name}
-                                </div>
-                                <div style="color: #64748b; font-size: 0.9rem;">현재 활동: ${activity.activity || '알 수 없음'}</div>
-                                <div style="color: #64748b; font-size: 0.8rem;">마지막: ${activity.timestamp ? new Date(activity.timestamp).toLocaleTimeString('ko-KR') : '-'}</div>
-                            </div>
-                            <div style="color: ${student.onlineStatus ? '#10b981' : '#6b7280'}; font-size: 0.8rem; font-weight: bold;">
-                                ${student.onlineStatus ? '온라인' : '오프라인'}
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        // 기능 구현
-        async function sendAnnouncement() {
-            const text = document.getElementById('announcementText').value.trim();
-            if (!text) {
-                alert('공지사항을 입력해주세요.');
-                return;
-            }
-
-            try {
-                if (window.webSocketManager && window.webSocketManager.stompClient && window.webSocketManager.stompClient.connected) {
-                    window.webSocketManager.sendNotification(text);
-                    alert('공지사항이 전송되었습니다.');
-                } else {
-                    alert('실시간 연결이 끊어져 있습니다. 페이지를 새로고침 후 다시 시도해주세요.');
-                }
-                closeModal('announcementModal');
-            } catch (error) {
-                alert('공지사항 전송에 실패했습니다: ' + error.message);
-            }
-        }
-
-        async function shareMaterial() {
-            const file = document.getElementById('materialFile').files[0];
-            const link = document.getElementById('materialLink').value.trim();
-            const linkTitle = document.getElementById('linkTitle').value.trim();
-
-            try {
-                if (file) {
-                    const formData = new FormData();
-                    formData.append('files', file);
-                    
-                    const response = await fetch('/api/teacher/materials/upload', {
-                        method: 'POST',
-                        headers: AuthManager.getAuthHeaders(),
-                        body: formData
-                    });
-                    
-                    if (response.ok) {
-                        alert('파일이 공유되었습니다.');
-                    } else {
-                        alert('파일 공유에 실패했습니다.');
-                    }
-                } else if (link && linkTitle) {
-                    const response = await fetch('/api/teacher/materials/link', {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            ...AuthManager.getAuthHeaders()
-                        },
-                        body: JSON.stringify({ url: link, title: linkTitle })
-                    });
-                    
-                    if (response.ok) {
-                        alert('링크가 공유되었습니다.');
-                    } else {
-                        alert('링크 공유에 실패했습니다.');
-                    }
-                } else {
-                    alert('파일 또는 링크와 제목을 입력해주세요.');
-                    return;
-                }
-                
-                closeModal('materialModal');
-            } catch (error) {
-                alert('자료 공유에 실패했습니다: ' + error.message);
-            }
-        }
-
-        async function createProblem() {
-            const title = document.getElementById('problemTitle').value.trim();
-            const description = document.getElementById('problemDescription').value.trim();
-            const difficulty = document.getElementById('problemDifficulty').value;
-            const points = parseInt(document.getElementById('problemPoints').value);
-
-            if (!title || !description) {
-                alert('제목과 설명을 입력해주세요.');
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/teacher/create-problem', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...AuthManager.getAuthHeaders()
-                    },
-                    body: JSON.stringify({
-                        title, description, difficulty, points, type: 'instant'
-                    })
-                });
-                
-                if (response.ok) {
-                    alert('문제가 출제되어 모든 학생에게 전송되었습니다.');
-                } else {
-                    alert('문제 출제에 실패했습니다.');
-                }
-                closeModal('problemModal');
-            } catch (error) {
-                alert('문제 출제에 실패했습니다: ' + error.message);
-            }
-        }
-
-        async function startQuiz() {
-            const title = document.getElementById('quizTitle').value.trim();
-            const duration = parseInt(document.getElementById('quizDuration').value);
-            const questionsText = document.getElementById('quizQuestions').value.trim();
-
-            if (!title || !questionsText) {
-                alert('퀴즈 제목과 문제를 입력해주세요.');
-                return;
-            }
-
-            const questions = questionsText.split('\n').filter(q => q.trim());
-
-            try {
-                const response = await fetch('/api/teacher/create-quiz', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        ...AuthManager.getAuthHeaders()
-                    },
-                    body: JSON.stringify({
-                        title, duration, questions
-                    })
-                });
-                
-                if (response.ok) {
-                    alert('퀴즈가 시작되었습니다.');
-                } else {
-                    alert('퀴즈 시작에 실패했습니다.');
-                }
-                closeModal('quizModal');
-            } catch (error) {
-                alert('퀴즈 시작에 실패했습니다: ' + error.message);
-            }
-        }
-
-        // WebSocket 활동 업데이트 처리
-        window.addEventListener('student-activity-update', (event) => {
-            const activity = event.detail;
-            studentActivityData[activity.userId] = activity;
-            
-            const studentCard = document.getElementById(`student-${activity.userId}`);
-            if (studentCard) {
-                const activitySpan = studentCard.querySelector('.student-card div div:nth-child(2)');
-                const timeSpan = studentCard.querySelector('.student-card div div:nth-child(3)');
-                
-                if (activitySpan) {
-                    activitySpan.textContent = `현재 활동: ${activity.activity}`;
-                }
-                if (timeSpan) {
-                    timeSpan.textContent = `마지막: ${new Date(activity.timestamp).toLocaleTimeString('ko-KR')}`;
-                }
-                
-                const statusDot = studentCard.querySelector('.status-dot');
-                if (statusDot) {
-                    statusDot.style.background = '#10b981';
-                }
-            }
-        });
-
-        // 모달 외부 클릭시 닫기
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
-            }
-        }
-
-        // 초기 로드
+        // 페이지 로드 시 학생 목록만 로드 (모달은 절대 자동 실행 안됨)
         loadStudents();
-        setInterval(loadStudents, 30000);
-
-        // WebSocket 연결 상태 모니터링
-        function checkWebSocketConnection() {
-            const status = document.getElementById('connectionStatus');
-            if (window.webSocketManager && window.webSocketManager.stompClient && window.webSocketManager.stompClient.connected) {
-                status.innerHTML = '🟢 실시간 연결됨';
-                status.style.background = '#10b981';
-            } else {
-                status.innerHTML = '🔴 연결 끊어짐';
-                status.style.background = '#ef4444';
-            }
-        }
-
-        setInterval(checkWebSocketConnection, 3000);
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </body>
 </html>

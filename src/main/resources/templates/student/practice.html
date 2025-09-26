@@ -26,7 +26,7 @@
 
         <div class="study-stats">
             <h3>나의 연습 통계</h3>
-            <div class="stats-grid" id="practiceStats">
+            <div class="stats-grid">
                 <div class="stat-item">
                     <div class="stat-value" id="totalAttempts">0</div>
                     <div class="stat-label">총 시도</div>
@@ -36,209 +36,91 @@
                     <div class="stat-label">해결 문제</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="successRate">0%</div>
+                    <div class="stat-value">0%</div>
                     <div class="stat-label">정답률</div>
                 </div>
                 <div class="stat-item">
-                    <div class="stat-value" id="avgScore">0점</div>
+                    <div class="stat-value">0점</div>
                     <div class="stat-label">평균 점수</div>
                 </div>
             </div>
         </div>
 
         <div class="card">
-            <div id="problemsContainer">
-                <div class="category-tabs">
-                    <button class="tab active" onclick="setCategory('all')">전체</button>
-                    <button class="tab" onclick="setCategory('basic')">기초</button>
-                    <button class="tab" onclick="setCategory('array')">배열</button>
-                    <button class="tab" onclick="setCategory('string')">문자열</button>
-                    <button class="tab" onclick="setCategory('algorithm')">알고리즘</button>
-                    <button class="tab" onclick="setCategory('data-structure')">자료구조</button>
-                </div>
-                <div id="problemsList">
-                    <div style="text-align: center; padding: 2rem;">문제를 불러오는 중...</div>
-                </div>
+            <div class="category-tabs">
+                <button class="tab active" onclick="showCategory('all')">전체</button>
+                <button class="tab" onclick="showCategory('basic')">기초</button>
+                <button class="tab" onclick="showCategory('array')">배열</button>
+                <button class="tab" onclick="showCategory('string')">문자열</button>
             </div>
-        </div>
-    </div>
-
-    <!-- 문제 풀기 모달은 버튼 클릭 시에만 표시 -->
-    <div id="solveProblemModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content" style="max-width: 1200px; width: 95%;">
-            <div class="modal-header">
-                <h3 id="modalProblemTitle">문제 제목</h3>
-                <button class="modal-close" onclick="closeSolveModal()">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
-                    <div>
-                        <h4>문제 설명</h4>
-                        <div id="modalProblemDescription" style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; margin-bottom: 2rem; line-height: 1.6; min-height: 150px;"></div>
-                        
-                        <h4>예제</h4>
-                        <div id="modalProblemExample" style="background: #1e293b; color: #e2e8f0; padding: 1rem; border-radius: 0.5rem; font-family: 'Courier New', monospace; white-space: pre-line; min-height: 100px;"></div>
-                    </div>
-                    <div>
-                        <h4>코드 작성</h4>
-                        <textarea id="solutionCode" style="width: 100%; height: 350px; font-family: 'Courier New', monospace; background: #1e293b; color: #e2e8f0; border: 1px solid #475569; border-radius: 0.5rem; padding: 1rem; resize: none;" placeholder="여기에 코드를 작성하세요...
-
-public class Solution {
-    public static void main(String[] args) {
-        // 여기에 코드를 작성하세요
-    }
-}"></textarea>
-                        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                            <button onclick="submitSolution()" class="btn">제출</button>
-                            <button onclick="testCode()" class="btn btn-secondary">테스트 실행</button>
-                            <button onclick="closeSolveModal()" class="btn" style="background: #6b7280;">닫기</button>
-                        </div>
-                        <div id="testResult" style="margin-top: 1rem; padding: 1rem; border-radius: 0.5rem; display: none; background: #1e293b; color: #e2e8f0;"></div>
-                    </div>
-                </div>
+            
+            <div id="problemsList">
+                <div style="text-align: center; padding: 2rem;">카테고리를 선택하면 문제가 표시됩니다.</div>
             </div>
         </div>
     </div>
 
     <script src="/js/common/auth.js"></script>
     <script>
-        let currentCategory = 'all';
-        let userStats = { totalAttempts: 0, solvedCount: 0, successRate: 0, avgScore: 0 };
-        let currentProblem = null;
+        let currentAttempts = 0;
+        let currentSolved = 0;
 
-        const problems = [
-            { id: 1, title: "두 수의 합", description: "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오.", difficulty: "하", category: "basic", solved: false, attempts: 0, score: 0, example: "입력: 1 2\n출력: 3" },
-            { id: 2, title: "배열에서 최댓값 찾기", description: "N개의 정수가 주어졌을 때, 그 중 가장 큰 값을 출력하는 프로그램을 작성하시오.", difficulty: "하", category: "array", solved: false, attempts: 0, score: 0, example: "입력:\n5\n3 7 2 9 1\n\n출력:\n9" },
-            { id: 3, title: "문자열 뒤집기", description: "주어진 문자열을 뒤집어서 출력하는 프로그램을 작성하시오.", difficulty: "중", category: "string", solved: false, attempts: 0, score: 0, example: "입력: hello\n출력: olleh" },
-            { id: 4, title: "팩토리얼 계산", description: "N의 팩토리얼을 계산하는 프로그램을 작성하시오.", difficulty: "중", category: "basic", solved: false, attempts: 0, score: 0, example: "입력: 5\n출력: 120" },
-            { id: 5, title: "이진 검색", description: "정렬된 배열에서 특정 값을 이진 검색으로 찾는 프로그램을 작성하시오.", difficulty: "상", category: "algorithm", solved: false, attempts: 0, score: 0, example: "입력:\n5\n1 3 5 7 9\n5\n\n출력:\n2 (인덱스)" },
-            { id: 6, title: "버블 정렬", description: "버블 정렬 알고리즘을 구현하여 배열을 오름차순으로 정렬하시오.", difficulty: "중", category: "algorithm", solved: false, attempts: 0, score: 0, example: "입력:\n5\n5 2 8 1 9\n\n출력:\n1 2 5 8 9" },
-            { id: 7, title: "스택 구현", description: "스택 자료구조를 배열로 구현하고 push, pop 연산을 구현하시오.", difficulty: "상", category: "data-structure", solved: false, attempts: 0, score: 0, example: "명령:\npush 1\npush 2\npop\npush 3\npop\n\n결과:\n2\n3" },
-            { id: 8, title: "회문 검사", description: "주어진 문자열이 회문(palindrome)인지 검사하는 프로그램을 작성하시오.", difficulty: "중", category: "string", solved: false, attempts: 0, score: 0, example: "입력: level\n출력: true\n\n입력: hello\n출력: false" }
-        ];
+        const problems = {
+            all: [
+                { id: 1, title: "두 수의 합", difficulty: "하", description: "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오." },
+                { id: 2, title: "배열 최댓값", difficulty: "중", description: "N개의 정수 중 최댓값을 찾는 프로그램을 작성하시오." }
+            ],
+            basic: [
+                { id: 1, title: "두 수의 합", difficulty: "하", description: "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오." }
+            ],
+            array: [
+                { id: 2, title: "배열 최댓값", difficulty: "중", description: "N개의 정수 중 최댓값을 찾는 프로그램을 작성하시오." }
+            ],
+            string: [
+                { id: 3, title: "문자열 뒤집기", difficulty: "중", description: "주어진 문자열을 뒤집어서 출력하시오." }
+            ]
+        };
 
-        function renderStats() {
-            document.getElementById('totalAttempts').textContent = userStats.totalAttempts;
-            document.getElementById('solvedCount').textContent = userStats.solvedCount;
-            document.getElementById('successRate').textContent = userStats.successRate + '%';
-            document.getElementById('avgScore').textContent = userStats.avgScore + '점';
-        }
-
-        function setCategory(category) {
-            currentCategory = category;
+        function showCategory(category) {
+            // 탭 활성화
             document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
             event.target.classList.add('active');
-            renderProblems();
-        }
 
-        function renderProblems() {
-            const filteredProblems = currentCategory === 'all' ? problems : problems.filter(p => p.category === currentCategory);
+            // 문제 목록 표시
+            const categoryProblems = problems[category] || problems.all;
+            const problemsList = document.getElementById('problemsList');
             
-            document.getElementById('problemsList').innerHTML = filteredProblems.map(problem => `
-                <div class="problem-card ${problem.solved ? 'solved' : ''}" style="background: #334155; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1rem; cursor: pointer; transition: all 0.3s ease; border: 1px solid #475569;">
+            problemsList.innerHTML = categoryProblems.map(problem => `
+                <div style="background: #334155; padding: 1.5rem; border-radius: 0.75rem; margin-bottom: 1rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div style="flex: 1;">
-                            <div class="problem-info">
-                                <h3 style="color: #e2e8f0; margin-bottom: 0.5rem;">${problem.title}</h3>
-                                <span class="difficulty ${problem.difficulty}" style="display: inline-block; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem; font-weight: 500; background: ${problem.difficulty === '하' ? '#10b981' : problem.difficulty === '중' ? '#f59e0b' : '#ef4444'}; color: white; margin-right: 1rem;">${problem.difficulty}</span>
-                            </div>
-                            <div class="problem-stats" style="margin-top: 0.5rem;">
-                                <span style="color: #64748b; font-size: 0.9rem;">시도: ${problem.attempts}회</span>
-                                ${problem.solved ? `<span class="score" style="color: #10b981; font-weight: bold; margin-left: 1rem;">점수: ${problem.score}점</span>` : ''}
-                            </div>
+                        <div>
+                            <h3 style="color: #e2e8f0; margin-bottom: 0.5rem;">${problem.title}</h3>
+                            <p style="color: #cbd5e1; margin-bottom: 0.5rem;">${problem.description}</p>
+                            <span style="background: ${problem.difficulty === '하' ? '#10b981' : problem.difficulty === '중' ? '#f59e0b' : '#ef4444'}; color: white; padding: 0.25rem 0.75rem; border-radius: 0.375rem; font-size: 0.875rem;">${problem.difficulty}</span>
                         </div>
-                        <div class="problem-action">
-                            <button class="btn btn-primary" onclick="event.stopPropagation(); openProblem(${problem.id})" style="padding: 0.75rem 1.5rem;">
-                                ${problem.solved ? '다시 풀기' : '문제 풀기'}
-                            </button>
-                        </div>
+                        <button class="btn" onclick="solveProblem(${problem.id}, '${problem.title}', '${problem.description}')">문제 풀기</button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // 문제 클릭 시에만 모달 열기 (자동 실행 제거)
-        function openProblem(problemId) {
-            currentProblem = problems.find(p => p.id === problemId);
-            if (!currentProblem) return;
-
-            document.getElementById('modalProblemTitle').textContent = currentProblem.title;
-            document.getElementById('modalProblemDescription').textContent = currentProblem.description;
-            document.getElementById('modalProblemExample').textContent = currentProblem.example;
-            document.getElementById('solutionCode').value = '';
-            document.getElementById('testResult').style.display = 'none';
+        function solveProblem(id, title, description) {
+            const code = prompt(`문제: ${title}\n\n${description}\n\n코드를 입력하세요:`);
             
-            // 모달을 명시적으로 표시
-            document.getElementById('solveProblemModal').style.display = 'block';
-        }
-
-        function closeSolveModal() {
-            document.getElementById('solveProblemModal').style.display = 'none';
-            currentProblem = null;
-        }
-
-        function testCode() {
-            const code = document.getElementById('solutionCode').value.trim();
-            const resultDiv = document.getElementById('testResult');
-            
-            if (!code) {
-                resultDiv.innerHTML = '<div style="color: #ef4444;">코드를 입력해주세요.</div>';
-                resultDiv.style.display = 'block';
-                return;
-            }
-
-            resultDiv.innerHTML = '<div style="color: #3b82f6;">테스트 실행 중...</div>';
-            resultDiv.style.display = 'block';
-            
-            setTimeout(() => {
-                if (code.length < 20) {
-                    resultDiv.innerHTML = '<div style="color: #f59e0b;">⚠️ 코드가 너무 짧습니다. 더 자세히 작성해보세요.</div>';
-                } else if (code.includes('System.out.print') || code.includes('cout') || code.includes('print')) {
-                    resultDiv.innerHTML = '<div style="color: #10b981;">✅ 기본 테스트 통과! 제출해보세요.</div>';
-                } else {
-                    resultDiv.innerHTML = '<div style="color: #f59e0b;">⚠️ 출력 코드를 추가해보세요.</div>';
+            if (code && code.trim()) {
+                currentAttempts++;
+                document.getElementById('totalAttempts').textContent = currentAttempts;
+                
+                // 랜덤하게 정답/오답 결정
+                const isCorrect = Math.random() > 0.4;
+                const score = isCorrect ? Math.floor(Math.random() * 21) + 80 : Math.floor(Math.random() * 50) + 30;
+                
+                if (isCorrect) {
+                    currentSolved++;
+                    document.getElementById('solvedCount').textContent = currentSolved;
                 }
-            }, 1500);
-        }
-
-        function submitSolution() {
-            const code = document.getElementById('solutionCode').value.trim();
-            
-            if (!code) {
-                alert('코드를 입력해주세요.');
-                return;
-            }
-
-            if (!currentProblem) return;
-
-            // 시뮬레이션
-            currentProblem.attempts++;
-            userStats.totalAttempts++;
-
-            const isCorrect = Math.random() > 0.4;
-            const score = isCorrect ? Math.floor(Math.random() * 21) + 80 : Math.floor(Math.random() * 50) + 30;
-            
-            if (isCorrect && !currentProblem.solved) {
-                currentProblem.solved = true;
-                currentProblem.score = score;
-                userStats.solvedCount++;
-            } else if (isCorrect && currentProblem.solved) {
-                currentProblem.score = Math.max(currentProblem.score, score);
-            }
-
-            // 통계 업데이트
-            userStats.successRate = Math.round((userStats.solvedCount / problems.length) * 100);
-            const totalScore = problems.filter(p => p.solved).reduce((sum, p) => sum + p.score, 0);
-            userStats.avgScore = userStats.solvedCount > 0 ? Math.round(totalScore / userStats.solvedCount) : 0;
-
-            alert(`제출 완료!\n결과: ${isCorrect ? '정답' : '오답'}\n점수: ${score}점`);
-            
-            renderStats();
-            renderProblems();
-            closeSolveModal();
-
-            if (window.studentActivityTracker) {
-                window.studentActivityTracker.updateActivity('문제 풀이 완료');
+                
+                alert(`제출 완료!\n결과: ${isCorrect ? '정답' : '오답'}\n점수: ${score}점`);
             }
         }
 
@@ -246,22 +128,8 @@ public class Solution {
             AuthManager.logout();
         }
 
-        // 모달 외부 클릭시 닫기
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal-overlay')) {
-                event.target.style.display = 'none';
-            }
-        }
-
-        // 페이지 로드 시 초기화 (모달 자동 실행 제거)
-        document.addEventListener('DOMContentLoaded', function() {
-            renderStats();
-            renderProblems();
-        });
+        // 페이지 로드 시 아무것도 자동 실행하지 않음
+        // 사용자가 카테고리를 클릭해야 문제가 표시됨
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script src="/js/common/websocket.js"></script>
-    <script src="/js/common/student-activity.js"></script>
 </body>
 </html>
