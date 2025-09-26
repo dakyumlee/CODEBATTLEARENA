@@ -3,101 +3,497 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>학생 대시보드 - 코드배틀아레나</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/student.css">
+    <title>학생 대시보드 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #0f1629;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #1a202c;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #4299e1;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-item {
+            color: #a0aec0;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: #2d3748;
+            color: #4299e1;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            color: #cbd5e0;
+        }
+        
+        .main-container {
+            margin-top: 80px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 30px;
+        }
+        
+        .dashboard-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f7fafc;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .stat-value {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #4299e1;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section-card {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .section-title {
+            font-size: 1.4rem;
+            font-weight: 600;
+            color: #4299e1;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .quick-links {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+        
+        .quick-link {
+            display: block;
+            padding: 20px;
+            background: #1a365d;
+            color: #90cdf4;
+            text-decoration: none;
+            border-radius: 10px;
+            border: 1px solid #2b6cb0;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .quick-link:hover {
+            background: #2a4365;
+            transform: translateY(-2px);
+        }
+        
+        .quick-link-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .quick-link-desc {
+            font-size: 0.9rem;
+            color: #cbd5e0;
+        }
+        
+        .recent-activity {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        
+        .activity-item {
+            background: #4a5568;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            border-left: 4px solid #4299e1;
+        }
+        
+        .activity-title {
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+        }
+        
+        .activity-desc {
+            color: #a0aec0;
+            font-size: 0.9rem;
+        }
+        
+        .activity-time {
+            color: #718096;
+            font-size: 0.8rem;
+            margin-top: 5px;
+        }
+        
+        .achievement-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #22543d;
+            color: #68d391;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            margin: 5px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #a0aec0;
+            padding: 40px;
+        }
+        
+        .progress-bar {
+            background: #4a5568;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #4299e1, #63b3ed);
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        
+        .progress-text {
+            font-size: 0.8rem;
+            color: #a0aec0;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .quick-links {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="header">
-        <div class="nav">
-            <a href="/" class="logo">코드배틀아레나</a>
-            <ul class="nav-links">
-                <li><a href="#" onclick="logout()">로그아웃</a></li>
-            </ul>
-        </div>
-    </div>
-
-    <div class="student-dashboard">
-        <div class="student-header">
-            <h1 class="student-title">학생 대시보드</h1>
-            <p class="student-subtitle">오늘도 열심히 코딩 공부해봐요</p>
-        </div>
-
-        <div class="student-nav">
-            <a href="/student/today" class="student-nav-item active">오늘의 학습</a>
-            <a href="/student/ai-tutor" class="student-nav-item">AI 튜터</a>
-            <a href="/student/practice" class="student-nav-item">코딩연습</a>
-            <a href="/student/notes" class="student-nav-item">복습노트</a>
-            <a href="/student/battle" class="student-nav-item">코드배틀</a>
-        </div>
-
-        <div class="battle-modes">
-            <div class="battle-mode-card" onclick="location.href='/student/battle/create'">
-                <div class="battle-icon">🎯</div>
-                <h3>친구와 배틀</h3>
-                <p>방을 만들어서 친구와 1:1 코딩 대결</p>
-            </div>
-            
-            <div class="battle-mode-card" onclick="location.href='/student/battle/random'">
-                <div class="battle-icon">🎲</div>
-                <h3>랜덤 배틀</h3>
-                <p>랜덤 상대와 즉시 매칭되는 스릴 넘치는 대결</p>
-            </div>
-            
-            <div class="battle-mode-card" onclick="location.href='/student/battle/ai'">
-                <div class="battle-icon">🤖</div>
-                <h3>AI와 배틀</h3>
-                <p>AI와 함께하는 혼자만의 코딩 연습</p>
-            </div>
-        </div>
-
-        <div class="study-stats">
-            <h3>나의 학습 현황</h3>
-            <div class="stats-grid" id="statsGrid">
-                <div class="stat-item">
-                    <div class="stat-value" id="solvedProblems">-</div>
-                    <div class="stat-label">해결한 문제</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="battleWins">-</div>
-                    <div class="stat-label">배틀 승리</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="accuracy">-</div>
-                    <div class="stat-label">정답률</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="studyDays">-</div>
-                    <div class="stat-label">연속 학습</div>
-                </div>
+        <div class="header-content">
+            <div class="logo">CodeBattleArena</div>
+            <nav class="nav-menu">
+                <a href="/student/dashboard" class="nav-item active">대시보드</a>
+                <a href="/student/today" class="nav-item">오늘의 학습</a>
+                <a href="/student/ai-tutor" class="nav-item">AI 튜터</a>
+                <a href="/student/practice" class="nav-item">코딩연습</a>
+                <a href="/student/notes" class="nav-item">복습노트</a>
+                <a href="/student/battle" class="nav-item">코드배틀</a>
+            </nav>
+            <div class="user-info">
+                <span>학생님 환영합니다</span>
+                <button onclick="logout()" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
             </div>
         </div>
     </div>
 
-    <script src="/js/common/auth.js"></script>
-    <script src="/js/common/api.js"></script>
+    <div class="main-container">
+        <h1 class="dashboard-title">학습 대시보드</h1>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value" id="solvedProblems">0</div>
+                <div class="stat-label">해결한 문제</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="problemProgress" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="problemProgressText">목표: 100문제</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="battleWins">0</div>
+                <div class="stat-label">배틀 승리</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="battleProgress" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="battleProgressText">승률: 0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="studyDays">0</div>
+                <div class="stat-label">연속 학습일</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="streakProgress" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="streakProgressText">이번 주 목표: 7일</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="totalScore">0</div>
+                <div class="stat-label">총 점수</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="scoreProgress" style="width: 0%"></div>
+                </div>
+                <div class="progress-text" id="scoreProgressText">다음 레벨까지</div>
+            </div>
+        </div>
+        
+        <div class="content-grid">
+            <div class="section-card">
+                <h2 class="section-title">빠른 시작</h2>
+                <div class="quick-links">
+                    <a href="/student/today" class="quick-link">
+                        <div class="quick-link-title">오늘의 학습</div>
+                        <div class="quick-link-desc">AI 추천 문제와 강사 자료</div>
+                    </a>
+                    <a href="/student/practice" class="quick-link">
+                        <div class="quick-link-title">코딩연습</div>
+                        <div class="quick-link-desc">알고리즘 문제 풀이</div>
+                    </a>
+                    <a href="/student/ai-tutor" class="quick-link">
+                        <div class="quick-link-title">AI 튜터</div>
+                        <div class="quick-link-desc">24시간 학습 도우미</div>
+                    </a>
+                    <a href="/student/battle" class="quick-link">
+                        <div class="quick-link-title">코드배틀</div>
+                        <div class="quick-link-desc">실시간 대결</div>
+                    </a>
+                    <a href="/student/notes" class="quick-link">
+                        <div class="quick-link-title">복습노트</div>
+                        <div class="quick-link-desc">나만의 학습 기록</div>
+                    </a>
+                    <a href="#" onclick="generateAIProblem()" class="quick-link">
+                        <div class="quick-link-title">AI 문제 생성</div>
+                        <div class="quick-link-desc">맞춤형 문제 만들기</div>
+                    </a>
+                </div>
+            </div>
+            
+            <div class="section-card">
+                <h2 class="section-title">최근 활동</h2>
+                <div class="recent-activity" id="recentActivity">
+                    <div class="empty-state">최근 활동이 없습니다.</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="section-card">
+            <h2 class="section-title">달성한 뱃지</h2>
+            <div id="achievements">
+                <div class="empty-state">아직 획득한 뱃지가 없습니다. 학습을 시작해보세요!</div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        async function loadStats() {
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            loadRecentActivity();
+            loadAchievements();
+        });
+        
+        async function loadDashboardData() {
             try {
-                const stats = await ApiClient.get('/api/student/stats');
-                document.getElementById('solvedProblems').textContent = stats.solvedProblems || 0;
-                document.getElementById('battleWins').textContent = stats.battleWins || 0;
-                document.getElementById('accuracy').textContent = (stats.accuracy || 0) + '%';
-                document.getElementById('studyDays').textContent = (stats.studyDays || 0) + '일';
+                const [statsResponse, battleStatsResponse, practiceStatsResponse] = await Promise.all([
+                    fetch('/api/student/stats'),
+                    fetch('/api/student/battle-stats'),
+                    fetch('/api/student/practice-stats')
+                ]);
+                
+                const stats = await statsResponse.json();
+                const battleStats = await battleStatsResponse.json();
+                const practiceStats = await practiceStatsResponse.json();
+                
+                updateStats(stats, battleStats, practiceStats);
             } catch (error) {
-                console.error('통계 로드 실패:', error);
+                console.error('대시보드 데이터 로드 실패:', error);
             }
         }
-
-        function logout() {
-            AuthManager.logout();
+        
+        function updateStats(stats, battleStats, practiceStats) {
+            // 해결한 문제
+            document.getElementById('solvedProblems').textContent = stats.solvedProblems || 0;
+            const problemProgress = Math.min((stats.solvedProblems || 0) / 100 * 100, 100);
+            document.getElementById('problemProgress').style.width = problemProgress + '%';
+            document.getElementById('problemProgressText').textContent = `목표: 100문제 (${stats.solvedProblems || 0}/100)`;
+            
+            // 배틀 승리
+            document.getElementById('battleWins').textContent = battleStats.wins || 0;
+            const totalBattles = (battleStats.wins || 0) + (battleStats.losses || 0);
+            const winRate = totalBattles > 0 ? Math.round((battleStats.wins || 0) / totalBattles * 100) : 0;
+            document.getElementById('battleProgress').style.width = winRate + '%';
+            document.getElementById('battleProgressText').textContent = `승률: ${winRate}%`;
+            
+            // 연속 학습일
+            document.getElementById('studyDays').textContent = stats.studyDays || 0;
+            const streakProgress = Math.min((stats.studyDays || 0) / 7 * 100, 100);
+            document.getElementById('streakProgress').style.width = streakProgress + '%';
+            document.getElementById('streakProgressText').textContent = `이번 주: ${stats.studyDays || 0}/7일`;
+            
+            // 총 점수
+            const totalScore = (stats.solvedProblems || 0) * 15 + (battleStats.wins || 0) * 50;
+            document.getElementById('totalScore').textContent = totalScore;
+            const nextLevel = Math.ceil(totalScore / 1000) * 1000;
+            const scoreProgress = (totalScore % 1000) / 10;
+            document.getElementById('scoreProgress').style.width = scoreProgress + '%';
+            document.getElementById('scoreProgressText').textContent = `다음 레벨까지 ${nextLevel - totalScore}점`;
         }
-
-        loadStats();
+        
+        async function loadRecentActivity() {
+            try {
+                const response = await fetch('/api/student/recent-activity');
+                const activities = await response.json();
+                displayRecentActivity(activities);
+            } catch (error) {
+                console.error('최근 활동 로드 실패:', error);
+                // API가 없으면 더미 데이터 표시 안함
+                document.getElementById('recentActivity').innerHTML = '<div class="empty-state">최근 활동을 불러올 수 없습니다.</div>';
+            }
+        }
+        
+        function displayRecentActivity(activities) {
+            const container = document.getElementById('recentActivity');
+            
+            if (!activities || activities.length === 0) {
+                container.innerHTML = '<div class="empty-state">최근 활동이 없습니다.</div>';
+                return;
+            }
+            
+            container.innerHTML = activities.map(activity => `
+                <div class="activity-item">
+                    <div class="activity-title">${activity.title}</div>
+                    <div class="activity-desc">${activity.description}</div>
+                    <div class="activity-time">${new Date(activity.timestamp).toLocaleString()}</div>
+                </div>
+            `).join('');
+        }
+        
+        async function loadAchievements() {
+            try {
+                const response = await fetch('/api/student/achievements');
+                const achievements = await response.json();
+                displayAchievements(achievements);
+            } catch (error) {
+                console.error('뱃지 로드 실패:', error);
+                // API가 없으면 더미 데이터 표시 안함
+                document.getElementById('achievements').innerHTML = '<div class="empty-state">뱃지 정보를 불러올 수 없습니다.</div>';
+            }
+        }
+        
+        function displayAchievements(achievements) {
+            const container = document.getElementById('achievements');
+            
+            if (!achievements || achievements.length === 0) {
+                container.innerHTML = '<div class="empty-state">아직 획득한 뱃지가 없습니다. 학습을 시작해보세요!</div>';
+                return;
+            }
+            
+            container.innerHTML = achievements.map(achievement => `
+                <div class="achievement-badge">
+                    <span>${achievement.icon}</span>
+                    <span>${achievement.name}</span>
+                </div>
+            `).join('');
+        }
+        
+        async function generateAIProblem() {
+            try {
+                const response = await fetch('/api/ai/generate-problem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ difficulty: 'random' })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    window.location.href = `/student/ai-problem?id=${result.problemId}`;
+                } else {
+                    alert('AI 문제 생성에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('AI 문제 생성 실패:', error);
+                alert('AI 문제 생성 중 오류가 발생했습니다.');
+            }
+        }
+        
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/';
+        }
     </script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script src="/js/common/websocket.js"></script>
-    <script src="/js/common/student-activity.js"></script>
 </body>
 </html>
