@@ -1,13 +1,13 @@
 body.teacher-page {
-    background: linear-gradient(135deg, #f8fafc 0%, #e0f2fe 50%, #b3e5fc 100%);
+    background: #f8fafc;
     color: #1e293b;
 }
 
 .teacher-page .header {
-    background: rgba(255, 255, 255, 0.95);
-    backdrop-filter: blur(10px);
-    border-bottom: 2px solid rgba(14, 165, 233, 0.2);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid #e2e8f0;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .teacher-page .logo {
@@ -19,7 +19,7 @@ body.teacher-page {
 }
 
 .teacher-page .nav-links a:hover {
-    background: rgba(14, 165, 233, 0.1);
+    background: #f1f5f9;
     color: #0ea5e9;
 }
 
@@ -28,17 +28,18 @@ body.teacher-page {
 }
 
 .teacher-header {
-    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    background: #0ea5e9;
     color: white;
     padding: 2rem;
-    border-radius: 1rem;
+    border-radius: 0.75rem;
     margin-bottom: 2rem;
-    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
 }
 
 .teacher-title {
     font-size: 2rem;
     font-weight: 700;
+    font-variation-settings: "wght" 700;
     margin-bottom: 0.5rem;
 }
 
@@ -48,28 +49,33 @@ body.teacher-page {
 }
 
 .teacher-page .card {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(14, 165, 233, 0.2);
+    background: white;
+    border: 1px solid #e2e8f0;
     color: #1e293b;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .teacher-page .btn {
-    background: linear-gradient(135deg, #0ea5e9, #0284c7);
+    background: #0ea5e9;
     color: white;
 }
 
 .teacher-page .btn:hover {
-    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+    background: #0284c7;
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
 .teacher-page .btn-secondary {
-    background: linear-gradient(135deg, #06b6d4, #0891b2);
+    background: #06b6d4;
+}
+
+.teacher-page .btn-secondary:hover {
+    background: #0891b2;
 }
 
 .teacher-page .input {
-    background: rgba(255, 255, 255, 0.9);
-    border: 1px solid rgba(14, 165, 233, 0.3);
+    background: white;
+    border: 1px solid #d1d5db;
     color: #1e293b;
 }
 
@@ -87,20 +93,21 @@ body.teacher-page {
 
 .student-card {
     background: white;
-    border: 1px solid rgba(14, 165, 233, 0.2);
+    border: 1px solid #e2e8f0;
     border-radius: 0.75rem;
     padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     transition: all 0.3s ease;
 }
 
 .student-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.2);
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.1);
 }
 
 .student-name {
     font-weight: 600;
+    font-variation-settings: "wght" 600;
     color: #0f172a;
     margin-bottom: 0.5rem;
 }
@@ -112,9 +119,9 @@ body.teacher-page {
 }
 
 .activity-monitor {
-    background: rgba(255, 255, 255, 0.95);
-    border-radius: 1rem;
+    background: white;
+    border-radius: 0.75rem;
     padding: 2rem;
     margin: 2rem 0;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }

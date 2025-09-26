@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI 배틀 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="/student/battle">배틀 홈</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">AI와 배틀</h1>
+            <p class="student-subtitle">AI와 함께 실력을 연마하세요</p>
+        </div>
+
+        <div id="aiSelection" class="card">
+            <h3>AI 난이도 선택</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem; margin: 2rem 0;">
+                <div class="battle-mode-card" onclick="selectAI('beginner')">
+                    <h4>초급 AI</h4>
+                    <p>기본적인 문제 해결 실력</p>
+                </div>
+                <div class="battle-mode-card" onclick="selectAI('intermediate')">
+                    <h4>중급 AI</h4>
+                    <p>효율적인 알고리즘 구사</p>
+                </div>
+                <div class="battle-mode-card" onclick="selectAI('advanced')">
+                    <h4>고급 AI</h4>
+                    <p>최적화된 솔루션 작성</p>
+                </div>
+            </div>
+        </div>
+
+        <div id="battleArena" class="card" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <div style="text-align: center;">
+                    <h4>나</h4>
+                    <div id="playerProgress" style="width: 200px; background: #334155; border-radius: 10px; padding: 5px; margin-top: 10px;">
+                        <div style="width: 0%; height: 20px; background: #10b981; border-radius: 5px; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+                <div style="text-align: center; color: #f59e0b; font-size: 2rem;">VS</div>
+                <div style="text-align: center;">
+                    <h4 id="aiName">AI</h4>
+                    <div id="aiProgress" style="width: 200px; background: #334155; border-radius: 10px; padding: 5px; margin-top: 10px;">
+                        <div style="width: 0%; height: 20px; background: #ef4444; border-radius: 5px; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="problem" style="background: #334155; padding: 1.5rem; border-radius: 0.5rem; margin-bottom: 2rem;">
+                <h4 id="problemTitle">문제 제목</h4>
+                <p id="problemDescription">문제 설명</p>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem;">
+                <div>
+                    <h5>나의 코드</h5>
+                    <textarea id="playerCode" class="input" style="height: 300px; font-family: 'Courier New', monospace;" placeholder="여기에 코드를 작성하세요..."></textarea>
+                    <button onclick="submitCode()" class="btn" style="width: 100%; margin-top: 1rem;">코드 제출</button>
+                </div>
+                <div>
+                    <h5>AI 코드 (실시간)</h5>
+                    <div id="aiCode" style="height: 300px; background: #475569; padding: 1rem; border-radius: 0.5rem; font-family: 'Courier New', monospace; color: #cbd5e1; overflow-y: auto;">
+                        AI가 코딩 중...
+                    </div>
+                </div>
+            </div>
+
+            <div id="timer" style="text-align: center; font-size: 1.5rem; font-weight: bold; color: #f59e0b; margin-top: 2rem;">
+                남은 시간: 10:00
+            </div>
+        </div>
+
+        <div id="battleResult" class="card" style="display: none;">
+            <div style="text-align: center;">
+                <h2 id="resultTitle" style="margin-bottom: 1rem;">결과</h2>
+                <p id="resultMessage" style="margin-bottom: 2rem;"></p>
+                <button onclick="restartBattle()" class="btn">다시 도전</button>
+                <button onclick="location.href='/student/battle'" class="btn btn-secondary" style="margin-left: 1rem;">배틀 홈</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script>
+        let selectedAI = '';
+        let battleTimer;
+        let timeLeft = 600; // 10분
+        let problems = [
+            {
+                title: "두 수의 합",
+                description: "정수 a와 b를 입력받아 a + b를 출력하는 프로그램을 작성하시오."
+            },
+            {
+                title: "최대값 찾기",
+                description: "배열에서 가장 큰 값을 찾아 출력하는 프로그램을 작성하시오."
+            },
+            {
+                title: "문자열 뒤집기",
+                description: "입력받은 문자열을 거꾸로 출력하는 프로그램을 작성하시오."
+            }
+        ];
+
+        function selectAI(level) {
+            selectedAI = level;
+            const aiNames = {
+                'beginner': '초급 AI',
+                'intermediate': '중급 AI',
+                'advanced': '고급 AI'
+            };
+            
+            document.getElementById('aiSelection').style.display = 'none';
+            document.getElementById('battleArena').style.display = 'block';
+            document.getElementById('aiName').textContent = aiNames[level];
+            
+            // 랜덤 문제 선택
+            const problem = problems[Math.floor(Math.random() * problems.length)];
+            document.getElementById('problemTitle').textContent = problem.title;
+            document.getElementById('problemDescription').textContent = problem.description;
+            
+            startBattle();
+        }
+
+        function startBattle() {
+            // 타이머 시작
+            battleTimer = setInterval(() => {
+                timeLeft--;
+                const minutes = Math.floor(timeLeft / 60);
+                const seconds = timeLeft % 60;
+                document.getElementById('timer').textContent = 
+                    `남은 시간: ${minutes}:${seconds.toString().padStart(2, '0')}`;
+                
+                if (timeLeft <= 0) {
+                    endBattle('시간 초과! AI가 승리했습니다.');
+                }
+            }, 1000);
+            
+            // AI 진행률 시뮬레이션
+            simulateAIProgress();
+        }
+
+        function simulateAIProgress() {
+            const speeds = {
+                'beginner': 0.8,
+                'intermediate': 1.2,
+                'advanced': 1.8
+            };
+            
+            const speed = speeds[selectedAI];
+            let aiProgress = 0;
+            
+            const aiTimer = setInterval(() => {
+                aiProgress += speed;
+                document.querySelector('#aiProgress div').style.width = Math.min(aiProgress, 100) + '%';
+                
+                if (aiProgress >= 100) {
+                    clearInterval(aiTimer);
+                    endBattle('AI가 먼저 완료했습니다! 패배하셨네요.');
+                }
+            }, 1000);
+        }
+
+        function submitCode() {
+            const code = document.getElementById('playerCode').value.trim();
+            
+            if (!code) {
+                alert('코드를 작성해주세요!');
+                return;
+            }
+            
+            // 간단한 코드 검증 (실제로는 서버에서 컴파일/실행 검증)
+            if (code.length < 10) {
+                alert('너무 짧은 코드입니다. 더 자세히 작성해주세요.');
+                return;
+            }
+            
+            clearInterval(battleTimer);
+            document.querySelector('#playerProgress div').style.width = '100%';
+            
+            setTimeout(() => {
+                endBattle('축하합니다! 승리하셨습니다!');
+            }, 500);
+        }
+
+        function endBattle(message) {
+            clearInterval(battleTimer);
+            
+            document.getElementById('battleArena').style.display = 'none';
+            document.getElementById('battleResult').style.display = 'block';
+            
+            const isWin = message.includes('승리');
+            document.getElementById('resultTitle').textContent = isWin ? '승리!' : '패배';
+            document.getElementById('resultTitle').style.color = isWin ? '#10b981' : '#ef4444';
+            document.getElementById('resultMessage').textContent = message;
+        }
+
+        function restartBattle() {
+            document.getElementById('battleResult').style.display = 'none';
+            document.getElementById('aiSelection').style.display = 'block';
+            
+            // 리셋
+            timeLeft = 600;
+            document.getElementById('playerCode').value = '';
+            document.querySelector('#playerProgress div').style.width = '0%';
+            document.querySelector('#aiProgress div').style.width = '0%';
+        }
+
+        function logout() {
+            AuthManager.logout();
+        }
+    </script>
+</body>
+</html>

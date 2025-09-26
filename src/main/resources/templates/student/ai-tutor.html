@@ -21,31 +21,34 @@
     <div class="student-dashboard">
         <div class="student-header">
             <h1 class="student-title">AI 튜터</h1>
-            <p class="student-subtitle">궁금한 것을 AI에게 물어보세요</p>
+            <p class="student-subtitle">코딩 학습의 든든한 도우미</p>
         </div>
 
         <div class="card" style="height: 70vh; display: flex; flex-direction: column;">
-            <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1rem; border: 1px solid #334155; border-radius: 0.5rem; margin-bottom: 1rem; background: #0f172a;">
-                <div class="chat-message ai-message">
-                    <div style="background: #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                        <strong>AI 튜터:</strong> 안녕하세요! 코딩 학습에 대해 무엇이든 물어보세요. 🤖
+            <div id="chatMessages" style="flex: 1; overflow-y: auto; padding: 1rem; background: #334155; border-radius: 0.5rem; margin-bottom: 1rem;">
+                <div class="ai-message" style="margin-bottom: 1rem;">
+                    <div style="display: flex; align-items: start; gap: 0.75rem;">
+                        <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">AI</div>
+                        <div style="background: #475569; padding: 0.75rem 1rem; border-radius: 0.75rem; max-width: 70%;">
+                            안녕하세요! 저는 여러분의 코딩 학습을 도와드릴 AI 튜터입니다. 자바, 알고리즘, 자료구조 등 궁금한 것이 있으면 언제든지 물어보세요! 😊
+                        </div>
                     </div>
                 </div>
             </div>
             
-            <div style="display: flex; gap: 1rem;">
-                <textarea id="messageInput" class="input" placeholder="질문을 입력하세요..." style="flex: 1; min-height: 60px; resize: vertical;" onkeypress="handleKeyPress(event)"></textarea>
-                <button class="btn" onclick="sendMessage()" style="height: fit-content;">전송</button>
+            <div style="display: flex; gap: 0.75rem;">
+                <input type="text" id="messageInput" class="input" placeholder="질문을 입력하세요..." style="flex: 1;" onkeypress="handleKeyPress(event)">
+                <button onclick="sendMessage()" class="btn" style="padding: 0.75rem 1.5rem;">전송</button>
             </div>
         </div>
 
         <div class="card">
-            <h3>자주 묻는 질문</h3>
-            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; margin-top: 1rem;">
-                <button class="btn btn-secondary" onclick="askPredefinedQuestion('자바 기초 문법 설명해줘')">자바 기초 문법</button>
-                <button class="btn btn-secondary" onclick="askPredefinedQuestion('알고리즘 공부 방법')">알고리즘 공부법</button>
-                <button class="btn btn-secondary" onclick="askPredefinedQuestion('배열과 리스트 차이점')">배열 vs 리스트</button>
-                <button class="btn btn-secondary" onclick="askPredefinedQuestion('객체지향 프로그래밍이란')">객체지향 개념</button>
+            <h3>추천 질문</h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 1rem;">
+                <button onclick="askRecommendedQuestion('자바 변수 타입에 대해 설명해주세요')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">변수 타입</button>
+                <button onclick="askRecommendedQuestion('배열과 리스트의 차이점이 뭔가요?')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">배열 vs 리스트</button>
+                <button onclick="askRecommendedQuestion('반복문 종류와 사용법을 알려주세요')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">반복문</button>
+                <button onclick="askRecommendedQuestion('정렬 알고리즘 종류를 설명해주세요')" class="btn btn-secondary" style="padding: 0.5rem 1rem; font-size: 0.9rem;">정렬 알고리즘</button>
             </div>
         </div>
     </div>
@@ -53,57 +56,88 @@
     <script src="/js/common/auth.js"></script>
     <script src="/js/common/api.js"></script>
     <script>
-        async function sendMessage() {
-            const input = document.getElementById('messageInput');
-            const message = input.value.trim();
-            
-            if (!message) return;
-
-            addChatMessage(message, 'user');
-            input.value = '';
-
-            try {
-                const response = await ApiClient.post('/api/ai/chat', { message });
-                addChatMessage(response.response, 'ai');
-            } catch (error) {
-                addChatMessage('죄송합니다. AI 서버에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.', 'ai', true);
-                console.error('AI 채팅 오류:', error);
-            }
-        }
-
-        function addChatMessage(message, sender, isError = false) {
-            const chatMessages = document.getElementById('chatMessages');
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `chat-message ${sender}-message`;
-            
-            const bgColor = sender === 'user' ? '#3b82f6' : (isError ? '#ef4444' : '#334155');
-            const senderName = sender === 'user' ? '나' : 'AI 튜터';
-            
-            messageDiv.innerHTML = `
-                <div style="background: ${bgColor}; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; ${sender === 'user' ? 'margin-left: 20%; text-align: right;' : ''}">
-                    <strong>${senderName}:</strong> ${message}
-                </div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
         function handleKeyPress(event) {
-            if (event.key === 'Enter' && !event.shiftKey) {
-                event.preventDefault();
+            if (event.key === 'Enter') {
                 sendMessage();
             }
         }
 
-        function askPredefinedQuestion(question) {
+        function askRecommendedQuestion(question) {
             document.getElementById('messageInput').value = question;
             sendMessage();
+        }
+
+        async function sendMessage() {
+            const messageInput = document.getElementById('messageInput');
+            const message = messageInput.value.trim();
+            
+            if (!message) return;
+
+            // 사용자 메시지 추가
+            addMessage(message, true);
+            messageInput.value = '';
+
+            // AI 응답 요청
+            try {
+                const response = await fetch('/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({ message })
+                });
+
+                const result = await response.json();
+                
+                if (response.ok) {
+                    addMessage(result.message, false);
+                } else {
+                    addMessage('죄송합니다. AI 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
+                }
+            } catch (error) {
+                addMessage('죄송합니다. AI 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
+            }
+        }
+
+        function addMessage(message, isUser) {
+            const chatMessages = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = isUser ? 'user-message' : 'ai-message';
+            messageDiv.style.marginBottom = '1rem';
+
+            if (isUser) {
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: start; gap: 0.75rem; justify-content: flex-end;">
+                        <div style="background: #3b82f6; padding: 0.75rem 1rem; border-radius: 0.75rem; max-width: 70%; color: white;">
+                            ${message}
+                        </div>
+                        <div style="width: 32px; height: 32px; background: #10b981; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">나</div>
+                    </div>
+                `;
+            } else {
+                messageDiv.innerHTML = `
+                    <div style="display: flex; align-items: start; gap: 0.75rem;">
+                        <div style="width: 32px; height: 32px; background: #3b82f6; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; flex-shrink: 0;">AI</div>
+                        <div style="background: #475569; padding: 0.75rem 1rem; border-radius: 0.75rem; max-width: 70%;">
+                            ${message}
+                        </div>
+                    </div>
+                `;
+            }
+
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
         }
 
         function logout() {
             AuthManager.logout();
         }
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/common/websocket.js"></script>
+    <script src="/js/common/student-activity.js"></script>
+</body>
 </body>
 </html>

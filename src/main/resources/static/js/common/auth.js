@@ -1,14 +1,32 @@
 class AuthManager {
-    static getToken() {
-        return localStorage.getItem('authToken');
-    }
-    
     static setToken(token) {
         localStorage.setItem('authToken', token);
     }
     
-    static removeToken() {
-        localStorage.removeItem('authToken');
+    static getToken() {
+        return localStorage.getItem('authToken');
+    }
+    
+    static setUserRole(role) {
+        localStorage.setItem('userRole', role);
+    }
+    
+    static setUserInfo(userInfo) {
+        localStorage.setItem('userId', userInfo.id);
+        localStorage.setItem('userName', userInfo.name);
+        localStorage.setItem('userEmail', userInfo.email);
+    }
+    
+    static getCurrentUserRole() {
+        return localStorage.getItem('userRole');
+    }
+    
+    static getCurrentUserId() {
+        return localStorage.getItem('userId');
+    }
+    
+    static getCurrentUserName() {
+        return localStorage.getItem('userName');
     }
     
     static getAuthHeaders() {
@@ -16,22 +34,16 @@ class AuthManager {
         return token ? { 'Authorization': `Bearer ${token}` } : {};
     }
     
-    static async isAuthenticated() {
-        const token = this.getToken();
-        if (!token) return false;
-        
-        try {
-            const response = await fetch('/api/auth/validate', {
-                headers: this.getAuthHeaders()
-            });
-            return response.ok;
-        } catch {
-            return false;
-        }
+    static logout() {
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('userRole');
+        localStorage.removeItem('userId');
+        localStorage.removeItem('userName');
+        localStorage.removeItem('userEmail');
+        window.location.href = '/';
     }
     
-    static logout() {
-        this.removeToken();
-        window.location.href = '/';
+    static isLoggedIn() {
+        return !!this.getToken();
     }
 }

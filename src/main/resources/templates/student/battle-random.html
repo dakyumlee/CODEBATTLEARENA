@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>랜덤 배틀 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="/student/battle">배틀 홈</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">랜덤 배틀</h1>
+            <p class="student-subtitle">실력이 비슷한 상대와 즉시 매칭됩니다</p>
+        </div>
+
+        <div class="card">
+            <h3>매칭 설정</h3>
+            <div style="margin: 2rem 0;">
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 2rem;">
+                    <div style="text-align: center; padding: 1rem; background: #334155; border-radius: 0.5rem;">
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #3b82f6;" id="currentRating">-</div>
+                        <div style="font-size: 0.9rem; color: #cbd5e1;">현재 레이팅</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #334155; border-radius: 0.5rem;">
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #10b981;" id="wins">-</div>
+                        <div style="font-size: 0.9rem; color: #cbd5e1;">승리</div>
+                    </div>
+                    <div style="text-align: center; padding: 1rem; background: #334155; border-radius: 0.5rem;">
+                        <div style="font-size: 1.2rem; font-weight: bold; color: #ef4444;" id="losses">-</div>
+                        <div style="font-size: 0.9rem; color: #cbd5e1;">패배</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">선호 난이도</label>
+                    <select id="preferredDifficulty" class="input">
+                        <option value="자동">자동 (레이팅 기반)</option>
+                        <option value="하">하 - 기초 문제</option>
+                        <option value="중">중 - 표준 문제</option>
+                        <option value="상">상 - 고급 문제</option>
+                    </select>
+                </div>
+
+                <button id="startMatching" onclick="startRandomMatching()" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem;">
+                    매칭 시작
+                </button>
+            </div>
+        </div>
+
+        <div id="matchingStatus" class="card" style="display: none;">
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 1.2rem; margin-bottom: 1rem; color: #3b82f6;">상대를 찾는 중...</div>
+                <div style="width: 60px; height: 60px; margin: 0 auto 1rem; border: 4px solid #334155; border-top: 4px solid #3b82f6; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                <div id="matchingTime" style="color: #64748b;">00:00</div>
+                <button onclick="cancelMatching()" class="btn btn-danger" style="margin-top: 1rem;">매칭 취소</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+
+    <script src="/js/common/auth.js"></script>
+    <script>
+        let matchingTimer;
+        let matchingTime = 0;
+
+        async function loadUserStats() {
+            try {
+                const stats = await fetch('/api/student/battle-stats');
+                const data = await stats.json();
+                document.getElementById('currentRating').textContent = data.rating || 1000;
+                document.getElementById('wins').textContent = data.wins || 0;
+                document.getElementById('losses').textContent = data.losses || 0;
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
+            }
+        }
+
+        function startRandomMatching() {
+            document.getElementById('startMatching').parentElement.parentElement.style.display = 'none';
+            document.getElementById('matchingStatus').style.display = 'block';
+            
+            matchingTime = 0;
+            matchingTimer = setInterval(() => {
+                matchingTime++;
+                const minutes = Math.floor(matchingTime / 60);
+                const seconds = matchingTime % 60;
+                document.getElementById('matchingTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        function cancelMatching() {
+            clearInterval(matchingTimer);
+            document.getElementById('matchingStatus').style.display = 'none';
+            document.getElementById('startMatching').parentElement.parentElement.style.display = 'block';
+        }
+
+        function logout() {
+            AuthManager.logout();
+        }
+
+        loadUserStats();
+    </script>
+</body>
+</html>

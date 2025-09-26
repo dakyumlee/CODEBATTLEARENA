@@ -4,10 +4,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -16,48 +14,51 @@ public class MaterialController {
 
     @GetMapping("/materials")
     public ResponseEntity<?> getMaterials() {
-        List<Map<String, Object>> materials = new ArrayList<>();
-        return ResponseEntity.ok(materials);
+        return ResponseEntity.ok(new ArrayList<>());
     }
 
     @PostMapping("/materials/upload")
     public ResponseEntity<?> uploadMaterials(@RequestParam("files") MultipartFile[] files) {
-        return ResponseEntity.ok("파일이 업로드되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "파일이 업로드되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/materials/link")
     public ResponseEntity<?> shareLink(@RequestBody LinkRequest request) {
-        return ResponseEntity.ok("링크가 공유되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "링크가 공유되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/materials/{id}")
     public ResponseEntity<?> deleteMaterial(@PathVariable Long id) {
-        return ResponseEntity.ok("자료가 삭제되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "자료가 삭제되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/problems")
     public ResponseEntity<?> getProblems() {
-        List<Map<String, Object>> problems = new ArrayList<>();
-        return ResponseEntity.ok(problems);
+        return ResponseEntity.ok(new ArrayList<>());
     }
 
     @PostMapping("/problems")
     public ResponseEntity<?> createProblem(@RequestBody ProblemRequest request) {
-        return ResponseEntity.ok("문제가 출제되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "문제가 출제되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @GetMapping("/submissions")
     public ResponseEntity<?> getSubmissions() {
-        List<Map<String, Object>> submissions = new ArrayList<>();
-        return ResponseEntity.ok(submissions);
+        return ResponseEntity.ok(new ArrayList<>());
     }
 
     @GetMapping("/grades")
     public ResponseEntity<?> getGrades() {
         Map<String, Object> response = new HashMap<>();
-        
-        List<Map<String, Object>> grades = new ArrayList<>();
-        response.put("grades", grades);
+        response.put("grades", new ArrayList<>());
         
         Map<String, Object> analysis = new HashMap<>();
         analysis.put("classAverage", 0);
@@ -66,9 +67,7 @@ public class MaterialController {
         analysis.put("attendanceRate", 0);
         response.put("analysis", analysis);
         
-        List<Map<String, Object>> counseling = new ArrayList<>();
-        response.put("counseling", counseling);
-        
+        response.put("counseling", new ArrayList<>());
         return ResponseEntity.ok(response);
     }
 

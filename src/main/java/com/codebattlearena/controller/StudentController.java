@@ -1,13 +1,10 @@
 package com.codebattlearena.controller;
 
-import com.codebattlearena.model.User;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 @RestController
@@ -24,6 +21,16 @@ public class StudentController {
         stats.put("battleWins", 0);
         stats.put("accuracy", 0);
         stats.put("studyDays", 0);
+        return ResponseEntity.ok(stats);
+    }
+
+    @GetMapping("/battle-stats")
+    public ResponseEntity<?> getBattleStats() {
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("rating", 1000);
+        stats.put("wins", 0);
+        stats.put("losses", 0);
+        stats.put("totalBattles", 0);
         return ResponseEntity.ok(stats);
     }
 
@@ -48,28 +55,28 @@ public class StudentController {
 
     @GetMapping("/notes")
     public ResponseEntity<?> getNotes() {
-        List<Map<String, Object>> notes = new ArrayList<>();
-        return ResponseEntity.ok(notes);
+        return ResponseEntity.ok(new ArrayList<>());
     }
 
     @PostMapping("/notes")
     public ResponseEntity<?> createNote(@RequestBody NoteRequest request) {
-        return ResponseEntity.ok("노트가 저장되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "노트가 저장되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/notes/{id}")
     public ResponseEntity<?> updateNote(@PathVariable Long id, @RequestBody NoteRequest request) {
-        return ResponseEntity.ok("노트가 수정되었습니다.");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "노트가 수정되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/notes/{id}")
     public ResponseEntity<?> deleteNote(@PathVariable Long id) {
-        return ResponseEntity.ok("노트가 삭제되었습니다.");
-    }
-
-    @PostMapping("/activity")
-    public ResponseEntity<?> updateActivity(@RequestBody ActivityRequest request) {
-        return ResponseEntity.ok("활동 업데이트 성공");
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "노트가 삭제되었습니다.");
+        return ResponseEntity.ok(response);
     }
 
     public static class NoteRequest {
@@ -80,15 +87,5 @@ public class StudentController {
         public void setTitle(String title) { this.title = title; }
         public String getContent() { return content; }
         public void setContent(String content) { this.content = content; }
-    }
-
-    public static class ActivityRequest {
-        private String activity;
-        private String page;
-
-        public String getActivity() { return activity; }
-        public void setActivity(String activity) { this.activity = activity; }
-        public String getPage() { return page; }
-        public void setPage(String page) { this.page = page; }
     }
 }

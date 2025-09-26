@@ -12,7 +12,7 @@
         <div class="nav">
             <a href="/" class="logo">코드배틀아레나</a>
             <ul class="nav-links">
-                <li><a href="/teacher/dashboard">대시보드</a></li>
+                <li><a href="/teacher">대시보드</a></li>
                 <li><a href="/teacher/class">수업관리</a></li>
                 <li><a href="/teacher/grades">성적관리</a></li>
                 <li><a href="#" onclick="logout()">로그아웃</a></li>
@@ -22,287 +22,403 @@
 
     <div class="teacher-dashboard">
         <div class="teacher-header">
-            <h1 class="teacher-title">수업관리</h1>
-            <p class="teacher-subtitle">자료 공유, 문제 출제, 과제 관리</p>
+            <h1 class="teacher-title">수업 자료 & 문제 관리</h1>
+            <p class="teacher-subtitle">학습 자료를 공유하고 문제를 출제하세요</p>
         </div>
 
+        <!-- 자료 관리 섹션 -->
         <div class="card">
-            <h3>자료 관리</h3>
-            <div style="margin: 2rem 0;">
-                <input type="file" id="fileInput" style="display: none;" onchange="uploadFile()" multiple accept=".pdf,.ppt,.pptx,.doc,.docx,.txt,.zip">
-                <button class="btn" onclick="document.getElementById('fileInput').click()">파일 업로드</button>
-                <button class="btn btn-secondary" onclick="shareLink()" style="margin-left: 1rem;">링크 공유</button>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3>📁 학습 자료 관리</h3>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="openUploadModal()" class="btn">파일 업로드</button>
+                    <button onclick="openLinkModal()" class="btn btn-secondary">링크 공유</button>
+                </div>
             </div>
-            
+
             <div id="materialsList">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">자료를 불러오는 중...</div>
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    자료를 불러오는 중...
+                </div>
             </div>
         </div>
 
+        <!-- 문제 출제 섹션 -->
         <div class="card">
-            <h3>문제 출제</h3>
-            <div style="display: flex; gap: 1rem; margin: 2rem 0;">
-                <button class="btn" onclick="showProblemForm('quiz')">퀴즈 만들기</button>
-                <button class="btn btn-secondary" onclick="showProblemForm('assignment')">과제 내기</button>
-                <button class="btn" onclick="showProblemForm('exam')">시험 출제</button>
-            </div>
-
-            <div id="problemForm" style="display: none; padding: 1rem; background: #f8fafc; border-radius: 0.5rem; margin: 2rem 0;">
-                <h4 id="problemFormTitle">문제 출제</h4>
-                <form onsubmit="submitProblem(event)">
-                    <input type="hidden" id="problemType">
-                    <input type="text" id="problemTitle" class="input" placeholder="문제 제목" style="margin-bottom: 1rem;" required>
-                    <textarea id="problemDescription" class="input" placeholder="문제 설명" style="min-height: 150px; margin-bottom: 1rem;" required></textarea>
-                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
-                        <select id="problemDifficulty" class="input" style="width: auto;">
-                            <option value="하">하</option>
-                            <option value="중">중</option>
-                            <option value="상">상</option>
-                        </select>
-                        <input type="number" id="problemPoints" class="input" placeholder="점수" min="1" max="100" value="10" style="width: 100px;">
-                        <input type="datetime-local" id="problemDeadline" class="input" style="width: auto;">
-                    </div>
-                    <div>
-                        <button type="submit" class="btn">출제하기</button>
-                        <button type="button" onclick="hideProblemForm()" class="btn" style="background: #6b7280; margin-left: 1rem;">취소</button>
-                    </div>
-                </form>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3>📝 문제/퀴즈/시험 관리</h3>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="openProblemModal()" class="btn">문제 출제</button>
+                    <button onclick="openQuizModal()" class="btn btn-secondary">퀴즈 만들기</button>
+                    <button onclick="openExamModal()" class="btn">시험 출제</button>
+                </div>
             </div>
 
             <div id="problemsList">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">출제한 문제를 불러오는 중...</div>
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    출제한 문제가 없습니다.
+                </div>
             </div>
         </div>
 
+        <!-- 채점 대기 섹션 -->
         <div class="card">
-            <h3>제출된 답안</h3>
-            <div id="submissionsList">
-                <div style="text-align: center; color: #64748b; padding: 2rem;">제출된 답안을 불러오는 중...</div>
+            <h3>✅ 채점 대기 목록</h3>
+            <div id="gradingQueue" style="margin-top: 2rem;">
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    채점 대기 중인 과제가 없습니다.
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- 파일 업로드 모달 -->
+    <div id="uploadModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>파일 업로드</h3>
+                <span class="modal-close" onclick="closeModal('uploadModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="file" id="uploadFiles" multiple class="input" style="margin-bottom: 1rem;">
+                <input type="text" id="uploadTitle" class="input" placeholder="자료 제목" style="margin-bottom: 1rem;">
+                <textarea id="uploadDescription" class="input" placeholder="자료 설명 (선택사항)" style="margin-bottom: 1rem; min-height: 80px;"></textarea>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="uploadFiles()" class="btn">업로드</button>
+                    <button onclick="closeModal('uploadModal')" class="btn" style="background: #6b7280;">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 링크 공유 모달 -->
+    <div id="linkModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>링크 공유</h3>
+                <span class="modal-close" onclick="closeModal('linkModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <input type="url" id="linkUrl" class="input" placeholder="https://example.com" style="margin-bottom: 1rem;">
+                <input type="text" id="linkTitle" class="input" placeholder="링크 제목" style="margin-bottom: 1rem;">
+                <textarea id="linkDescription" class="input" placeholder="링크 설명 (선택사항)" style="margin-bottom: 1rem; min-height: 80px;"></textarea>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="shareLink()" class="btn">공유</button>
+                    <button onclick="closeModal('linkModal')" class="btn" style="background: #6b7280;">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 문제 출제 모달 -->
+    <div id="problemModal" class="modal" style="display: none;">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3>문제 출제</h3>
+                <span class="modal-close" onclick="closeModal('problemModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <input type="text" id="problemTitle" class="input" placeholder="문제 제목">
+                    <select id="problemDifficulty" class="input">
+                        <option value="하">하 - 기초</option>
+                        <option value="중" selected>중 - 표준</option>
+                        <option value="상">상 - 고급</option>
+                    </select>
+                </div>
+                <textarea id="problemDescription" class="input" placeholder="문제 설명" style="min-height: 120px; margin-bottom: 1rem;"></textarea>
+                <textarea id="problemExample" class="input" placeholder="예제 입출력" style="min-height: 80px; margin-bottom: 1rem;"></textarea>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem;">
+                    <input type="number" id="problemPoints" class="input" placeholder="점수" value="10" min="1" max="100">
+                    <input type="datetime-local" id="problemDeadline" class="input">
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="createProblem()" class="btn">문제 출제</button>
+                    <button onclick="closeModal('problemModal')" class="btn" style="background: #6b7280;">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-close {
+            color: #64748b;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #ef4444;
+        }
+
+        .material-item, .problem-item {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .material-item:hover, .problem-item:hover {
+            background: #f1f5f9;
+        }
+    </style>
+
     <script src="/js/common/auth.js"></script>
-    <script src="/js/common/api.js"></script>
     <script>
         async function loadMaterials() {
             try {
-                const materials = await ApiClient.get('/api/teacher/materials');
-                displayMaterials(materials);
+                const materials = await fetch('/api/teacher/materials', {
+                    headers: AuthManager.getAuthHeaders()
+                }).then(r => r.json());
+
+                const materialsList = document.getElementById('materialsList');
+                
+                if (materials.length === 0) {
+                    materialsList.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">공유한 자료가 없습니다.</div>';
+                    return;
+                }
+
+                materialsList.innerHTML = materials.map(material => `
+                    <div class="material-item">
+                        <div>
+                            <h4>${material.title}</h4>
+                            <div style="color: #64748b; font-size: 0.9rem;">
+                                업로드: ${new Date(material.createdAt).toLocaleDateString('ko-KR')} | 
+                                다운로드: ${material.downloadsCount || 0}회
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button onclick="deleteMaterial(${material.id})" class="btn btn-danger" style="padding: 0.5rem;">삭제</button>
+                        </div>
+                    </div>
+                `).join('');
             } catch (error) {
                 document.getElementById('materialsList').innerHTML = 
                     '<div style="text-align: center; color: #ef4444; padding: 2rem;">자료를 불러올 수 없습니다.</div>';
-                console.error('자료 로드 실패:', error);
             }
         }
 
-        function displayMaterials(materials) {
-            const listDiv = document.getElementById('materialsList');
+        function openUploadModal() {
+            document.getElementById('uploadModal').style.display = 'block';
+        }
+
+        function openLinkModal() {
+            document.getElementById('linkModal').style.display = 'block';
+        }
+
+        function openProblemModal() {
+            document.getElementById('problemModal').style.display = 'block';
+        }
+
+        function openQuizModal() {
+            alert('퀴즈 기능은 대시보드에서 이용하실 수 있습니다.');
+        }
+
+        function openExamModal() {
+            alert('시험 출제 기능 개발 중입니다.');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function uploadFiles() {
+            const filesInput = document.getElementById('uploadFiles');
+            const title = document.getElementById('uploadTitle').value.trim();
             
-            if (materials.length === 0) {
-                listDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">업로드된 자료가 없습니다.</div>';
+            if (filesInput.files.length === 0) {
+                alert('업로드할 파일을 선택해주세요.');
                 return;
             }
 
-            listDiv.innerHTML = materials.map(material => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin: 0.5rem 0;">
-                    <div>
-                        <strong>${material.title}</strong>
-                        <div style="color: #64748b; font-size: 0.9rem;">업로드: ${formatDate(material.createdAt)} | 다운로드: ${material.downloadsCount}회</div>
-                    </div>
-                    <div>
-                        <button class="btn btn-secondary" onclick="previewFile(${material.id})" style="padding: 0.5rem; margin-right: 0.5rem;">미리보기</button>
-                        <button class="btn btn-danger" onclick="deleteMaterial(${material.id})" style="padding: 0.5rem;">삭제</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function uploadFile() {
-            const files = document.getElementById('fileInput').files;
-            if (files.length === 0) return;
-
-            const formData = new FormData();
-            for (let i = 0; i < files.length; i++) {
-                formData.append('files', files[i]);
+            if (!title) {
+                alert('자료 제목을 입력해주세요.');
+                return;
             }
 
             try {
-                await fetch('/api/teacher/materials/upload', {
+                const formData = new FormData();
+                for (let file of filesInput.files) {
+                    formData.append('files', file);
+                }
+                formData.append('title', title);
+                formData.append('description', document.getElementById('uploadDescription').value);
+
+                const response = await fetch('/api/teacher/materials/upload', {
                     method: 'POST',
                     headers: AuthManager.getAuthHeaders(),
                     body: formData
                 });
-                alert('파일이 업로드되었습니다.');
-                loadMaterials();
+
+                if (response.ok) {
+                    alert('파일이 업로드되었습니다.');
+                    closeModal('uploadModal');
+                    document.getElementById('uploadFiles').value = '';
+                    document.getElementById('uploadTitle').value = '';
+                    document.getElementById('uploadDescription').value = '';
+                    loadMaterials();
+                } else {
+                    throw new Error('업로드 실패');
+                }
             } catch (error) {
                 alert('파일 업로드에 실패했습니다: ' + error.message);
             }
         }
 
-        function shareLink() {
-            const url = prompt('공유할 링크 URL을 입력하세요:');
-            const title = prompt('링크 제목을 입력하세요:');
+        async function shareLink() {
+            const url = document.getElementById('linkUrl').value.trim();
+            const title = document.getElementById('linkTitle').value.trim();
             
-            if (url && title) {
-                ApiClient.post('/api/teacher/materials/link', { url, title })
-                    .then(() => {
-                        alert('링크가 공유되었습니다.');
-                        loadMaterials();
+            if (!url || !title) {
+                alert('URL과 제목을 모두 입력해주세요.');
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/teacher/materials/link', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        url: url,
+                        title: title,
+                        description: document.getElementById('linkDescription').value
                     })
-                    .catch(error => alert('링크 공유에 실패했습니다: ' + error.message));
+                });
+
+                if (response.ok) {
+                    alert('링크가 공유되었습니다.');
+                    closeModal('linkModal');
+                    document.getElementById('linkUrl').value = '';
+                    document.getElementById('linkTitle').value = '';
+                    document.getElementById('linkDescription').value = '';
+                    loadMaterials();
+                } else {
+                    throw new Error('공유 실패');
+                }
+            } catch (error) {
+                alert('링크 공유에 실패했습니다: ' + error.message);
             }
         }
 
-        function showProblemForm(type) {
-            document.getElementById('problemType').value = type;
-            document.getElementById('problemFormTitle').textContent = 
-                type === 'quiz' ? '퀴즈 만들기' : type === 'assignment' ? '과제 내기' : '시험 출제';
-            document.getElementById('problemForm').style.display = 'block';
-        }
-
-        function hideProblemForm() {
-            document.getElementById('problemForm').style.display = 'none';
-            document.querySelector('#problemForm form').reset();
-        }
-
-        async function submitProblem(event) {
-            event.preventDefault();
+        async function createProblem() {
+            const title = document.getElementById('problemTitle').value.trim();
+            const description = document.getElementById('problemDescription').value.trim();
             
-            const data = {
-                type: document.getElementById('problemType').value,
-                title: document.getElementById('problemTitle').value,
-                description: document.getElementById('problemDescription').value,
-                difficulty: document.getElementById('problemDifficulty').value,
-                points: document.getElementById('problemPoints').value,
-                deadline: document.getElementById('problemDeadline').value
-            };
+            if (!title || !description) {
+                alert('문제 제목과 설명을 입력해주세요.');
+                return;
+            }
 
             try {
-                await ApiClient.post('/api/teacher/problems', data);
-                alert('문제가 출제되었습니다.');
-                hideProblemForm();
-                loadProblems();
+                const response = await fetch('/api/teacher/create-problem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        description: description,
+                        difficulty: document.getElementById('problemDifficulty').value,
+                        points: parseInt(document.getElementById('problemPoints').value),
+                        deadline: document.getElementById('problemDeadline').value,
+                        type: 'assignment'
+                    })
+                });
+
+                if (response.ok) {
+                    alert('문제가 출제되었습니다.');
+                    closeModal('problemModal');
+                    document.getElementById('problemTitle').value = '';
+                    document.getElementById('problemDescription').value = '';
+                    document.getElementById('problemExample').value = '';
+                    document.getElementById('problemPoints').value = '10';
+                    document.getElementById('problemDeadline').value = '';
+                } else {
+                    throw new Error('문제 출제 실패');
+                }
             } catch (error) {
                 alert('문제 출제에 실패했습니다: ' + error.message);
             }
         }
 
-        async function loadProblems() {
-            try {
-                const problems = await ApiClient.get('/api/teacher/problems');
-                displayProblems(problems);
-            } catch (error) {
-                document.getElementById('problemsList').innerHTML = 
-                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">문제를 불러올 수 없습니다.</div>';
-                console.error('문제 로드 실패:', error);
-            }
-        }
-
-        function displayProblems(problems) {
-            const listDiv = document.getElementById('problemsList');
-            
-            if (problems.length === 0) {
-                listDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">출제한 문제가 없습니다.</div>';
+        async function deleteMaterial(id) {
+            if (!confirm('정말 이 자료를 삭제하시겠습니까?')) {
                 return;
             }
 
-            listDiv.innerHTML = problems.map(problem => `
-                <div style="border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 1rem; margin: 0.5rem 0;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div>
-                            <h4>${problem.title}</h4>
-                            <p style="color: #64748b; margin: 0.5rem 0;">${problem.description.substring(0, 100)}...</p>
-                            <span style="background: ${getDifficultyColor(problem.difficulty)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">
-                                ${problem.difficulty}
-                            </span>
-                            <span style="margin-left: 1rem; color: #3b82f6;">${problem.points}점</span>
-                        </div>
-                        <button class="btn" onclick="viewSubmissions(${problem.id})" style="padding: 0.5rem;">답안 보기</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        async function loadSubmissions() {
             try {
-                const submissions = await ApiClient.get('/api/teacher/submissions');
-                displaySubmissions(submissions);
+                const response = await fetch(`/api/teacher/materials/${id}`, {
+                    method: 'DELETE',
+                    headers: AuthManager.getAuthHeaders()
+                });
+
+                if (response.ok) {
+                    alert('자료가 삭제되었습니다.');
+                    loadMaterials();
+                } else {
+                    throw new Error('삭제 실패');
+                }
             } catch (error) {
-                document.getElementById('submissionsList').innerHTML = 
-                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">답안을 불러올 수 없습니다.</div>';
-                console.error('답안 로드 실패:', error);
+                alert('자료 삭제에 실패했습니다: ' + error.message);
             }
-        }
-
-        function displaySubmissions(submissions) {
-            const listDiv = document.getElementById('submissionsList');
-            
-            if (submissions.length === 0) {
-                listDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">제출된 답안이 없습니다.</div>';
-                return;
-            }
-
-            listDiv.innerHTML = submissions.map(submission => `
-                <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; margin: 0.5rem 0;">
-                    <div>
-                        <strong>${submission.studentName}</strong> - ${submission.problemTitle}
-                        <div style="color: #64748b; font-size: 0.9rem;">제출시간: ${formatDate(submission.submittedAt)}</div>
-                    </div>
-                    <div>
-                        ${submission.score !== null ? 
-                            `<span style="color: ${submission.score >= 80 ? '#10b981' : submission.score >= 60 ? '#f59e0b' : '#ef4444'}; margin-right: 1rem;">${submission.score}점</span>` : 
-                            ''
-                        }
-                        <button class="btn" onclick="gradeSubmission(${submission.id})" style="padding: 0.5rem;">채점하기</button>
-                    </div>
-                </div>
-            `).join('');
-        }
-
-        function getDifficultyColor(difficulty) {
-            switch(difficulty) {
-                case '하': return '#10b981';
-                case '중': return '#f59e0b';
-                case '상': return '#ef4444';
-                default: return '#6b7280';
-            }
-        }
-
-        function formatDate(dateString) {
-            return new Date(dateString).toLocaleString('ko-KR');
-        }
-
-        function previewFile(fileId) {
-            window.open(`/api/files/preview/${fileId}`, '_blank');
-        }
-
-        function deleteMaterial(materialId) {
-            if (confirm('정말로 이 자료를 삭제하시겠습니까?')) {
-                ApiClient.delete(`/api/teacher/materials/${materialId}`)
-                    .then(() => {
-                        alert('자료가 삭제되었습니다.');
-                        loadMaterials();
-                    })
-                    .catch(error => alert('자료 삭제에 실패했습니다: ' + error.message));
-            }
-        }
-
-        function viewSubmissions(problemId) {
-            location.href = `/teacher/problem/${problemId}/submissions`;
-        }
-
-        function gradeSubmission(submissionId) {
-            location.href = `/teacher/submission/${submissionId}/grade`;
         }
 
         function logout() {
             AuthManager.logout();
         }
 
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
         loadMaterials();
-        loadProblems();
-        loadSubmissions();
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/common/websocket.js"></script>
 </body>
 </html>

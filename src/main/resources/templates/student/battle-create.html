@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>친구와 배틀 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="/student/battle">배틀 홈</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">친구와 배틀</h1>
+            <p class="student-subtitle">배틀방을 만들어서 친구를 초대해보세요</p>
+        </div>
+
+        <div class="card">
+            <h3>배틀방 설정</h3>
+            <form id="createBattleForm" style="margin-top: 2rem;">
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">방 이름</label>
+                    <input type="text" id="roomName" class="input" placeholder="배틀방 이름을 입력하세요" required>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">문제 난이도</label>
+                    <select id="difficulty" class="input">
+                        <option value="하">하 - 기초 문제</option>
+                        <option value="중" selected>중 - 표준 문제</option>
+                        <option value="상">상 - 고급 문제</option>
+                    </select>
+                </div>
+                
+                <div style="margin-bottom: 1.5rem;">
+                    <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">제한 시간</label>
+                    <select id="timeLimit" class="input">
+                        <option value="10">10분</option>
+                        <option value="15" selected>15분</option>
+                        <option value="20">20분</option>
+                        <option value="30">30분</option>
+                    </select>
+                </div>
+                
+                <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1.1rem;">배틀방 생성</button>
+            </form>
+        </div>
+
+        <div id="battleRoom" class="card" style="display: none;">
+            <h3>배틀방이 생성되었습니다</h3>
+            <div style="margin: 2rem 0;">
+                <div style="background: #334155; padding: 1rem; border-radius: 0.5rem; text-align: center;">
+                    <div style="font-size: 0.9rem; color: #cbd5e1; margin-bottom: 0.5rem;">초대 코드</div>
+                    <div id="inviteCode" style="font-size: 1.5rem; font-weight: bold; color: #3b82f6; letter-spacing: 0.2rem;"></div>
+                    <button onclick="copyInviteCode()" class="btn btn-secondary" style="margin-top: 1rem;">코드 복사</button>
+                </div>
+            </div>
+            
+            <div style="text-align: center; color: #64748b; margin: 1rem 0;">
+                친구가 참여할 때까지 대기 중...
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script>
+        document.getElementById('createBattleForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const roomName = document.getElementById('roomName').value;
+            const difficulty = document.getElementById('difficulty').value;
+            const timeLimit = document.getElementById('timeLimit').value;
+            
+            // 배틀방 생성 요청
+            createBattleRoom({ roomName, difficulty, timeLimit });
+        });
+
+        async function createBattleRoom(settings) {
+            try {
+                const response = await fetch('/api/battle/create', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(settings)
+                });
+                
+                const result = await response.json();
+                
+                document.getElementById('createBattleForm').parentElement.style.display = 'none';
+                document.getElementById('battleRoom').style.display = 'block';
+                document.getElementById('inviteCode').textContent = result.inviteCode;
+                
+            } catch (error) {
+                alert('배틀방 생성에 실패했습니다: ' + error.message);
+            }
+        }
+
+        function copyInviteCode() {
+            const code = document.getElementById('inviteCode').textContent;
+            navigator.clipboard.writeText(code).then(() => {
+                alert('초대 코드가 복사되었습니다: ' + code);
+            });
+        }
+
+        function logout() {
+            AuthManager.logout();
+        }
+    </script>
+</body>
+</html>

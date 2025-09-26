@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>코드배틀 - 코드배틀아레나</title>
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/student.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">코드배틀아레나</a>
+            <ul class="nav-links">
+                <li><a href="/student">대시보드</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="student-dashboard">
+        <div class="student-header">
+            <h1 class="student-title">코드배틀</h1>
+            <p class="student-subtitle">친구들과 함께 코딩 실력을 겨뤄보세요</p>
+        </div>
+
+        <div class="battle-modes">
+            <div class="battle-mode-card" onclick="location.href='/student/battle/create'">
+                <div class="battle-icon">🎯</div>
+                <h3>친구와 배틀</h3>
+                <p>방을 만들어서 친구와 1:1 코딩 대결</p>
+            </div>
+            
+            <div class="battle-mode-card" onclick="location.href='/student/battle/join'">
+                <div class="battle-icon">🚪</div>
+                <h3>배틀룸 입장</h3>
+                <p>초대코드로 친구의 배틀룸에 참여</p>
+            </div>
+            
+            <div class="battle-mode-card" onclick="location.href='/student/battle/random'">
+                <div class="battle-icon">🎲</div>
+                <h3>랜덤 배틀</h3>
+                <p>랜덤 상대와 즉시 매칭되는 스릴 넘치는 대결</p>
+            </div>
+            
+            <div class="battle-mode-card" onclick="location.href='/student/battle/ai'">
+                <div class="battle-icon">🤖</div>
+                <h3>AI와 배틀</h3>
+                <p>AI와 함께하는 혼자만의 코딩 연습</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>최근 배틀 기록</h3>
+            <div id="recentBattles" style="margin-top: 1rem;">
+                <div style="text-align: center; color: #64748b; padding: 2rem;">
+                    아직 배틀 기록이 없습니다
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/js/common/auth.js"></script>
+    <script>
+        function logout() {
+            AuthManager.logout();
+        }
+    </script>
+</body>
+</html>

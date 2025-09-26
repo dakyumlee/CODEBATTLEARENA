@@ -24,6 +24,9 @@
         <div class="teacher-header">
             <h1 class="teacher-title">강사 실시간 모니터링</h1>
             <p class="teacher-subtitle">학생들의 실시간 학습 현황을 확인하세요</p>
+            <div id="connectionStatus" style="margin-top: 1rem; padding: 0.5rem 1rem; border-radius: 0.5rem; background: #10b981; color: white; display: inline-block;">
+                🟢 실시간 연결됨
+            </div>
         </div>
 
         <div class="activity-monitor">
@@ -41,21 +44,90 @@
             </div>
 
             <div style="display: flex; gap: 1rem; margin-top: 2rem; flex-wrap: wrap;">
-                <button class="btn" onclick="sendNotification()">전체 공지사항</button>
-                <button class="btn btn-secondary" onclick="shareFile()">자료 공유</button>
-                <button class="btn" onclick="createProblem()">즉석 문제 출제</button>
-                <button class="btn btn-secondary" onclick="startQuiz()">퀴즈 시작</button>
+                <button class="btn" onclick="openNotificationModal()">전체 공지사항</button>
+                <button class="btn btn-secondary" onclick="openFileShareModal()">자료 공유</button>
+                <button class="btn" onclick="openProblemModal()">즉석 문제 출제</button>
+                <button class="btn btn-secondary" onclick="openQuizModal()">퀴즈 시작</button>
             </div>
         </div>
     </div>
 
+    <!-- 모든 모달들... (이전과 동일) -->
+    <div id="notificationModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>전체 공지사항</h3>
+                <span class="modal-close" onclick="closeModal('notificationModal')">&times;</span>
+            </div>
+            <div class="modal-body">
+                <textarea id="notificationMessage" class="input" placeholder="공지사항 내용을 입력하세요..." style="min-height: 120px; margin-bottom: 1rem;"></textarea>
+                <div style="display: flex; gap: 1rem;">
+                    <button class="btn" onclick="sendNotification()">전송</button>
+                    <button class="btn" onclick="closeModal('notificationModal')" style="background: #6b7280;">취소</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+
+        .modal-content {
+            background-color: white;
+            margin: 5% auto;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 600px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-body {
+            padding: 1.5rem;
+        }
+
+        .modal-close {
+            color: #64748b;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .modal-close:hover {
+            color: #ef4444;
+        }
+    </style>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
     <script src="/js/common/auth.js"></script>
-    <script src="/js/common/api.js"></script>
     <script src="/js/common/websocket.js"></script>
     <script>
+        let studentActivities = {};
+
         async function loadStudents() {
             try {
-                const students = await ApiClient.get('/api/teacher/students');
+                const students = await fetch('/api/teacher/students', {
+                    headers: AuthManager.getAuthHeaders()
+                }).then(r => r.json());
+
                 const grid = document.getElementById('studentGrid');
                 
                 if (students.length === 0) {
@@ -63,17 +135,7 @@
                     return;
                 }
 
-                grid.innerHTML = students.map(student => `
-                    <div class="student-card">
-                        <div class="student-name">
-                            <span class="online-indicator ${student.onlineStatus ? 'online' : 'offline'}"></span>
-                            ${student.name}
-                        </div>
-                        <div class="student-activity">현재 활동: ${student.currentActivity || '알 수 없음'}</div>
-                        <div class="student-activity">페이지: ${student.currentPage || '-'}</div>
-                        <div class="student-activity">접속 시간: ${student.lastActivity || '-'}</div>
-                    </div>
-                `).join('');
+                updateStudentGrid(students);
             } catch (error) {
                 console.error('학생 목록 로드 실패:', error);
                 document.getElementById('studentGrid').innerHTML = 
@@ -81,43 +143,132 @@
             }
         }
 
-        async function loadGroups() {
+        function updateStudentGrid(students) {
+            const grid = document.getElementById('studentGrid');
+            
+            grid.innerHTML = students.map(student => {
+                const activity = studentActivities[student.id] || {};
+                const lastSeen = activity.timestamp ? 
+                    new Date(activity.timestamp).toLocaleTimeString('ko-KR') : 
+                    (student.lastActivity ? new Date(student.lastActivity).toLocaleTimeString('ko-KR') : '-');
+                
+                return `
+                    <div class="student-card" id="student-${student.id}">
+                        <div class="student-name">
+                            <span class="online-indicator ${student.onlineStatus ? 'online' : 'offline'}"></span>
+                            ${student.name}
+                        </div>
+                        <div class="student-activity">현재 활동: ${activity.activity || '알 수 없음'}</div>
+                        <div class="student-activity">페이지: ${activity.page || '-'}</div>
+                        <div class="student-activity">마지막 활동: ${lastSeen}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // WebSocket 이벤트 처리
+        window.addEventListener('student-activity-update', (event) => {
+            const activity = event.detail;
+            studentActivities[activity.userId] = activity;
+            
+            // 해당 학생 카드 업데이트
+            const studentCard = document.getElementById(`student-${activity.userId}`);
+            if (studentCard) {
+                const activityElements = studentCard.querySelectorAll('.student-activity');
+                if (activityElements.length >= 3) {
+                    activityElements[0].textContent = `현재 활동: ${activity.activity}`;
+                    activityElements[1].textContent = `페이지: ${activity.page}`;
+                    activityElements[2].textContent = `마지막 활동: ${new Date(activity.timestamp).toLocaleTimeString('ko-KR')}`;
+                }
+                
+                // 온라인 상태 업데이트
+                const indicator = studentCard.querySelector('.online-indicator');
+                if (indicator) {
+                    indicator.className = 'online-indicator online';
+                }
+            }
+        });
+
+        function openNotificationModal() {
+            document.getElementById('notificationModal').style.display = 'block';
+        }
+
+        function openFileShareModal() {
+            alert('자료 공유는 수업관리 페이지에서 이용하실 수 있습니다.');
+        }
+
+        function openProblemModal() {
+            alert('문제 출제는 수업관리 페이지에서 이용하실 수 있습니다.');
+        }
+
+        function openQuizModal() {
+            alert('퀴즈는 수업관리 페이지에서 이용하실 수 있습니다.');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        async function sendNotification() {
+            const message = document.getElementById('notificationMessage').value.trim();
+            if (!message) {
+                alert('공지사항 내용을 입력해주세요.');
+                return;
+            }
+
             try {
-                const groups = await ApiClient.get('/api/teacher/groups');
-                const select = document.getElementById('groupSelect');
-                select.innerHTML = '<option value="">전체 그룹</option>' + 
-                    groups.map(group => `<option value="${group.id}">${group.name}</option>`).join('');
+                // WebSocket으로 실시간 전송
+                window.webSocketManager.sendNotification(message);
+                
+                // 서버 API로도 저장
+                await fetch('/api/teacher/notification', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        ...AuthManager.getAuthHeaders()
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        target: 'all'
+                    })
+                });
+                
+                alert('공지사항이 전송되었습니다.');
+                document.getElementById('notificationMessage').value = '';
+                closeModal('notificationModal');
             } catch (error) {
-                console.error('그룹 목록 로드 실패:', error);
+                alert('공지사항 전송에 실패했습니다: ' + error.message);
             }
-        }
-
-        function sendNotification() {
-            const message = prompt('공지사항을 입력하세요:');
-            if (message) {
-                alert('공지사항이 전송되었습니다: ' + message);
-            }
-        }
-
-        function shareFile() {
-            alert('파일 공유 기능은 준비 중입니다.');
-        }
-
-        function createProblem() {
-            alert('문제 출제 기능은 준비 중입니다.');
-        }
-
-        function startQuiz() {
-            alert('퀴즈 시작 기능은 준비 중입니다.');
         }
 
         function logout() {
             AuthManager.logout();
         }
 
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // WebSocket 연결 상태 모니터링
+        function checkWebSocketConnection() {
+            const status = document.getElementById('connectionStatus');
+            if (window.webSocketManager.stompClient && window.webSocketManager.stompClient.connected) {
+                status.innerHTML = '🟢 실시간 연결됨';
+                status.style.background = '#10b981';
+            } else {
+                status.innerHTML = '🔴 연결 끊어짐';
+                status.style.background = '#ef4444';
+            }
+        }
+
+        setInterval(checkWebSocketConnection, 3000);
         loadStudents();
-        loadGroups();
         setInterval(loadStudents, 30000);
     </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="/js/common/websocket.js"></script>
 </body>
 </html>
