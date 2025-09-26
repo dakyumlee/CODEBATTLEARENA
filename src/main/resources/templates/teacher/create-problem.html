@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>문제 출제 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/common.css">
+    <link rel="stylesheet" href="/css/teacher.css">
+</head>
+<body>
+    <div class="header">
+        <div class="nav">
+            <a href="/" class="logo">CodeBattleArena</a>
+            <ul class="nav-links">
+                <li><a href="/teacher">대시보드</a></li>
+                <li><a href="/teacher/class">수업 관리</a></li>
+                <li><a href="#" onclick="logout()">로그아웃</a></li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="teacher-container">
+        <div class="teacher-header">
+            <h1>문제/퀴즈 출제</h1>
+            <p>학생들을 위한 문제나 퀴즈를 출제해보세요</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('problem')">코딩 문제</button>
+            <button class="tab-btn" onclick="switchTab('quiz')">객관식 퀴즈</button>
+        </div>
+
+        <div id="problemTab" class="tab-content active">
+            <div class="card">
+                <h3>코딩 문제 출제</h3>
+                <form id="problemForm">
+                    <div class="form-group">
+                        <label>문제 제목</label>
+                        <input type="text" id="problemTitle" class="input" placeholder="예: 두 수의 합 구하기" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>난이도</label>
+                        <select id="problemDifficulty" class="input">
+                            <option value="하">하 - 기초</option>
+                            <option value="중">중 - 보통</option>
+                            <option value="상">상 - 어려움</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>문제 설명</label>
+                        <textarea id="problemDescription" class="input" rows="4" placeholder="문제에 대한 자세한 설명을 작성하세요..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>입력 설명</label>
+                        <textarea id="problemInput" class="input" rows="2" placeholder="입력 형식에 대한 설명..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>출력 설명</label>
+                        <textarea id="problemOutput" class="input" rows="2" placeholder="출력 형식에 대한 설명..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>예제 입력</label>
+                        <textarea id="problemExampleInput" class="input" rows="2" placeholder="3 5"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>예제 출력</label>
+                        <textarea id="problemExampleOutput" class="input" rows="2" placeholder="8"></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>제한 시간 (분)</label>
+                        <input type="number" id="problemTimeLimit" class="input" value="30" min="5" max="180">
+                    </div>
+                    
+                    <button type="submit" class="btn">문제 출제하기</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="quizTab" class="tab-content">
+            <div class="card">
+                <h3>객관식 퀴즈 출제</h3>
+                <form id="quizForm">
+                    <div class="form-group">
+                        <label>퀴즈 제목</label>
+                        <input type="text" id="quizTitle" class="input" placeholder="예: Java 기초 개념 확인" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>질문</label>
+                        <textarea id="quizQuestion" class="input" rows="3" placeholder="질문을 작성하세요..." required></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>선택지</label>
+                        <input type="text" id="option1" class="input" placeholder="1번 선택지" required style="margin-bottom: 0.5rem;">
+                        <input type="text" id="option2" class="input" placeholder="2번 선택지" required style="margin-bottom: 0.5rem;">
+                        <input type="text" id="option3" class="input" placeholder="3번 선택지" required style="margin-bottom: 0.5rem;">
+                        <input type="text" id="option4" class="input" placeholder="4번 선택지" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>정답</label>
+                        <select id="quizAnswer" class="input" required>
+                            <option value="">정답을 선택하세요</option>
+                            <option value="1">1번</option>
+                            <option value="2">2번</option>
+                            <option value="3">3번</option>
+                            <option value="4">4번</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>해설 (선택사항)</label>
+                        <textarea id="quizExplanation" class="input" rows="3" placeholder="정답에 대한 해설을 작성하세요..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>제한 시간 (분)</label>
+                        <input type="number" id="quizTimeLimit" class="input" value="10" min="1" max="60">
+                    </div>
+                    
+                    <button type="submit" class="btn">퀴즈 출제하기</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+            
+            document.querySelector(`[onclick="switchTab('${tabName}')"]`).classList.add('active');
+            document.getElementById(tabName + 'Tab').classList.add('active');
+        }
+
+        document.getElementById('problemForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const problemData = {
+                title: document.getElementById('problemTitle').value,
+                difficulty: document.getElementById('problemDifficulty').value,
+                description: document.getElementById('problemDescription').value,
+                inputDesc: document.getElementById('problemInput').value,
+                outputDesc: document.getElementById('problemOutput').value,
+                exampleInput: document.getElementById('problemExampleInput').value,
+                exampleOutput: document.getElementById('problemExampleOutput').value,
+                timeLimit: parseInt(document.getElementById('problemTimeLimit').value),
+                type: 'CODING'
+            };
+
+            try {
+                const response = await fetch('/api/teacher/problem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify(problemData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('문제가 성공적으로 출제되었습니다!');
+                    document.getElementById('problemForm').reset();
+                } else {
+                    alert('문제 출제에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
+
+        document.getElementById('quizForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const quizData = {
+                title: document.getElementById('quizTitle').value,
+                question: document.getElementById('quizQuestion').value,
+                options: [
+                    document.getElementById('option1').value,
+                    document.getElementById('option2').value,
+                    document.getElementById('option3').value,
+                    document.getElementById('option4').value
+                ],
+                correctAnswer: parseInt(document.getElementById('quizAnswer').value),
+                explanation: document.getElementById('quizExplanation').value,
+                timeLimit: parseInt(document.getElementById('quizTimeLimit').value),
+                type: 'QUIZ'
+            };
+
+            try {
+                const response = await fetch('/api/teacher/quiz', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify(quizData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('퀴즈가 성공적으로 출제되었습니다!');
+                    document.getElementById('quizForm').reset();
+                } else {
+                    alert('퀴즈 출제에 실패했습니다: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
+
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/';
+        }
+    </script>
+
+    <style>
+        .tabs {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .tab-btn {
+            padding: 0.75rem 1.5rem;
+            background: #e2e8f0;
+            border: none;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .tab-btn.active {
+            background: #3b82f6;
+            color: white;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+        
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #374151;
+        }
+    </style>
+</body>
+</html>
