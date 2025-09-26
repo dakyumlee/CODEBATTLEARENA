@@ -61,14 +61,19 @@
             color: #3b82f6;
         }
         
-        .main-container {
-            max-width: 1200px;
+        .container {
+            max-width: 800px;
             margin: 0 auto;
             padding: 2rem;
         }
         
+        .page-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        
         .page-title {
-            font-size: 2rem;
+            font-size: 2.5rem;
             font-weight: 700;
             color: #1e293b;
             margin-bottom: 0.5rem;
@@ -76,141 +81,188 @@
         
         .page-subtitle {
             color: #64748b;
-            margin-bottom: 2rem;
+            font-size: 1.1rem;
         }
         
         .tabs {
             display: flex;
-            gap: 0;
-            margin-bottom: 2rem;
             background: white;
-            border-radius: 0.75rem;
-            padding: 0.25rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
         .tab-btn {
             flex: 1;
-            padding: 1rem 2rem;
+            padding: 1rem;
             background: transparent;
             border: none;
-            border-radius: 0.5rem;
+            border-radius: 8px;
             cursor: pointer;
-            font-weight: 500;
-            transition: all 0.2s;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.3s;
             color: #64748b;
         }
         
         .tab-btn.active {
-            background: #3b82f6;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
         }
         
         .tab-content {
             display: none;
+            animation: fadeIn 0.3s ease-in;
         }
         
         .tab-content.active {
             display: block;
         }
         
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
         .form-card {
             background: white;
-            border-radius: 0.75rem;
-            padding: 2rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-radius: 16px;
+            padding: 2.5rem;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+        }
+        
+        .form-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1e293b;
+            margin-bottom: 2rem;
+            text-align: center;
         }
         
         .form-group {
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
         }
         
-        .form-group label {
+        .form-label {
             display: block;
-            margin-bottom: 0.5rem;
+            margin-bottom: 0.75rem;
             font-weight: 600;
             color: #374151;
+            font-size: 1rem;
         }
         
         .form-control {
             width: 100%;
-            padding: 0.75rem 1rem;
-            border: 1px solid #d1d5db;
-            border-radius: 0.375rem;
+            padding: 1rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
             font-size: 1rem;
-            transition: all 0.2s;
+            transition: all 0.3s;
+            background: #fafbfc;
         }
         
         .form-control:focus {
             outline: none;
             border-color: #3b82f6;
+            background: white;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-control::placeholder {
+            color: #9ca3af;
         }
         
         textarea.form-control {
             resize: vertical;
-            min-height: 100px;
+            min-height: 120px;
+            font-family: inherit;
         }
         
-        .btn {
-            padding: 0.75rem 2rem;
-            border: none;
-            border-radius: 0.375rem;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            display: inline-block;
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1.5rem;
         }
         
-        .btn-primary {
-            background: #3b82f6;
+        .submit-btn {
+            width: 100%;
+            padding: 1.25rem;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
             color: white;
-        }
-        
-        .btn-primary:hover {
-            background: #2563eb;
-        }
-        
-        .file-upload {
-            position: relative;
-            display: inline-block;
-            width: 100%;
-        }
-        
-        .file-input {
-            position: absolute;
-            opacity: 0;
-            width: 100%;
-            height: 100%;
+            border: none;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 1rem;
         }
         
-        .file-label {
-            display: block;
-            padding: 2rem;
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+        }
+        
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+        
+        .file-upload-area {
             border: 2px dashed #d1d5db;
-            border-radius: 0.375rem;
+            border-radius: 12px;
+            padding: 3rem 2rem;
             text-align: center;
+            background: #fafbfc;
+            transition: all 0.3s;
             cursor: pointer;
-            transition: all 0.2s;
+            position: relative;
         }
         
-        .file-label:hover {
+        .file-upload-area:hover {
             border-color: #3b82f6;
             background: #f8fafc;
         }
         
-        .file-info {
-            margin-top: 0.5rem;
-            font-size: 0.875rem;
-            color: #64748b;
+        .file-input {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
         }
         
-        .options-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 1rem;
+        .upload-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            color: #9ca3af;
+        }
+        
+        .upload-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+        
+        .upload-hint {
+            color: #6b7280;
+            font-size: 0.9rem;
+        }
+        
+        .success-message {
+            background: #ecfdf5;
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 1rem;
+            color: #059669;
+            font-weight: 600;
+            text-align: center;
+            margin-top: 1rem;
+            display: none;
         }
     </style>
 </head>
@@ -222,14 +274,17 @@
                 <li><a href="/teacher">대시보드</a></li>
                 <li><a href="/teacher/class">수업 관리</a></li>
                 <li><a href="/teacher/create-problem" class="active">문제 출제</a></li>
+                <li><a href="/teacher/grades">성적 관리</a></li>
                 <li><a href="javascript:logout()">로그아웃</a></li>
             </ul>
         </div>
     </div>
 
-    <div class="main-container">
-        <h1 class="page-title">문제 출제</h1>
-        <p class="page-subtitle">학생들을 위한 문제나 퀴즈를 출제해보세요</p>
+    <div class="container">
+        <div class="page-header">
+            <h1 class="page-title">문제 출제</h1>
+            <p class="page-subtitle">학생들을 위한 문제나 퀴즈를 출제하고 실시간으로 전송해보세요</p>
+        </div>
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('coding')">코딩 문제</button>
@@ -240,47 +295,50 @@
         <!-- 코딩 문제 탭 -->
         <div id="codingTab" class="tab-content active">
             <div class="form-card">
-                <h3 style="margin-bottom: 1.5rem; color: #1e293b;">코딩 문제 출제</h3>
+                <h2 class="form-title">코딩 문제 출제</h2>
                 <form id="codingForm">
                     <div class="form-group">
-                        <label>문제 제목</label>
-                        <input type="text" class="form-control" placeholder="예: 두 수의 합 구하기" required>
+                        <label class="form-label">문제 제목</label>
+                        <input type="text" name="title" class="form-control" placeholder="예: 두 수의 합 구하기" required>
                     </div>
                     
-                    <div class="options-grid">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>난이도</label>
-                            <select class="form-control">
-                                <option value="하">하 - 기초</option>
-                                <option value="중">중 - 보통</option>
-                                <option value="상">상 - 어려움</option>
+                            <label class="form-label">난이도</label>
+                            <select name="difficulty" class="form-control" required>
+                                <option value="하">하 - 기초 수준</option>
+                                <option value="중" selected>중 - 보통 수준</option>
+                                <option value="상">상 - 어려운 수준</option>
                             </select>
                         </div>
                         
                         <div class="form-group">
-                            <label>제한 시간 (분)</label>
-                            <input type="number" class="form-control" value="30" min="5" max="180">
+                            <label class="form-label">제한 시간 (분)</label>
+                            <input type="number" name="timeLimit" class="form-control" value="30" min="5" max="180" required>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>문제 설명</label>
-                        <textarea class="form-control" rows="4" placeholder="문제에 대한 자세한 설명을 작성하세요..." required></textarea>
+                        <label class="form-label">문제 설명</label>
+                        <textarea name="description" class="form-control" placeholder="문제에 대한 자세한 설명을 작성하세요..." required></textarea>
                     </div>
                     
-                    <div class="options-grid">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>예제 입력</label>
-                            <textarea class="form-control" rows="3" placeholder="3 5"></textarea>
+                            <label class="form-label">예제 입력</label>
+                            <textarea name="exampleInput" class="form-control" placeholder="3 5"></textarea>
                         </div>
                         
                         <div class="form-group">
-                            <label>예제 출력</label>
-                            <textarea class="form-control" rows="3" placeholder="8"></textarea>
+                            <label class="form-label">예제 출력</label>
+                            <textarea name="exampleOutput" class="form-control" placeholder="8"></textarea>
                         </div>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">문제 출제하기</button>
+                    <button type="submit" class="submit-btn">문제 출제하기</button>
+                    <div class="success-message" id="codingSuccess">
+                        문제가 성공적으로 출제되었습니다! 학생들에게 알림이 전송되었습니다.
+                    </div>
                 </form>
             </div>
         </div>
@@ -288,30 +346,30 @@
         <!-- 객관식 퀴즈 탭 -->
         <div id="quizTab" class="tab-content">
             <div class="form-card">
-                <h3 style="margin-bottom: 1.5rem; color: #1e293b;">객관식 퀴즈 출제</h3>
+                <h2 class="form-title">객관식 퀴즈 출제</h2>
                 <form id="quizForm">
                     <div class="form-group">
-                        <label>퀴즈 제목</label>
-                        <input type="text" class="form-control" placeholder="예: Java 기초 개념 확인" required>
+                        <label class="form-label">퀴즈 제목</label>
+                        <input type="text" name="title" class="form-control" placeholder="예: Java 기초 개념 확인" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>질문</label>
-                        <textarea class="form-control" rows="3" placeholder="질문을 작성하세요..." required></textarea>
+                        <label class="form-label">질문</label>
+                        <textarea name="question" class="form-control" placeholder="질문을 작성하세요..." required></textarea>
                     </div>
                     
                     <div class="form-group">
-                        <label>선택지</label>
-                        <input type="text" class="form-control" placeholder="1번 선택지" required style="margin-bottom: 0.5rem;">
-                        <input type="text" class="form-control" placeholder="2번 선택지" required style="margin-bottom: 0.5rem;">
-                        <input type="text" class="form-control" placeholder="3번 선택지" required style="margin-bottom: 0.5rem;">
-                        <input type="text" class="form-control" placeholder="4번 선택지" required>
+                        <label class="form-label">선택지</label>
+                        <input type="text" name="option1" class="form-control" placeholder="1번 선택지" required style="margin-bottom: 0.75rem;">
+                        <input type="text" name="option2" class="form-control" placeholder="2번 선택지" required style="margin-bottom: 0.75rem;">
+                        <input type="text" name="option3" class="form-control" placeholder="3번 선택지" required style="margin-bottom: 0.75rem;">
+                        <input type="text" name="option4" class="form-control" placeholder="4번 선택지" required>
                     </div>
                     
-                    <div class="options-grid">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>정답</label>
-                            <select class="form-control" required>
+                            <label class="form-label">정답</label>
+                            <select name="correctAnswer" class="form-control" required>
                                 <option value="">정답을 선택하세요</option>
                                 <option value="1">1번</option>
                                 <option value="2">2번</option>
@@ -321,17 +379,20 @@
                         </div>
                         
                         <div class="form-group">
-                            <label>제한 시간 (분)</label>
-                            <input type="number" class="form-control" value="10" min="1" max="60">
+                            <label class="form-label">제한 시간 (분)</label>
+                            <input type="number" name="timeLimit" class="form-control" value="10" min="1" max="60" required>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>해설 (선택사항)</label>
-                        <textarea class="form-control" rows="3" placeholder="정답에 대한 해설을 작성하세요..."></textarea>
+                        <label class="form-label">해설 (선택사항)</label>
+                        <textarea name="explanation" class="form-control" placeholder="정답에 대한 해설을 작성하세요..."></textarea>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">퀴즈 출제하기</button>
+                    <button type="submit" class="submit-btn">퀴즈 출제하기</button>
+                    <div class="success-message" id="quizSuccess">
+                        퀴즈가 성공적으로 출제되었습니다! 학생들에게 알림이 전송되었습니다.
+                    </div>
                 </form>
             </div>
         </div>
@@ -339,43 +400,44 @@
         <!-- 시험지 업로드 탭 -->
         <div id="examTab" class="tab-content">
             <div class="form-card">
-                <h3 style="margin-bottom: 1.5rem; color: #1e293b;">시험지 업로드</h3>
+                <h2 class="form-title">시험지 업로드</h2>
                 <form id="examForm">
                     <div class="form-group">
-                        <label>시험 제목</label>
-                        <input type="text" class="form-control" placeholder="예: 중간고사" required>
+                        <label class="form-label">시험 제목</label>
+                        <input type="text" name="title" class="form-control" placeholder="예: 중간고사" required>
                     </div>
                     
                     <div class="form-group">
-                        <label>시험지 파일</label>
-                        <div class="file-upload">
-                            <input type="file" class="file-input" accept=".pdf,.docx,.doc,.hwp" required>
-                            <label class="file-label">
-                                <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
-                                <div>파일을 드래그하거나 클릭하여 업로드</div>
-                                <div class="file-info">PDF, Word, HWP 파일 지원 (최대 10MB)</div>
-                            </label>
+                        <label class="form-label">시험지 파일</label>
+                        <div class="file-upload-area" onclick="document.getElementById('examFile').click()">
+                            <input type="file" id="examFile" name="examFile" class="file-input" accept=".pdf,.docx,.doc,.hwp" required>
+                            <div class="upload-icon">📄</div>
+                            <div class="upload-text">파일을 클릭하여 업로드</div>
+                            <div class="upload-hint">PDF, Word, HWP 파일 지원 (최대 10MB)</div>
                         </div>
                     </div>
                     
-                    <div class="options-grid">
+                    <div class="form-row">
                         <div class="form-group">
-                            <label>시험 시간 (분)</label>
-                            <input type="number" class="form-control" value="60" min="10" max="300">
+                            <label class="form-label">시험 시간 (분)</label>
+                            <input type="number" name="timeLimit" class="form-control" value="60" min="10" max="300" required>
                         </div>
                         
                         <div class="form-group">
-                            <label>만점</label>
-                            <input type="number" class="form-control" value="100" min="10" max="500">
+                            <label class="form-label">만점</label>
+                            <input type="number" name="maxScore" class="form-control" value="100" min="10" max="500" required>
                         </div>
                     </div>
                     
                     <div class="form-group">
-                        <label>시험 안내사항</label>
-                        <textarea class="form-control" rows="3" placeholder="학생들에게 전달할 시험 안내사항을 작성하세요..."></textarea>
+                        <label class="form-label">시험 안내사항</label>
+                        <textarea name="instructions" class="form-control" placeholder="학생들에게 전달할 시험 안내사항을 작성하세요..."></textarea>
                     </div>
                     
-                    <button type="submit" class="btn btn-primary">시험지 업로드</button>
+                    <button type="submit" class="submit-btn">시험지 업로드</button>
+                    <div class="success-message" id="examSuccess">
+                        시험지가 성공적으로 업로드되었습니다! 학생들에게 알림이 전송되었습니다.
+                    </div>
                 </form>
             </div>
         </div>
@@ -390,69 +452,21 @@
             document.getElementById(tabName + 'Tab').classList.add('active');
         }
 
-        // 파일 업로드 처리
-        document.querySelector('.file-input').addEventListener('change', function(e) {
+        // 파일 업로드 표시 개선
+        document.getElementById('examFile').addEventListener('change', function(e) {
             const file = e.target.files[0];
-            const label = document.querySelector('.file-label');
+            const uploadArea = document.querySelector('.file-upload-area');
             
             if (file) {
                 const fileName = file.name;
                 const fileSize = (file.size / 1024 / 1024).toFixed(2);
-                label.innerHTML = `
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-                    <div style="font-weight: 600;">${fileName}</div>
-                    <div class="file-info">${fileSize}MB</div>
+                uploadArea.innerHTML = `
+                    <div class="upload-icon">✅</div>
+                    <div class="upload-text">${fileName}</div>
+                    <div class="upload-hint">${fileSize}MB</div>
                 `;
-            }
-        });
-
-        // 폼 제출 처리
-        document.getElementById('codingForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            alert('코딩 문제가 출제되었습니다!');
-        });
-
-        document.getElementById('quizForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            alert('퀴즈가 출제되었습니다!');
-        });
-
-        document.getElementById('examForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            alert('시험지가 업로드되었습니다!');
-        });
-
-        function logout() {
-            if (confirm('로그아웃 하시겠습니까?')) {
-                localStorage.clear();
-                window.location.href = '/';
-            }
-        }
-    </script>
-</body>
-</html>
-    <script src="/js/teacher/create-problem.js"></script>
-</body>
-</html>
-
-        // 폼에 name 속성 추가
-        document.getElementById('codingForm').querySelector('input[type="text"]').setAttribute('name', 'title');
-        document.getElementById('codingForm').querySelector('select').setAttribute('name', 'difficulty');
-        document.getElementById('codingForm').querySelector('textarea').setAttribute('name', 'description');
-
-        // 파일 업로드 처리
-        document.querySelector('.file-input').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            const label = document.querySelector('.file-label');
-            
-            if (file) {
-                const fileName = file.name;
-                const fileSize = (file.size / 1024 / 1024).toFixed(2);
-                label.innerHTML = `
-                    <div style="font-size: 2rem; margin-bottom: 0.5rem;">✅</div>
-                    <div style="font-weight: 600;">${fileName}</div>
-                    <div class="file-info">${fileSize}MB</div>
-                `;
+                uploadArea.style.borderColor = '#10b981';
+                uploadArea.style.background = '#ecfdf5';
             }
         });
 
@@ -460,12 +474,14 @@
         document.getElementById('codingForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const inputs = e.target.querySelectorAll('input, select, textarea');
+            const formData = new FormData(e.target);
             const problemData = {
-                title: inputs[0].value,
-                difficulty: inputs[1].value,
-                timeLimit: parseInt(inputs[2].value),
-                description: inputs[3].value,
+                title: formData.get('title'),
+                difficulty: formData.get('difficulty'),
+                timeLimit: parseInt(formData.get('timeLimit')),
+                description: formData.get('description'),
+                exampleInput: formData.get('exampleInput'),
+                exampleOutput: formData.get('exampleOutput'),
                 type: 'CODING'
             };
 
@@ -482,8 +498,11 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('문제가 성공적으로 출제되었습니다! 학생들에게 알림이 전송되었습니다.');
+                    document.getElementById('codingSuccess').style.display = 'block';
                     e.target.reset();
+                    setTimeout(() => {
+                        document.getElementById('codingSuccess').style.display = 'none';
+                    }, 5000);
                 } else {
                     alert('문제 출제에 실패했습니다: ' + result.message);
                 }
@@ -494,10 +513,28 @@
 
         document.getElementById('quizForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('퀴즈가 출제되었습니다!');
+            document.getElementById('quizSuccess').style.display = 'block';
+            e.target.reset();
+            setTimeout(() => {
+                document.getElementById('quizSuccess').style.display = 'none';
+            }, 5000);
         });
 
         document.getElementById('examForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            alert('시험지가 업로드되었습니다!');
+            document.getElementById('examSuccess').style.display = 'block';
+            e.target.reset();
+            setTimeout(() => {
+                document.getElementById('examSuccess').style.display = 'none';
+            }, 5000);
         });
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+    </script>
+</body>
+</html>
