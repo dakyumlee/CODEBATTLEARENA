@@ -44,6 +44,24 @@
             color: #1a202c;
         }
         
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-item {
+            color: #718096;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: #3182ce;
+            color: white;
+        }
+        
         .user-info {
             display: flex;
             align-items: center;
@@ -236,6 +254,67 @@
             background: #38a169;
         }
         
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+        
+        .btn-primary {
+            padding: 16px 30px;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 15px;
+        }
+        
+        .btn-close {
+            float: right;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #718096;
+            padding: 20px;
+        }
+        
         @media (max-width: 1024px) {
             .dashboard-grid {
                 grid-template-columns: 1fr;
@@ -252,9 +331,14 @@
     <div class="teacher-header">
         <div class="header-content">
             <div class="logo">CodeBattleArena</div>
+            <nav class="nav-menu">
+                <a href="/teacher/dashboard" class="nav-item active">대시보드</a>
+                <a href="/teacher/class" class="nav-item">수업관리</a>
+                <a href="/teacher/grades" class="nav-item">성적관리</a>
+            </nav>
             <div class="user-info">
                 <span>강사님 환영합니다</span>
-                <button onclick="logout()" style="padding: 8px 16px; background: #f56565; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
+                <button onclick="logout()" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
             </div>
         </div>
     </div>
@@ -266,11 +350,11 @@
             <div class="dashboard-section">
                 <h2 class="section-title">
                     <div class="section-icon">👥</div>
-                    학생 현황 (접속: <span id="onlineCount">0</span>/25명)
+                    학생 현황 (접속: <span id="onlineCount">0</span>명)
                 </h2>
                 
                 <div class="students-grid" id="studentsGrid">
-                    <!-- 학생들이 여기에 동적으로 표시됩니다 -->
+                    <div class="empty-state">등록된 학생이 없습니다.</div>
                 </div>
             </div>
             
@@ -282,16 +366,16 @@
                 
                 <div class="quick-actions">
                     <button class="action-btn primary" onclick="sendQuickAnnouncement()">
-                        📢 전체 공지
+                        전체 공지
                     </button>
                     <button class="action-btn" onclick="shareQuickMaterial()">
-                        📎 자료 공유
+                        자료 공유
                     </button>
                     <button class="action-btn" onclick="createQuickProblem()">
-                        📝 즉석 문제
+                        즉석 문제
                     </button>
                     <button class="action-btn" onclick="startQuickQuiz()">
-                        ⏱️ 퀴즈 시작
+                        퀴즈 시작
                     </button>
                 </div>
             </div>
@@ -316,24 +400,32 @@
             </div>
         </div>
     </div>
+    
+    <!-- 빠른 작업 모달 -->
+    <div class="modal" id="quickModal">
+        <div class="modal-content">
+            <button class="btn-close" onclick="closeModal()">×</button>
+            <h2 class="modal-title" id="modalTitle">빠른 작업</h2>
+            <div id="modalBody">
+                <!-- 내용이 동적으로 채워집니다 -->
+            </div>
+        </div>
+    </div>
+    
+    <!-- 성공 메시지 모달 -->
+    <div class="modal" id="successModal">
+        <div class="modal-content">
+            <button class="btn-close" onclick="closeSuccessModal()">×</button>
+            <h2 class="modal-title">성공!</h2>
+            <p id="successMessage"></p>
+            <button class="btn-primary" onclick="closeSuccessModal()">확인</button>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
         let stompClient = null;
-        
-        const sampleStudents = [
-            {id: 1, name: '김철수', status: 'online', activity: '코딩연습'},
-            {id: 2, name: '박영희', status: 'online', activity: 'AI 문제풀이'},
-            {id: 3, name: '이민수', status: 'away', activity: '복습노트 작성'},
-            {id: 4, name: '최지훈', status: 'offline', activity: '오프라인'},
-            {id: 5, name: '정수빈', status: 'online', activity: '배틀 대기'},
-            {id: 6, name: '한민지', status: 'online', activity: '강사 문제 풀이'},
-            {id: 7, name: '김영수', status: 'away', activity: '휴식중'},
-            {id: 8, name: '이하늘', status: 'online', activity: '코딩연습'},
-            {id: 9, name: '박서준', status: 'online', activity: 'AI 튜터 대화'},
-            {id: 10, name: '윤지원', status: 'offline', activity: '오프라인'}
-        ];
         
         document.addEventListener('DOMContentLoaded', function() {
             connectWebSocket();
@@ -351,27 +443,43 @@
             });
         }
         
-        function loadStudents() {
+        async function loadStudents() {
+            try {
+                const response = await fetch('/api/teacher/students');
+                const students = await response.json();
+                displayStudents(students);
+            } catch (error) {
+                console.error('학생 목록 로드 실패:', error);
+                document.getElementById('studentsGrid').innerHTML = '<div class="empty-state">학생 목록을 불러올 수 없습니다.</div>';
+            }
+        }
+        
+        function displayStudents(students) {
             const grid = document.getElementById('studentsGrid');
-            const onlineStudents = sampleStudents.filter(s => s.status === 'online');
+            const onlineStudents = students.filter(s => s.onlineStatus);
             
             document.getElementById('onlineCount').textContent = onlineStudents.length;
             
-            grid.innerHTML = sampleStudents.map(student => `
+            if (students.length === 0) {
+                grid.innerHTML = '<div class="empty-state">등록된 학생이 없습니다.</div>';
+                return;
+            }
+            
+            grid.innerHTML = students.map(student => `
                 <div class="student-card">
-                    <div class="student-status status-${student.status}"></div>
+                    <div class="student-status status-${student.onlineStatus ? 'online' : 'offline'}"></div>
                     <div class="student-name">${student.name}</div>
-                    <div class="student-activity">${student.activity}</div>
+                    <div class="student-activity">${student.onlineStatus ? '온라인' : '오프라인'}</div>
                 </div>
             `).join('');
         }
         
         function sendAnnouncement() {
-            const title = document.getElementById('announcementTitle').value;
-            const content = document.getElementById('announcementContent').value;
+            const title = document.getElementById('announcementTitle').value.trim();
+            const content = document.getElementById('announcementContent').value.trim();
             
-            if (!title.trim() || !content.trim()) {
-                alert('제목과 내용을 모두 입력해주세요.');
+            if (!title || !content) {
+                showErrorModal('제목과 내용을 모두 입력해주세요.');
                 return;
             }
             
@@ -384,91 +492,181 @@
             
             if (stompClient) {
                 stompClient.send('/app/announce', {}, JSON.stringify(announcement));
-                alert('공지사항이 전송되었습니다!');
+                showSuccessModal('공지사항이 모든 학생에게 전송되었습니다!');
                 
                 document.getElementById('announcementTitle').value = '';
                 document.getElementById('announcementContent').value = '';
+            } else {
+                showErrorModal('웹소켓 연결이 필요합니다.');
             }
         }
         
         function sendQuickAnnouncement() {
-            const message = prompt('전체 공지 내용을 입력하세요:');
-            if (message) {
-                const announcement = {
-                    type: 'announcement',
-                    title: '긴급 공지',
-                    message: message,
-                    timestamp: new Date().toISOString()
-                };
-                
-                if (stompClient) {
-                    stompClient.send('/app/announce', {}, JSON.stringify(announcement));
-                    alert('긴급 공지가 전송되었습니다!');
-                }
+            showQuickModal('긴급 공지', `
+                <div class="form-group">
+                    <label class="form-label">공지 내용</label>
+                    <textarea class="form-input form-textarea" id="quickMessage" placeholder="긴급 공지 내용을 입력하세요"></textarea>
+                </div>
+                <button class="btn-primary" onclick="executeQuickAnnouncement()">전송</button>
+            `);
+        }
+        
+        function executeQuickAnnouncement() {
+            const message = document.getElementById('quickMessage').value.trim();
+            if (!message) return;
+            
+            const announcement = {
+                type: 'announcement',
+                title: '긴급 공지',
+                message: message,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (stompClient) {
+                stompClient.send('/app/announce', {}, JSON.stringify(announcement));
+                closeModal();
+                showSuccessModal('긴급 공지가 전송되었습니다!');
             }
         }
         
         function shareQuickMaterial() {
-            const title = prompt('공유할 자료 제목:');
-            const url = prompt('자료 링크 URL:');
+            showQuickModal('빠른 자료 공유', `
+                <div class="form-group">
+                    <label class="form-label">자료 제목</label>
+                    <input type="text" class="form-input" id="quickMaterialTitle" placeholder="자료 제목">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">자료 링크</label>
+                    <input type="url" class="form-input" id="quickMaterialUrl" placeholder="https://example.com">
+                </div>
+                <button class="btn-primary" onclick="executeQuickMaterial()">공유</button>
+            `);
+        }
+        
+        function executeQuickMaterial() {
+            const title = document.getElementById('quickMaterialTitle').value.trim();
+            const url = document.getElementById('quickMaterialUrl').value.trim();
             
-            if (title && url) {
-                const material = {
-                    type: 'new_material',
-                    title: title,
-                    url: url,
-                    timestamp: new Date().toISOString()
-                };
-                
-                if (stompClient) {
-                    stompClient.send('/app/share-material', {}, JSON.stringify(material));
-                    alert('자료가 공유되었습니다!');
-                }
+            if (!title || !url) return;
+            
+            const material = {
+                type: 'new_material',
+                title: title,
+                url: url,
+                message: `새로운 자료가 공유되었습니다: ${title}`,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (stompClient) {
+                stompClient.send('/app/share-material', {}, JSON.stringify(material));
+                closeModal();
+                showSuccessModal('자료가 공유되었습니다!');
             }
         }
         
         function createQuickProblem() {
-            const title = prompt('문제 제목:');
-            const description = prompt('문제 설명:');
+            showQuickModal('즉석 문제 출제', `
+                <div class="form-group">
+                    <label class="form-label">문제 제목</label>
+                    <input type="text" class="form-input" id="quickProblemTitle" placeholder="문제 제목">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">문제 설명</label>
+                    <textarea class="form-input form-textarea" id="quickProblemDesc" placeholder="문제 설명"></textarea>
+                </div>
+                <button class="btn-primary" onclick="executeQuickProblem()">출제</button>
+            `);
+        }
+        
+        function executeQuickProblem() {
+            const title = document.getElementById('quickProblemTitle').value.trim();
+            const description = document.getElementById('quickProblemDesc').value.trim();
             
-            if (title && description) {
-                const problem = {
-                    type: 'new_problem',
-                    title: title,
-                    description: description,
-                    timestamp: new Date().toISOString()
-                };
-                
-                if (stompClient) {
-                    stompClient.send('/app/create-problem', {}, JSON.stringify(problem));
-                    alert('문제가 출제되었습니다!');
-                }
+            if (!title || !description) return;
+            
+            const problem = {
+                type: 'new_problem',
+                title: title,
+                description: description,
+                message: `새로운 문제가 출제되었습니다: ${title}`,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (stompClient) {
+                stompClient.send('/app/create-problem', {}, JSON.stringify(problem));
+                closeModal();
+                showSuccessModal('문제가 출제되었습니다!');
             }
         }
         
         function startQuickQuiz() {
-            const title = prompt('퀴즈 제목:');
-            const duration = prompt('제한시간(분):');
+            showQuickModal('빠른 퀴즈 시작', `
+                <div class="form-group">
+                    <label class="form-label">퀴즈 제목</label>
+                    <input type="text" class="form-input" id="quickQuizTitle" placeholder="퀴즈 제목">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">제한시간 (분)</label>
+                    <input type="number" class="form-input" id="quickQuizDuration" placeholder="10" min="1" max="60">
+                </div>
+                <button class="btn-primary" onclick="executeQuickQuiz()">시작</button>
+            `);
+        }
+        
+        function executeQuickQuiz() {
+            const title = document.getElementById('quickQuizTitle').value.trim();
+            const duration = document.getElementById('quickQuizDuration').value;
             
-            if (title && duration) {
-                const quiz = {
-                    type: 'new_quiz',
-                    title: title,
-                    duration: parseInt(duration),
-                    timestamp: new Date().toISOString()
-                };
-                
-                if (stompClient) {
-                    stompClient.send('/app/start-quiz', {}, JSON.stringify(quiz));
-                    alert('퀴즈가 시작되었습니다!');
-                }
+            if (!title || !duration) return;
+            
+            const quiz = {
+                type: 'new_quiz',
+                title: title,
+                duration: parseInt(duration),
+                message: `새로운 퀴즈가 시작되었습니다: ${title}`,
+                timestamp: new Date().toISOString()
+            };
+            
+            if (stompClient) {
+                stompClient.send('/app/start-quiz', {}, JSON.stringify(quiz));
+                closeModal();
+                showSuccessModal('퀴즈가 시작되었습니다!');
             }
+        }
+        
+        function showQuickModal(title, content) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalBody').innerHTML = content;
+            document.getElementById('quickModal').style.display = 'flex';
+        }
+        
+        function closeModal() {
+            document.getElementById('quickModal').style.display = 'none';
+        }
+        
+        function showSuccessModal(message) {
+            document.getElementById('successMessage').textContent = message;
+            document.getElementById('successModal').style.display = 'flex';
+        }
+        
+        function showErrorModal(message) {
+            document.getElementById('successMessage').textContent = message;
+            document.querySelector('#successModal .modal-title').textContent = '오류';
+            document.getElementById('successModal').style.display = 'flex';
+        }
+        
+        function closeSuccessModal() {
+            document.getElementById('successModal').style.display = 'none';
+            document.querySelector('#successModal .modal-title').textContent = '성공!';
         }
         
         function logout() {
             localStorage.clear();
             window.location.href = '/';
         }
+        
+        // 5초마다 학생 상태 업데이트
+        setInterval(loadStudents, 5000);
     </script>
 </body>
 </html>
