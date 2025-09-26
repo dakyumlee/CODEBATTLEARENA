@@ -14,31 +14,45 @@
                 <p style="color: #64748b; font-size: 1rem;">국비학원 학습 관리 시스템</p>
             </div>
             
-            <div id="loginSection">
-                <form id="loginForm" style="margin-bottom: 2rem;">
-                    <div style="margin-bottom: 1rem;">
-                        <input type="email" id="email" class="input" placeholder="이메일" required style="font-size: 1rem; padding: 1rem;" value="admin@test.com">
-                    </div>
-                    <div style="margin-bottom: 1.5rem;">
-                        <input type="password" id="password" class="input" placeholder="비밀번호" required style="font-size: 1rem; padding: 1rem;" value="1234">
-                    </div>
-                    <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600;">로그인</button>
-                </form>
-                
-                <div style="margin-bottom: 2rem;">
-                    <div style="background: #334155; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem;">
-                        <div style="color: #cbd5e1; font-size: 0.9rem; margin-bottom: 0.5rem;">테스트 계정 (자동 생성됨):</div>
-                        <div style="color: #64748b; font-size: 0.8rem; line-height: 1.4;">
-                            관리자: admin@test.com / 1234<br>
-                            강사: teacher@test.com / 1234<br>
-                            학생: student@test.com / 1234<br>
-                            원관리자: oicrcutie@gmail.com / aa667788!!
+            <div id="authSection">
+                <div id="loginSection">
+                    <form id="loginForm" style="margin-bottom: 1.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <input type="email" id="email" class="input" placeholder="이메일" required style="font-size: 1rem; padding: 1rem;">
                         </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <input type="password" id="password" class="input" placeholder="비밀번호" required style="font-size: 1rem; padding: 1rem;">
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600;">로그인</button>
+                    </form>
+                    
+                    <div style="text-align: center;">
+                        <p style="color: #64748b; font-size: 0.9rem;">
+                            계정이 없으신가요? 
+                            <a href="#" onclick="showRegisterForm()" style="color: #3b82f6; text-decoration: none;">회원가입</a>
+                        </p>
                     </div>
-                    <div style="display: flex; gap: 0.5rem;">
-                        <button onclick="quickLogin('admin@test.com', '1234')" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.9rem;">관리자</button>
-                        <button onclick="quickLogin('teacher@test.com', '1234')" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.9rem;">강사</button>
-                        <button onclick="quickLogin('student@test.com', '1234')" class="btn btn-secondary" style="flex: 1; padding: 0.5rem; font-size: 0.9rem;">학생</button>
+                </div>
+
+                <div id="registerSection" style="display: none;">
+                    <form id="registerForm" style="margin-bottom: 1.5rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <input type="text" id="regName" class="input" placeholder="이름" required style="font-size: 1rem; padding: 1rem;">
+                        </div>
+                        <div style="margin-bottom: 1rem;">
+                            <input type="email" id="regEmail" class="input" placeholder="이메일" required style="font-size: 1rem; padding: 1rem;">
+                        </div>
+                        <div style="margin-bottom: 1.5rem;">
+                            <input type="password" id="regPassword" class="input" placeholder="비밀번호" required style="font-size: 1rem; padding: 1rem;">
+                        </div>
+                        <button type="submit" class="btn" style="width: 100%; padding: 1rem; font-size: 1rem; font-weight: 600;">회원가입 (학생 계정)</button>
+                    </form>
+                    
+                    <div style="text-align: center;">
+                        <p style="color: #64748b; font-size: 0.9rem;">
+                            이미 계정이 있으신가요? 
+                            <a href="#" onclick="showLoginForm()" style="color: #3b82f6; text-decoration: none;">로그인</a>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -48,9 +62,14 @@
     <script src="/js/common/auth.js"></script>
     
     <script>
-        function quickLogin(email, password) {
-            document.getElementById('email').value = email;
-            document.getElementById('password').value = password;
+        function showRegisterForm() {
+            document.getElementById('loginSection').style.display = 'none';
+            document.getElementById('registerSection').style.display = 'block';
+        }
+
+        function showLoginForm() {
+            document.getElementById('loginSection').style.display = 'block';
+            document.getElementById('registerSection').style.display = 'none';
         }
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
@@ -86,7 +105,32 @@
                 alert('로그인 오류: ' + error.message);
             }
         });
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const name = document.getElementById('regName').value;
+            const email = document.getElementById('regEmail').value;
+            const password = document.getElementById('regPassword').value;
+
+            try {
+                const response = await fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password })
+                });
+                
+                if (response.ok) {
+                    alert('회원가입이 완료되었습니다. 학생 계정으로 등록되었으며, 강사 권한이 필요한 경우 관리자에게 문의하세요.');
+                    showLoginForm();
+                    document.getElementById('email').value = email;
+                } else {
+                    const error = await response.text();
+                    alert('회원가입 실패: ' + error);
+                }
+            } catch (error) {
+                alert('회원가입 오류: ' + error.message);
+            }
+        });
     </script>
-    
 </body>
 </html>
