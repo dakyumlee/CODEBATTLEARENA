@@ -26,7 +26,7 @@ public class AdminApiController {
                 userData.put("id", user.getId());
                 userData.put("name", user.getName());
                 userData.put("email", user.getEmail());
-                userData.put("role", user.getRole());
+                userData.put("role", user.getRole().toString());
                 userData.put("groupId", user.getGroupId());
                 userData.put("online", user.isOnlineStatus());
                 userData.put("lastActivity", user.getLastActivity());
@@ -48,7 +48,7 @@ public class AdminApiController {
             user.setName((String) userData.get("name"));
             user.setEmail((String) userData.get("email"));
             user.setPassword("password123"); // 기본 비밀번호
-            user.setRole((String) userData.get("role"));
+            user.setRole(UserRole.valueOf((String) userData.get("role")));
             
             if (userData.get("groupId") != null) {
                 user.setGroupId(Long.valueOf(userData.get("groupId").toString()));
@@ -63,7 +63,7 @@ public class AdminApiController {
                 "id", savedUser.getId(),
                 "name", savedUser.getName(),
                 "email", savedUser.getEmail(),
-                "role", savedUser.getRole()
+                "role", savedUser.getRole().toString()
             ));
             
             return response;
@@ -106,7 +106,7 @@ public class AdminApiController {
             Optional<User> userOpt = userRepository.findById(id);
             if (userOpt.isPresent()) {
                 User user = userOpt.get();
-                user.setRole(request.get("role"));
+                user.setRole(UserRole.valueOf(request.get("role")));
                 userRepository.save(user);
                 
                 Map<String, Object> response = new HashMap<>();
@@ -131,8 +131,12 @@ public class AdminApiController {
     public Map<String, Object> getSystemStats() {
         try {
             long totalUsers = userRepository.count();
-            long studentCount = userRepository.findAllStudents().size();
-            long teacherCount = totalUsers - studentCount - 1; // 관리자 1명 제외
+            long studentCount = userRepository.findAll().stream()
+                .mapToLong(user -> user.getRole() == UserRole.STUDENT ? 1 : 0)
+                .sum();
+            long teacherCount = userRepository.findAll().stream()
+                .mapToLong(user -> user.getRole() == UserRole.TEACHER ? 1 : 0)
+                .sum();
             long onlineUsers = userRepository.findAll().stream()
                 .mapToLong(user -> user.isOnlineStatus() ? 1 : 0)
                 .sum();
