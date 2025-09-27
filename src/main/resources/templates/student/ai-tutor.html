@@ -5,362 +5,257 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AI 튜터 - CodeBattleArena</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background: linear-gradient(135deg, #1a1f36 0%, #2d3561 100%);
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
             min-height: 100vh;
-            color: #e2e8f0;
+            color: #e8eaed;
         }
         
         .header {
-            background: rgba(26, 31, 54, 0.95);
-            backdrop-filter: blur(10px);
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             padding: 20px 30px;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
         
         .header-content {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
         
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #90cdf4;
-        }
+        .logo { font-size: 1.5rem; font-weight: 700; color: #4fc3f7; }
         
-        .nav-menu {
-            display: flex;
-            gap: 30px;
-        }
+        .nav-menu { display: flex; gap: 30px; }
         
         .nav-item {
-            color: #a0aec0;
+            color: #b0bec5;
             text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            transition: all 0.2s;
+            padding: 10px 16px;
+            border-radius: 12px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
         }
         
-        .nav-item:hover, .nav-item.active {
-            background: #4299e1;
-            color: white;
+        .nav-item:hover { background: rgba(79, 195, 247, 0.1); color: #4fc3f7; border-color: rgba(79, 195, 247, 0.3); }
+        .nav-item.active { background: rgba(79, 195, 247, 0.2); color: #4fc3f7; border-color: rgba(79, 195, 247, 0.5); }
+        
+        .main-container { max-width: 1200px; margin: 0 auto; padding: 40px 30px; }
+        
+        .welcome-section {
+            text-align: center;
+            margin-bottom: 50px;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 24px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
         
-        .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 30px;
-            height: calc(100vh - 100px);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .page-title {
+        .welcome-title {
             font-size: 2.5rem;
             font-weight: 700;
-            color: #90cdf4;
-            margin-bottom: 30px;
-            text-align: center;
+            color: #4fc3f7;
+            margin-bottom: 15px;
+        }
+        
+        .welcome-subtitle {
+            font-size: 1.2rem;
+            color: #b0bec5;
+            margin-bottom: 20px;
         }
         
         .chat-container {
-            background: rgba(45, 53, 97, 0.8);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-            border: 1px solid rgba(144, 205, 244, 0.2);
-            flex: 1;
+            height: 600px;
             display: flex;
             flex-direction: column;
-            overflow: hidden;
-        }
-        
-        .chat-header {
-            padding: 20px 30px;
-            border-bottom: 1px solid rgba(144, 205, 244, 0.2);
-            background: rgba(26, 31, 54, 0.6);
-        }
-        
-        .chat-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #90cdf4;
-            margin-bottom: 5px;
-        }
-        
-        .chat-subtitle {
-            color: #a0aec0;
-            font-size: 0.9rem;
         }
         
         .chat-messages {
             flex: 1;
-            padding: 20px;
             overflow-y: auto;
-            scroll-behavior: smooth;
+            padding: 20px 0;
+            margin-bottom: 20px;
         }
         
         .message {
             margin-bottom: 20px;
             display: flex;
-            animation: fadeIn 0.3s ease-in;
+            align-items: flex-start;
+            gap: 12px;
         }
         
         .message.user {
-            justify-content: flex-end;
-        }
-        
-        .message.ai {
-            justify-content: flex-start;
-        }
-        
-        .message-content {
-            max-width: 70%;
-            padding: 15px 20px;
-            border-radius: 18px;
-            position: relative;
-            word-wrap: break-word;
-            white-space: pre-wrap;
-        }
-        
-        .message.user .message-content {
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
-            color: white;
-            border-bottom-right-radius: 6px;
-        }
-        
-        .message.ai .message-content {
-            background: rgba(26, 31, 54, 0.8);
-            border: 1px solid rgba(144, 205, 244, 0.3);
-            color: #e2e8f0;
-            border-bottom-left-radius: 6px;
+            flex-direction: row-reverse;
         }
         
         .message-avatar {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
-            margin: 0 10px;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: 600;
-            font-size: 0.8rem;
-            flex-shrink: 0;
-        }
-        
-        .message.user .message-avatar {
-            background: #4299e1;
-            color: white;
+            font-size: 0.9rem;
         }
         
         .message.ai .message-avatar {
-            background: linear-gradient(135deg, #90cdf4 0%, #4299e1 100%);
-            color: #1a1f36;
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            color: white;
         }
         
-        .chat-input-container {
-            padding: 20px;
-            border-top: 1px solid rgba(144, 205, 244, 0.2);
-            background: rgba(26, 31, 54, 0.6);
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
+            color: white;
         }
         
-        .chat-input-form {
+        .message-content {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 15px 20px;
+            max-width: 70%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .message.user .message-content {
+            background: rgba(79, 195, 247, 0.1);
+            border-color: rgba(79, 195, 247, 0.3);
+        }
+        
+        .chat-input-area {
             display: flex;
-            gap: 12px;
+            gap: 15px;
             align-items: flex-end;
         }
         
         .chat-input {
             flex: 1;
-            padding: 12px 16px;
-            border: 1px solid rgba(144, 205, 244, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 12px;
-            background: rgba(26, 31, 54, 0.8);
-            color: #e2e8f0;
+            padding: 15px 20px;
+            color: #e8eaed;
             font-size: 1rem;
             resize: none;
+            min-height: 50px;
             max-height: 120px;
-            min-height: 44px;
-            font-family: inherit;
         }
         
         .chat-input:focus {
             outline: none;
-            border-color: #90cdf4;
-            box-shadow: 0 0 0 3px rgba(144, 205, 244, 0.2);
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.1);
         }
         
-        .chat-input::placeholder {
-            color: #a0aec0;
-        }
-        
-        .send-button {
-            padding: 12px 20px;
-            background: linear-gradient(135deg, #4299e1 0%, #3182ce 100%);
+        .chat-send-btn {
+            padding: 15px 25px;
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
             color: white;
             border: none;
             border-radius: 12px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.2s;
+            transition: all 0.3s;
             min-width: 80px;
         }
         
-        .send-button:hover:not(:disabled) {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 20px rgba(66, 153, 225, 0.4);
+        .chat-send-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 195, 247, 0.3);
         }
         
-        .send-button:disabled {
-            opacity: 0.6;
+        .chat-send-btn:disabled {
+            opacity: 0.5;
             cursor: not-allowed;
-        }
-        
-        .typing-indicator {
-            display: flex;
-            align-items: center;
-            gap: 5px;
-            color: #a0aec0;
-            font-style: italic;
-        }
-        
-        .typing-dots {
-            display: flex;
-            gap: 4px;
-        }
-        
-        .typing-dot {
-            width: 6px;
-            height: 6px;
-            background: #90cdf4;
-            border-radius: 50%;
-            animation: typing 1.4s ease-in-out infinite;
-        }
-        
-        .typing-dot:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .typing-dot:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        .welcome-message {
-            text-align: center;
-            color: #a0aec0;
-            padding: 40px 20px;
-            line-height: 1.6;
-        }
-        
-        .welcome-message h3 {
-            color: #90cdf4;
-            margin-bottom: 15px;
+            transform: none;
         }
         
         .quick-questions {
+            margin-top: 30px;
+            padding: 25px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .quick-questions h3 {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .quick-questions-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 15px;
-            margin: 20px 0;
+            gap: 10px;
         }
         
-        .quick-question {
-            background: rgba(26, 31, 54, 0.8);
-            border: 1px solid rgba(144, 205, 244, 0.3);
-            border-radius: 12px;
-            padding: 15px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-align: center;
-        }
-        
-        .quick-question:hover {
-            background: rgba(66, 153, 225, 0.2);
-            border-color: #90cdf4;
-            transform: translateY(-2px);
-        }
-        
-        @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: scale(1);
-                opacity: 0.5;
-            }
-            30% {
-                transform: scale(1.2);
-                opacity: 1;
-            }
-        }
-        
-        .chat-messages::-webkit-scrollbar {
-            width: 6px;
-        }
-        
-        .chat-messages::-webkit-scrollbar-track {
-            background: transparent;
-        }
-        
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: rgba(144, 205, 244, 0.3);
-            border-radius: 3px;
-        }
-        
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: rgba(144, 205, 244, 0.5);
-        }
-        
-        .message-content code {
-            background: rgba(26, 31, 54, 0.8);
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: 'Consolas', 'Monaco', monospace;
-            font-size: 0.9em;
-        }
-        
-        .message-content pre {
-            background: rgba(26, 31, 54, 0.8);
-            padding: 12px;
+        .quick-question-btn {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
-            overflow-x: auto;
-            margin: 8px 0;
-            border: 1px solid rgba(144, 205, 244, 0.3);
+            padding: 12px 16px;
+            color: #b0bec5;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: left;
+            font-size: 0.9rem;
         }
         
-        .message-content pre code {
-            background: none;
-            padding: 0;
+        .quick-question-btn:hover {
+            background: rgba(79, 195, 247, 0.1);
+            border-color: rgba(79, 195, 247, 0.3);
+            color: #4fc3f7;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #78909c;
+            padding: 60px 20px;
+            font-style: italic;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            color: #4fc3f7;
+            padding: 20px;
+        }
+        
+        .loading.show {
+            display: block;
+        }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; gap: 15px; }
+            .nav-menu { flex-wrap: wrap; }
+            .main-container { padding: 20px 15px; }
+            .chat-container { height: 500px; }
+            .message-content { max-width: 85%; }
+            .quick-questions-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <div class="logo">CodeBattleArena</div>
+            <div class="logo">CodeBattleArena 학생</div>
             <nav class="nav-menu">
-                <a href="/student" class="nav-item">대시보드</a>
                 <a href="/student/today" class="nav-item">오늘의 학습</a>
                 <a href="/student/ai-tutor" class="nav-item active">AI 튜터</a>
                 <a href="/student/practice" class="nav-item">코딩연습</a>
@@ -372,142 +267,98 @@
     </div>
 
     <div class="main-container">
-        <h1 class="page-title">🤖 AI 코딩 튜터</h1>
-        
+        <div class="welcome-section">
+            <div class="welcome-title">AI 튜터</div>
+            <div class="welcome-subtitle">궁금한 것이 있으면 언제든지 물어보세요! 제가 도와드릴게요.</div>
+        </div>
+
         <div class="chat-container">
-            <div class="chat-header">
-                <div class="chat-title">GPT-4o Mini 튜터</div>
-                <div class="chat-subtitle">프로그래밍 질문을 자유롭게 해보세요!</div>
-            </div>
-            
             <div class="chat-messages" id="chatMessages">
-                <div class="welcome-message">
-                    <h3>안녕하세요! AI 코딩 튜터입니다</h3>
-                    <p>프로그래밍에 관한 질문이나 학습에 도움이 필요한 것이 있으면 언제든지 말씀해주세요.<br>
-                    코드 리뷰, 알고리즘 설명, 디버깅 도움 등 무엇이든 도와드릴게요!</p>
-                    
-                    <div class="quick-questions">
-                        <div class="quick-question" onclick="sendQuickQuestion('자바 기초 문법을 알려주세요')">
-                            📚 자바 기초 문법
-                        </div>
-                        <div class="quick-question" onclick="sendQuickQuestion('배열과 리스트의 차이점은 무엇인가요?')">
-                            🔍 배열 vs 리스트
-                        </div>
-                        <div class="quick-question" onclick="sendQuickQuestion('반복문 사용법을 예시와 함께 설명해주세요')">
-                            🔄 반복문 사용법
-                        </div>
-                        <div class="quick-question" onclick="sendQuickQuestion('객체지향 프로그래밍이란 무엇인가요?')">
-                            🎯 객체지향 개념
-                        </div>
-                    </div>
+                <div class="empty-state">
+                    안녕하세요! 코딩 학습에 도움이 필요하시면 언제든지 질문해주세요.
                 </div>
             </div>
             
-            <div class="chat-input-container">
-                <form class="chat-input-form" id="chatForm">
-                    <textarea 
-                        class="chat-input" 
-                        id="messageInput" 
-                        placeholder="질문을 입력하세요... (Shift + Enter로 줄바꿈, Enter로 전송)"
-                        rows="1"
-                    ></textarea>
-                    <button type="submit" class="send-button" id="sendButton">전송</button>
-                </form>
+            <div class="loading" id="loadingIndicator">
+                AI가 답변을 생성하고 있습니다...
+            </div>
+            
+            <div class="chat-input-area">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="질문을 입력하세요... (예: 자바 배열에 대해 설명해주세요)"
+                    rows="1"></textarea>
+                <button id="sendButton" class="chat-send-btn">전송</button>
+            </div>
+        </div>
+
+        <div class="quick-questions">
+            <h3>💡 자주 묻는 질문</h3>
+            <div class="quick-questions-grid">
+                <button class="quick-question-btn" onclick="askQuickQuestion('자바 변수와 데이터 타입에 대해 설명해주세요')">
+                    자바 변수와 데이터 타입
+                </button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('배열과 리스트의 차이점이 뭔가요?')">
+                    배열과 리스트의 차이점
+                </button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('객체지향 프로그래밍이란 무엇인가요?')">
+                    객체지향 프로그래밍
+                </button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('알고리즘 시간복잡도를 어떻게 계산하나요?')">
+                    알고리즘 시간복잡도
+                </button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('데이터베이스 정규화에 대해 알려주세요')">
+                    데이터베이스 정규화
+                </button>
+                <button class="quick-question-btn" onclick="askQuickQuestion('REST API란 무엇이고 어떻게 설계하나요?')">
+                    REST API 설계
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        const chatMessages = document.getElementById('chatMessages');
-        const messageInput = document.getElementById('messageInput');
-        const sendButton = document.getElementById('sendButton');
-        const chatForm = document.getElementById('chatForm');
+        let isFirstMessage = true;
 
-        let isTyping = false;
+        function askQuickQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
+        }
 
         function addMessage(content, isUser = false) {
+            const messagesContainer = document.getElementById('chatMessages');
+            
+            if (isFirstMessage) {
+                messagesContainer.innerHTML = '';
+                isFirstMessage = false;
+            }
+            
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
             
-            const formattedContent = isUser ? content : formatAIResponse(content);
-            
             messageDiv.innerHTML = `
-                <div class="message-avatar">${isUser ? 'U' : 'AI'}</div>
-                <div class="message-content">${formattedContent}</div>
+                <div class="message-avatar">${isUser ? 'YOU' : 'AI'}</div>
+                <div class="message-content">${content}</div>
             `;
             
-            chatMessages.appendChild(messageDiv);
-            scrollToBottom();
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        function formatAIResponse(content) {
-            // 코드 블록 포맷팅
-            content = content.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
-            // 인라인 코드 포맷팅
-            content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
-            // 줄바꿈 처리
-            content = content.replace(/\n/g, '<br>');
-            return content;
-        }
-
-        function showTypingIndicator() {
-            if (isTyping) return;
+        async function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const loadingIndicator = document.getElementById('loadingIndicator');
             
-            isTyping = true;
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message ai';
-            typingDiv.id = 'typing-indicator';
-            
-            typingDiv.innerHTML = `
-                <div class="message-avatar">AI</div>
-                <div class="message-content">
-                    <div class="typing-indicator">
-                        <span>답변을 작성하고 있습니다</span>
-                        <div class="typing-dots">
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
-                            <div class="typing-dot"></div>
-                        </div>
-                    </div>
-                </div>
-            `;
-            
-            chatMessages.appendChild(typingDiv);
-            scrollToBottom();
-        }
-
-        function hideTypingIndicator() {
-            isTyping = false;
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
-            }
-        }
-
-        function scrollToBottom() {
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-
-        function adjustTextareaHeight() {
-            messageInput.style.height = 'auto';
-            messageInput.style.height = Math.min(messageInput.scrollHeight, 120) + 'px';
-        }
-
-        async function sendMessage(message) {
-            if (!message.trim()) return;
-            
-            // 환영 메시지 제거
-            const welcomeMessage = document.querySelector('.welcome-message');
-            if (welcomeMessage) {
-                welcomeMessage.remove();
-            }
+            const message = input.value.trim();
+            if (!message) return;
             
             addMessage(message, true);
-            messageInput.value = '';
-            adjustTextareaHeight();
+            input.value = '';
             
             sendButton.disabled = true;
-            showTypingIndicator();
+            loadingIndicator.classList.add('show');
             
             try {
                 const response = await fetch('/api/ai/chat', {
@@ -519,45 +370,36 @@
                     body: JSON.stringify({ message: message })
                 });
                 
+                if (response.status === 401) {
+                    addMessage('로그인이 만료되었습니다. 다시 로그인해주세요.', false);
+                    setTimeout(() => {
+                        localStorage.clear();
+                        window.location.href = '/';
+                    }, 2000);
+                    return;
+                }
+                
                 const data = await response.json();
                 
-                hideTypingIndicator();
-                
-                if (data.response) {
-                    addMessage(data.response);
-                } else if (data.error) {
-                    addMessage('죄송합니다. ' + data.error);
+                if (data.success) {
+                    addMessage(data.response, false);
                 } else {
-                    addMessage('죄송합니다. 현재 AI 서비스에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
+                    addMessage('죄송합니다. AI 서비스에 일시적인 문제가 발생했습니다. 잠시 후 다시 시도해주세요.', false);
                 }
+                
             } catch (error) {
-                hideTypingIndicator();
-                addMessage('네트워크 오류가 발생했습니다. 인터넷 연결을 확인해주세요.');
                 console.error('AI 채팅 오류:', error);
+                addMessage('네트워크 오류가 발생했습니다. 연결을 확인하고 다시 시도해주세요.', false);
             } finally {
                 sendButton.disabled = false;
+                loadingIndicator.classList.remove('show');
             }
         }
 
-        function sendQuickQuestion(question) {
-            sendMessage(question);
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.height = Math.min(textarea.scrollHeight, 120) + 'px';
         }
-
-        chatForm.addEventListener('submit', (e) => {
-            e.preventDefault();
-            const message = messageInput.value;
-            sendMessage(message);
-        });
-
-        messageInput.addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                const message = messageInput.value;
-                sendMessage(message);
-            }
-        });
-
-        messageInput.addEventListener('input', adjustTextareaHeight);
 
         function logout() {
             if (confirm('로그아웃 하시겠습니까?')) {
@@ -565,6 +407,23 @@
                 window.location.href = '/';
             }
         }
+
+        document.getElementById('chatInput').addEventListener('input', function() {
+            autoResize(this);
+        });
+
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        document.getElementById('sendButton').addEventListener('click', sendMessage);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            addMessage('안녕하세요! 코딩 학습에 도움이 필요하시면 언제든지 질문해주세요. 아래 자주 묻는 질문을 참고하시거나 직접 질문을 입력해보세요!', false);
+        });
     </script>
 </body>
 </html>
