@@ -24,6 +24,9 @@ public class Material {
     @Column(name = "file_path")
     private String filePath;
 
+    @Column(name = "local_file_path")
+    private String localFilePath;
+
     @Column(name = "file_type")
     private String fileType;
 
@@ -41,14 +44,6 @@ public class Material {
 
     @Column(name = "cloudinary_public_id", length = 255)
     private String cloudinaryPublicId;
-
-    public String getCloudinaryPublicId() {
-        return cloudinaryPublicId;
-    }
-
-    public void setCloudinaryPublicId(String cloudinaryPublicId) {
-        this.cloudinaryPublicId = cloudinaryPublicId;
-    }
 
     public Material() {
         this.createdAt = LocalDateTime.now();
@@ -102,6 +97,14 @@ public class Material {
         this.filePath = filePath;
     }
 
+    public String getLocalFilePath() {
+        return localFilePath;
+    }
+
+    public void setLocalFilePath(String localFilePath) {
+        this.localFilePath = localFilePath;
+    }
+
     public String getFileType() {
         return fileType;
     }
@@ -140,5 +143,13 @@ public class Material {
 
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public String getCloudinaryPublicId() {
+        return cloudinaryPublicId;
+    }
+
+    public void setCloudinaryPublicId(String cloudinaryPublicId) {
+        this.cloudinaryPublicId = cloudinaryPublicId;
     }
 }

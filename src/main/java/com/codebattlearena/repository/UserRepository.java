@@ -21,9 +21,17 @@ public interface UserRepository extends JpaRepository<User, Long> {
     
     List<User> findByRole(UserRole role);
     
+    List<User> findByGroupId(Long groupId);
+    
     Long countByRole(UserRole role);
     
     Long countByOnlineStatusTrue();
+    
+    Long countByGroupId(Long groupId);
+    
+    Long countByGroupIdIn(List<Long> groupIds);
+    
+    Long countByGroupIdInAndOnlineStatusTrue(List<Long> groupIds);
     
     List<User> findAllByOrderByCreatedAtDesc();
 }
