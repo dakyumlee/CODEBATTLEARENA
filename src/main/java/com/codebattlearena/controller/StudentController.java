@@ -1,6 +1,5 @@
 package com.codebattlearena.controller;
 
-import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.*;
 import com.codebattlearena.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -34,9 +34,6 @@ public class StudentController {
     
     @Autowired
     private MaterialRepository materialRepository;
-    
-    @Autowired
-    private JwtUtil jwtUtil;
 
     @Autowired
     private Environment env;
@@ -56,36 +53,19 @@ public class StudentController {
         }
     }
 
-    private Long getUserIdFromRequest(HttpServletRequest request) {
+    private Long getUserIdFromSession(HttpSession session) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                if (request.getCookies() != null) {
-                    for (var cookie : request.getCookies()) {
-                        if ("authToken".equals(cookie.getName())) {
-                            authHeader = "Bearer " + cookie.getValue();
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                String email = jwtUtil.extractEmail(token);
-                User user = userRepository.findByEmail(email).orElse(null);
-                return user != null ? user.getId() : null;
-            }
+            Object userId = session.getAttribute("userId");
+            return userId != null ? (Long) userId : null;
         } catch (Exception e) {
-            System.err.println("토큰 파싱 오류: " + e.getMessage());
+            return null;
         }
-        return null;
     }
 
     @GetMapping("/profile")
-    public Map<String, Object> getProfile(HttpServletRequest request) {
+    public Map<String, Object> getProfile(HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("error", "Unauthorized");
             }
@@ -102,9 +82,9 @@ public class StudentController {
     }
 
     @GetMapping("/ai-problems/today")
-    public Map<String, Object> getTodayAiProblem(HttpServletRequest request) {
+    public Map<String, Object> getTodayAiProblem(HttpSession session) {
     try {
-        Long userId = getUserIdFromRequest(request);
+        Long userId = getUserIdFromSession(session);
         if (userId == null) {
             return Map.of("error", "Unauthorized");
         }
@@ -126,9 +106,9 @@ public class StudentController {
 }
 
     @GetMapping("/today")
-    public Map<String, Object> getTodayData(HttpServletRequest request) {
+    public Map<String, Object> getTodayData(HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("error", "Unauthorized");
             }
@@ -155,9 +135,9 @@ public class StudentController {
     }
 
     @GetMapping("/materials/{id}/download")
-    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
@@ -179,9 +159,9 @@ public class StudentController {
     }
 
     @GetMapping("/ai-problems")
-    public Map<String, Object> getAiProblems(HttpServletRequest request) {
+    public Map<String, Object> getAiProblems(HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("error", "Unauthorized");
             }
@@ -223,9 +203,9 @@ public class StudentController {
     }
 
     @GetMapping("/teacher-problems")
-    public Map<String, Object> getTeacherProblems(HttpServletRequest request) {
+    public Map<String, Object> getTeacherProblems(HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("error", "Unauthorized");
             }
@@ -274,9 +254,9 @@ public class StudentController {
     }
 
     @GetMapping("/problem/{id}")
-    public Map<String, Object> getProblemDetail(@PathVariable Long id, HttpServletRequest request) {
+    public Map<String, Object> getProblemDetail(@PathVariable Long id, HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("error", "Unauthorized");
             }
@@ -327,10 +307,10 @@ public class StudentController {
             @RequestParam("problemId") Long problemId,
             @RequestParam(value = "answer", required = false) String answer,
             @RequestParam(value = "file", required = false) MultipartFile file,
-            HttpServletRequest request) {
+            HttpSession session) {
         
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
@@ -389,9 +369,9 @@ public class StudentController {
     }
 
     @GetMapping("/notes")
-    public List<StudyNote> getNotes(HttpServletRequest request) {
+    public List<StudyNote> getNotes(HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return new ArrayList<>();
             }
@@ -403,9 +383,9 @@ public class StudentController {
     }
 
     @PostMapping("/notes")
-    public Map<String, Object> createNote(@RequestBody Map<String, String> noteData, HttpServletRequest request) {
+    public Map<String, Object> createNote(@RequestBody Map<String, String> noteData, HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("success", false, "message", "Unauthorized");
             }
@@ -426,9 +406,9 @@ public class StudentController {
     }
 
     @PutMapping("/notes/{id}")
-    public Map<String, Object> updateNote(@PathVariable Long id, @RequestBody Map<String, String> noteData, HttpServletRequest request) {
+    public Map<String, Object> updateNote(@PathVariable Long id, @RequestBody Map<String, String> noteData, HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("success", false, "message", "Unauthorized");
             }
@@ -451,9 +431,9 @@ public class StudentController {
     }
 
     @DeleteMapping("/notes/{id}")
-    public Map<String, Object> deleteNote(@PathVariable Long id, HttpServletRequest request) {
+    public Map<String, Object> deleteNote(@PathVariable Long id, HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(request);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("success", false, "message", "Unauthorized");
             }

@@ -1,6 +1,5 @@
 package com.codebattlearena.controller;
 
-import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.*;
 import com.codebattlearena.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -40,9 +39,6 @@ public class TeacherController {
     private SubmissionRepository submissionRepository;
 
     @Autowired
-    private JwtUtil jwtUtil;
-
-    @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
     @Autowired
@@ -64,41 +60,24 @@ public class TeacherController {
         }
     }
 
-    private Long getUserIdFromRequest(HttpServletRequest request) {
+    private Long getUserIdFromSession(HttpSession session) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                if (request.getCookies() != null) {
-                    for (var cookie : request.getCookies()) {
-                        if ("authToken".equals(cookie.getName())) {
-                            authHeader = "Bearer " + cookie.getValue();
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                if (!jwtUtil.isTokenValid(token)) {
-                    return null;
-                }
-                String email = jwtUtil.extractEmail(token);
-                User user = userRepository.findByEmail(email).orElse(null);
-                if (user != null && user.getRole() == UserRole.TEACHER) {
-                    return user.getId();
-                }
+            Object userId = session.getAttribute("userId");
+            Object userRole = session.getAttribute("userRole");
+            
+            if (userId != null && "TEACHER".equals(userRole)) {
+                return (Long) userId;
             }
         } catch (Exception e) {
-            System.err.println("토큰 파싱 오류: " + e.getMessage());
+            System.err.println("세션 확인 오류: " + e.getMessage());
         }
         return null;
     }
 
     @GetMapping("/materials/{id}/preview")
-    public ResponseEntity<Map<String, Object>> previewMaterial(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> previewMaterial(@PathVariable Long id, HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
@@ -122,9 +101,9 @@ public class TeacherController {
     }
 
     @GetMapping("/problems/{id}/detail")
-    public ResponseEntity<Map<String, Object>> getProblemDetail(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> getProblemDetail(@PathVariable Long id, HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
@@ -159,9 +138,9 @@ public class TeacherController {
     }
 
     @GetMapping("/materials")
-    public ResponseEntity<Map<String, Object>> getMaterials(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> getMaterials(HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
@@ -193,10 +172,10 @@ public class TeacherController {
             @RequestParam("title") String title,
             @RequestParam(value = "description", required = false) String description,
             @RequestParam("file") MultipartFile file,
-            HttpServletRequest request) {
+            HttpSession session) {
 
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
@@ -248,9 +227,9 @@ public class TeacherController {
     }
 
     @GetMapping("/materials/{id}/download")
-    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpServletRequest request) {
+    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
@@ -272,9 +251,9 @@ public class TeacherController {
     }
 
     @DeleteMapping("/materials/{id}")
-    public Map<String, Object> deleteMaterial(@PathVariable Long id, HttpServletRequest request) {
+    public Map<String, Object> deleteMaterial(@PathVariable Long id, HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
@@ -320,9 +299,9 @@ public class TeacherController {
     }
 
     @PostMapping("/problems")
-    public Map<String, Object> createProblem(@RequestBody Map<String, Object> problemData, HttpServletRequest request) {
+    public Map<String, Object> createProblem(@RequestBody Map<String, Object> problemData, HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
@@ -375,9 +354,9 @@ public class TeacherController {
     }
 
     @GetMapping("/problems")
-    public ResponseEntity<Map<String, Object>> getMyProblems(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> getMyProblems(HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
@@ -390,9 +369,9 @@ public class TeacherController {
     }
 
     @GetMapping("/submissions")
-    public ResponseEntity<Map<String, Object>> getSubmissions(HttpServletRequest request) {
+    public ResponseEntity<Map<String, Object>> getSubmissions(HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
             }
@@ -427,9 +406,9 @@ public class TeacherController {
     }
 
     @PostMapping("/grade-submission")
-    public Map<String, Object> gradeSubmission(@RequestBody Map<String, Object> gradeData, HttpServletRequest request) {
+    public Map<String, Object> gradeSubmission(@RequestBody Map<String, Object> gradeData, HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
@@ -459,9 +438,9 @@ public class TeacherController {
 
     @PutMapping("/problems/{id}")
     public Map<String, Object> updateProblem(@PathVariable Long id, @RequestBody Map<String, Object> problemData,
-            HttpServletRequest request) {
+            HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
@@ -490,9 +469,9 @@ public class TeacherController {
     }
 
     @DeleteMapping("/problems/{id}")
-    public Map<String, Object> deleteProblem(@PathVariable Long id, HttpServletRequest request) {
+    public Map<String, Object> deleteProblem(@PathVariable Long id, HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
@@ -511,9 +490,9 @@ public class TeacherController {
     }
 
     @GetMapping("/students")
-    public Map<String, Object> getMyStudents(HttpServletRequest request) {
+    public Map<String, Object> getMyStudents(HttpSession session) {
         try {
-            Long teacherId = getUserIdFromRequest(request);
+            Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("error", "Unauthorized");
             }

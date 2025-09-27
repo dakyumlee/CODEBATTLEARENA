@@ -1,6 +1,5 @@
 package com.codebattlearena.controller;
 
-import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.User;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +8,7 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.util.*;
 
 @RestController
@@ -19,31 +18,22 @@ public class AIController {
     @Autowired
     private UserRepository userRepository;
     
-    @Autowired
-    private JwtUtil jwtUtil;
-    
     @Value("${openai.api.key:}")
     private String openaiApiKey;
 
-    private Long getUserIdFromRequest(HttpServletRequest request) {
+    private Long getUserIdFromSession(HttpSession session) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                String email = jwtUtil.extractEmail(token);
-                User user = userRepository.findByEmail(email).orElse(null);
-                return user != null ? user.getId() : null;
-            }
+            Object userId = session.getAttribute("userId");
+            return userId != null ? (Long) userId : null;
         } catch (Exception e) {
-            System.err.println("토큰 파싱 오류: " + e.getMessage());
+            return null;
         }
-        return null;
     }
 
     @PostMapping("/chat")
-    public Map<String, Object> chat(@RequestBody ChatRequest request, HttpServletRequest httpRequest) {
+    public Map<String, Object> chat(@RequestBody ChatRequest request, HttpSession session) {
         try {
-            Long userId = getUserIdFromRequest(httpRequest);
+            Long userId = getUserIdFromSession(session);
             if (userId == null) {
                 return Map.of("error", "Unauthorized");
             }

@@ -1,13 +1,12 @@
 package com.codebattlearena.controller;
 
-import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.User;
 import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.*;
 
@@ -17,60 +16,14 @@ public class AdminApiController {
 
     @Autowired
     private UserRepository userRepository;
-    
-    @Autowired
-    private JwtUtil jwtUtil;
 
-    private Long getUserIdFromRequest(HttpServletRequest request) {
+    private boolean isAdmin(HttpSession session) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                if (request.getCookies() != null) {
-                    for (var cookie : request.getCookies()) {
-                        if ("authToken".equals(cookie.getName())) {
-                            authHeader = "Bearer " + cookie.getValue();
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                String email = jwtUtil.extractEmail(token);
-                User user = userRepository.findByEmail(email).orElse(null);
-                return user != null ? user.getId() : null;
-            }
+            Object userRole = session.getAttribute("userRole");
+            return "ADMIN".equals(userRole);
         } catch (Exception e) {
-            System.err.println("토큰 파싱 오류: " + e.getMessage());
+            return false;
         }
-        return null;
-    }
-
-    private boolean isAdmin(HttpServletRequest request) {
-        try {
-            String authHeader = request.getHeader("Authorization");
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                if (request.getCookies() != null) {
-                    for (var cookie : request.getCookies()) {
-                        if ("authToken".equals(cookie.getName())) {
-                            authHeader = "Bearer " + cookie.getValue();
-                            break;
-                        }
-                    }
-                }
-            }
-            
-            if (authHeader != null && authHeader.startsWith("Bearer ")) {
-                String token = authHeader.substring(7);
-                String email = jwtUtil.extractEmail(token);
-                User user = userRepository.findByEmail(email).orElse(null);
-                return user != null && user.getRole() == UserRole.ADMIN;
-            }
-        } catch (Exception e) {
-            System.err.println("관리자 권한 확인 오류: " + e.getMessage());
-        }
-        return false;
     }
 
     public static class CreateUserRequest {
@@ -93,9 +46,9 @@ public class AdminApiController {
     }
 
     @GetMapping("/statistics")
-    public Map<String, Object> getSystemStatistics(HttpServletRequest request) {
+    public Map<String, Object> getSystemStatistics(HttpSession session) {
         try {
-            if (!isAdmin(request)) {
+            if (!isAdmin(session)) {
                 return Map.of("error", "Unauthorized");
             }
             
@@ -119,9 +72,9 @@ public class AdminApiController {
     }
 
     @GetMapping("/users")
-    public Map<String, Object> getAllUsers(HttpServletRequest request) {
+    public Map<String, Object> getAllUsers(HttpSession session) {
         try {
-            if (!isAdmin(request)) {
+            if (!isAdmin(session)) {
                 return Map.of("error", "Unauthorized");
             }
             
@@ -146,9 +99,9 @@ public class AdminApiController {
     }
 
     @PostMapping("/users")
-    public Map<String, Object> createUser(@RequestBody CreateUserRequest userRequest, HttpServletRequest request) {
+    public Map<String, Object> createUser(@RequestBody CreateUserRequest userRequest, HttpSession session) {
         try {
-            if (!isAdmin(request)) {
+            if (!isAdmin(session)) {
                 return Map.of("success", false, "message", "Unauthorized");
             }
             
@@ -172,9 +125,9 @@ public class AdminApiController {
     }
 
     @DeleteMapping("/users/{id}")
-    public Map<String, Object> deleteUser(@PathVariable Long id, HttpServletRequest request) {
+    public Map<String, Object> deleteUser(@PathVariable Long id, HttpSession session) {
         try {
-            if (!isAdmin(request)) {
+            if (!isAdmin(session)) {
                 return Map.of("success", false, "message", "Unauthorized");
             }
             
@@ -196,9 +149,9 @@ public class AdminApiController {
     }
 
     @PutMapping("/users/{id}/role")
-    public Map<String, Object> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> roleData, HttpServletRequest request) {
+    public Map<String, Object> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> roleData, HttpSession session) {
         try {
-            if (!isAdmin(request)) {
+            if (!isAdmin(session)) {
                 return Map.of("success", false, "message", "Unauthorized");
             }
             

@@ -1,11 +1,6 @@
 spring:
-  application:
-    name: CodeBattleArena
-  
   datasource:
-    url: jdbc:postgresql://localhost:5433/codebattlearena
-    username: postgres
-    password: password
+    url: ${DATABASE_URL}
     driver-class-name: org.postgresql.Driver
   
   jpa:
@@ -15,9 +10,15 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
+    defer-datasource-initialization: true
+
+  sql:
+    init:
+      mode: always
+      data-locations: classpath:data.sql
   
   thymeleaf:
-    cache: false
+    cache: true
     prefix: classpath:/templates/
     suffix: .html
   
@@ -27,14 +28,22 @@ spring:
       max-request-size: 50MB
 
 server:
-  port: 8080
+  port: ${PORT:8080}
 
 jwt:
-  secret: codebattlearena-secret-key-2025-very-long-and-secure-key
+  secret: ${JWT_SECRET:codebattlearena-secret-key-2025-very-long-and-secure-key}
   expiration: 86400000
+
+ai:
+  openai:
+    api-key: ${OPENAI_API_KEY:}
+
+upload:
+  path: ./uploads
 
 logging:
   level:
-    com.codebattlearena: DEBUG
+    com.codebattlearena: INFO
     org.springframework.security: WARN
     org.springframework.web: WARN
+    org.hibernate: WARN
