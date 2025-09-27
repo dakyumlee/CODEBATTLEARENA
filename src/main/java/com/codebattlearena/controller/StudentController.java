@@ -3,15 +3,20 @@ package com.codebattlearena.controller;
 import com.codebattlearena.model.*;
 import com.codebattlearena.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import jakarta.annotation.PostConstruct;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
+import java.net.MalformedURLException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -35,31 +40,20 @@ public class StudentController {
     @Autowired
     private MaterialRepository materialRepository;
 
-    @Autowired
-    private Environment env;
-
-    private com.cloudinary.Cloudinary cloudinary;
-
-    @PostConstruct
-    public void init() {
-        try {
-            cloudinary = new com.cloudinary.Cloudinary();
-            cloudinary.config.cloudName = "dgtxjgdit";
-            cloudinary.config.apiKey = "838357254369448";
-            cloudinary.config.apiSecret = "c5xRZ7AD5wTd6l0KBqTnaBYpWSU";
-            cloudinary.config.secure = true;
-        } catch (Exception e) {
-            System.err.println("Cloudinary initialization failed: " + e.getMessage());
-        }
-    }
+    private final Path fileStorageLocation = Paths.get("src/main/resources/uploads").toAbsolutePath().normalize();
 
     private Long getUserIdFromSession(HttpSession session) {
         try {
             Object userId = session.getAttribute("userId");
-            return userId != null ? (Long) userId : null;
+            Object userRole = session.getAttribute("userRole");
+            
+            if (userId != null && "STUDENT".equals(userRole)) {
+                return (Long) userId;
+            }
         } catch (Exception e) {
-            return null;
+            System.err.println("세션 확인 오류: " + e.getMessage());
         }
+        return null;
     }
 
     @GetMapping("/profile")
@@ -83,27 +77,27 @@ public class StudentController {
 
     @GetMapping("/ai-problems/today")
     public Map<String, Object> getTodayAiProblem(HttpSession session) {
-    try {
-        Long userId = getUserIdFromSession(session);
-        if (userId == null) {
-            return Map.of("error", "Unauthorized");
+        try {
+            Long userId = getUserIdFromSession(session);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            Map<String, Object> todayProblem = Map.of(
+                "id", "ai-today-" + LocalDateTime.now().getDayOfYear(),
+                "title", "배열의 최댓값 찾기",
+                "description", "주어진 정수 배열에서 최댓값을 찾는 함수를 작성하세요.\n\n입력: [3, 1, 4, 1, 5, 9, 2, 6]\n출력: 9\n\n힌트: 반복문을 사용하여 배열을 순회하면서 최댓값을 찾아보세요.",
+                "difficulty", "하",
+                "category", "배열",
+                "timeLimit", 30,
+                "points", 100
+            );
+            
+            return Map.of("success", true, "problem", todayProblem);
+        } catch (Exception e) {
+            return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
         }
-        
-        Map<String, Object> todayProblem = Map.of(
-            "id", "ai-today-" + LocalDateTime.now().getDayOfYear(),
-            "title", "배열의 최댓값 찾기",
-            "description", "주어진 정수 배열에서 최댓값을 찾는 함수를 작성하세요.\n\n입력: [3, 1, 4, 1, 5, 9, 2, 6]\n출력: 9\n\n힌트: 반복문을 사용하여 배열을 순회하면서 최댓값을 찾아보세요.",
-            "difficulty", "하",
-            "category", "배열",
-            "timeLimit", 30,
-            "points", 100
-        );
-        
-        return Map.of("success", true, "problem", todayProblem);
-    } catch (Exception e) {
-        return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
     }
-}
 
     @GetMapping("/today")
     public Map<String, Object> getTodayData(HttpSession session) {
@@ -124,7 +118,7 @@ public class StudentController {
                 data.put("fileSize", material.getFileSize());
                 data.put("originalFilename", material.getOriginalFilename());
                 data.put("createdAt", material.getCreatedAt());
-                data.put("filePath", material.getFilePath());
+                data.put("downloadCount", material.getDownloadCount());
                 return data;
             }).collect(Collectors.toList());
             
@@ -135,7 +129,7 @@ public class StudentController {
     }
 
     @GetMapping("/materials/{id}/download")
-    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long userId = getUserIdFromSession(session);
             if (userId == null) {
@@ -147,58 +141,60 @@ public class StudentController {
                 return ResponseEntity.notFound().build();
             }
 
-            material.setDownloadCount(material.getDownloadCount() + 1);
-            materialRepository.save(material);
+            Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
 
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .header("Location", material.getFilePath())
-                    .build();
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+            if (resource.exists()) {
+                material.setDownloadCount(material.getDownloadCount() + 1);
+                materialRepository.save(material);
+
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException ex) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @GetMapping("/ai-problems")
-    public Map<String, Object> getAiProblems(HttpSession session) {
+    @GetMapping("/materials/{id}/preview")
+    public ResponseEntity<Resource> previewMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long userId = getUserIdFromSession(session);
             if (userId == null) {
-                return Map.of("error", "Unauthorized");
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-            
-            List<Map<String, Object>> aiProblems = Arrays.asList(
-                Map.of(
-                    "id", "ai-1",
-                    "title", "배열의 최댓값 찾기",
-                    "description", "주어진 정수 배열에서 최댓값을 찾는 함수를 작성하세요.\n\n입력: [3, 1, 4, 1, 5, 9, 2, 6]\n출력: 9\n\n힌트: 반복문을 사용하여 배열을 순회하면서 최댓값을 찾아보세요.",
-                    "difficulty", "하",
-                    "category", "배열",
-                    "timeLimit", 30,
-                    "points", 100
-                ),
-                Map.of(
-                    "id", "ai-2", 
-                    "title", "문자열 뒤집기",
-                    "description", "주어진 문자열을 뒤집어 반환하는 함수를 작성하세요.\n\n입력: \"Hello\"\n출력: \"olleH\"\n\n힌트: 문자열의 끝에서부터 시작까지 역순으로 문자를 이어붙이면 됩니다.",
-                    "difficulty", "하",
-                    "category", "문자열",
-                    "timeLimit", 20,
-                    "points", 80
-                ),
-                Map.of(
-                    "id", "ai-3", 
-                    "title", "피보나치 수열",
-                    "description", "n번째 피보나치 수를 구하는 함수를 작성하세요.\n\n입력: 10\n출력: 55\n\n설명: 피보나치 수열은 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, ... 입니다.\n각 수는 앞의 두 수의 합으로 이루어집니다.",
-                    "difficulty", "중",
-                    "category", "DP",
-                    "timeLimit", 45,
-                    "points", 150
-                )
-            );
-            
-            return Map.of("success", true, "problems", aiProblems);
-        } catch (Exception e) {
-            return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
+
+            Material material = materialRepository.findById(id).orElse(null);
+            if (material == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
+
+            if (resource.exists()) {
+                String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
+                MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+                
+                if (fileType.equals("pdf")) {
+                    mediaType = MediaType.APPLICATION_PDF;
+                } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp").contains(fileType)) {
+                    mediaType = MediaType.IMAGE_JPEG;
+                }
+
+                return ResponseEntity.ok()
+                        .contentType(mediaType)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + material.getOriginalFilename() + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException ex) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
@@ -222,6 +218,7 @@ public class StudentController {
                 problemData.put("timeLimit", problem.getTimeLimit());
                 problemData.put("points", problem.getPoints());
                 problemData.put("type", problem.getType());
+                problemData.put("createdAt", problem.getCreatedAt());
                 
                 if ("QUIZ".equals(problem.getType())) {
                     problemData.put("optionA", problem.getOptionA());
@@ -305,8 +302,7 @@ public class StudentController {
     @PostMapping("/submit-answer")
     public Map<String, Object> submitAnswer(
             @RequestParam("problemId") Long problemId,
-            @RequestParam(value = "answer", required = false) String answer,
-            @RequestParam(value = "file", required = false) MultipartFile file,
+            @RequestParam("answer") String answer,
             HttpSession session) {
         
         try {
@@ -315,8 +311,8 @@ public class StudentController {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
             
-            if ((answer == null || answer.trim().isEmpty()) && (file == null || file.isEmpty())) {
-                return Map.of("success", false, "message", "텍스트 답안을 작성하거나 파일을 첨부해주세요.");
+            if (answer == null || answer.trim().isEmpty()) {
+                return Map.of("success", false, "message", "답안을 작성해주세요.");
             }
             
             if (submissionRepository.existsByUserIdAndProblemId(userId, problemId)) {
@@ -331,38 +327,21 @@ public class StudentController {
             Submission submission = new Submission();
             submission.setUserId(userId);
             submission.setProblemId(problemId);
+            submission.setAnswer(answer);
             submission.setSubmittedAt(LocalDateTime.now());
             submission.setStatus("PENDING");
             
-            if (answer != null && !answer.trim().isEmpty()) {
-                submission.setAnswer(answer);
-            }
-            
-            if (file != null && !file.isEmpty()) {
-                try {
-                    if (cloudinary != null) {
-                        String originalFilename = file.getOriginalFilename();
-                        Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
-                                Map.of("folder", "codebattlearena/submissions",
-                                        "public_id", System.currentTimeMillis() + "_" + userId + "_" + problemId,
-                                        "resource_type", "auto"));
-                        
-                        String fileUrl = (String) uploadResult.get("secure_url");
-                        String existingAnswer = submission.getAnswer();
-                        String combinedAnswer = (existingAnswer != null ? existingAnswer + "\n\n" : "") + 
-                                              "첨부 파일: " + originalFilename + "\n파일 링크: " + fileUrl;
-                        submission.setAnswer(combinedAnswer);
-                    } else {
-                        return Map.of("success", false, "message", "파일 업로드 서비스가 설정되지 않았습니다.");
-                    }
-                } catch (Exception e) {
-                    return Map.of("success", false, "message", "파일 업로드 실패: " + e.getMessage());
-                }
+            if ("QUIZ".equals(problem.getType()) && problem.getCorrectAnswer() != null) {
+                boolean isCorrect = problem.getCorrectAnswer().equalsIgnoreCase(answer.trim());
+                submission.setScore(isCorrect ? problem.getPoints() : 0);
+                submission.setStatus("GRADED");
+                submission.setFeedback(isCorrect ? "정답입니다!" : "오답입니다. 정답: " + problem.getCorrectAnswer());
+                submission.setGradedAt(LocalDateTime.now());
             }
             
             submissionRepository.save(submission);
             
-            return Map.of("success", true, "message", "답안이 제출되었습니다. 채점을 기다려주세요.");
+            return Map.of("success", true, "message", "답안이 제출되었습니다.");
         } catch (Exception e) {
             return Map.of("success", false, "message", "제출 실패: " + e.getMessage());
         }

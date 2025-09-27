@@ -470,7 +470,53 @@ public class TeacherController {
             return Map.of("success", false, "message", "삭제 실패: " + e.getMessage());
         }
     }
+    @GetMapping("/api/teacher/materials/{id}/download-fixed")
+public ResponseEntity<Resource> downloadMaterialFixed(@PathVariable Long id, HttpSession session) {
+    try {
+        Long teacherId = getUserIdFromSession(session);
+        if (teacherId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
+        Material material = materialRepository.findById(id).orElse(null);
+        if (material == null || !material.getTeacherId().equals(teacherId)) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
+        Resource resource = new UrlResource(filePath.toUri());
+
+        if (resource.exists()) {
+            material.setDownloadCount(material.getDownloadCount() + 1);
+            materialRepository.save(material);
+
+            String contentType = "application/octet-stream";
+            String fileExtension = material.getFileType();
+            if (fileExtension != null) {
+                switch (fileExtension.toLowerCase()) {
+                    case "pdf": contentType = "application/pdf"; break;
+                    case "jpg":
+                    case "jpeg": contentType = "image/jpeg"; break;
+                    case "png": contentType = "image/png"; break;
+                    case "gif": contentType = "image/gif"; break;
+                    case "doc": contentType = "application/msword"; break;
+                    case "docx": contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"; break;
+                    case "ppt": contentType = "application/vnd.ms-powerpoint"; break;
+                    case "pptx": contentType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"; break;
+                }
+            }
+
+            return ResponseEntity.ok()
+                    .contentType(MediaType.parseMediaType(contentType))
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
+                    .body(resource);
+        } else {
+            return ResponseEntity.notFound().build();
+        }
+    } catch (Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+    }
+}
     @GetMapping("/api/teacher/problems")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getMyProblems(HttpSession session) {
