@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>복습노트 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #1a202c;
+            min-height: 100vh;
+            color: #e2e8f0;
+        }
+        
+        .header {
+            background: #2d3748;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { font-size: 1.5rem; font-weight: 700; color: #4299e1; }
+        
+        .nav-menu { display: flex; gap: 30px; }
+        
+        .nav-item {
+            color: #a0aec0;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover, .nav-item.active { background: #4299e1; color: white; }
+        
+        .main-container { max-width: 1400px; margin: 0 auto; padding: 30px; }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4299e1;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .section-card {
+            background: #2d3748;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.3);
+            border: 1px solid #4a5568;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #4299e1;
+        }
+        
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #3182ce;
+            transform: translateY(-1px);
+        }
+        
+        .btn-secondary {
+            background: #4a5568;
+            color: #e2e8f0;
+        }
+        
+        .btn-danger {
+            background: #e53e3e;
+            color: white;
+        }
+        
+        .form-container {
+            background: #374151;
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
+            border: 1px solid #4a5568;
+        }
+        
+        .form-group { margin-bottom: 20px; }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #e2e8f0;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            background: #2d3748;
+            color: #e2e8f0;
+            font-size: 1rem;
+            font-family: inherit;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.2);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .notes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+        }
+        
+        .note-card {
+            background: #374151;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #4a5568;
+            transition: all 0.3s;
+        }
+        
+        .note-card:hover {
+            transform: translateY(-3px);
+            border-color: #4299e1;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+        
+        .note-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .note-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e2e8f0;
+            margin-bottom: 5px;
+        }
+        
+        .note-date {
+            color: #a0aec0;
+            font-size: 0.85rem;
+        }
+        
+        .note-content {
+            color: #cbd5e0;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            max-height: 200px;
+            overflow: hidden;
+        }
+        
+        .note-actions {
+            display: flex;
+            gap: 10px;
+        }
+        
+        .note-actions .btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #a0aec0;
+            padding: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .notes-grid { grid-template-columns: 1fr; }
+            .form-actions { flex-direction: column; }
+            .note-actions { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">CodeBattleArena</div>
+            <nav class="nav-menu">
+                <a href="/student" class="nav-item">대시보드</a>
+                <a href="/student/today" class="nav-item">오늘의 학습</a>
+                <a href="/student/ai-tutor" class="nav-item">AI 튜터</a>
+                <a href="/student/practice" class="nav-item">코딩연습</a>
+                <a href="/student/notes" class="nav-item active">복습노트</a>
+                <a href="/student/battle" class="nav-item">코드배틀</a>
+                <a href="javascript:logout()" class="nav-item">로그아웃</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <h1 class="page-title">복습노트</h1>
+
+        <div class="section-card">
+            <div class="section-header">
+                <h3 class="section-title">나의 노트</h3>
+                <button onclick="showCreateForm()" class="btn btn-primary">새 노트 작성</button>
+            </div>
+
+            <div id="createForm" class="form-container" style="display: none;">
+                <h4 style="color: #4299e1; margin-bottom: 20px;">새 노트 작성</h4>
+                <div class="form-group">
+                    <label class="form-label">노트 제목</label>
+                    <input type="text" id="noteTitle" class="form-control" placeholder="노트 제목을 입력하세요">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">내용</label>
+                    <textarea id="noteContent" class="form-control" rows="8" placeholder="학습 내용을 자유롭게 작성하세요..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button onclick="saveNote()" class="btn btn-primary">저장</button>
+                    <button onclick="cancelNote()" class="btn btn-secondary">취소</button>
+                </div>
+            </div>
+
+            <div id="notesList">
+                <div class="empty-state">노트를 불러오는 중...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let editingNoteId = null;
+
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/';
+                return false;
+            }
+            return true;
+        }
+
+        async function makeRequest(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken'),
+                    'Content-Type': 'application/json',
+                    ...options.headers
+                }
+            });
+            
+            if (response.status === 401) {
+                localStorage.clear();
+                window.location.href = '/';
+                throw new Error('Unauthorized');
+            }
+            
+            return response;
+        }
+
+        async function loadNotes() {
+            try {
+                const response = await makeRequest('/api/student/notes');
+                const notes = await response.json();
+
+                const notesList = document.getElementById('notesList');
+                
+                if (notes.length === 0) {
+                    notesList.innerHTML = '<div class="empty-state">아직 작성한 노트가 없습니다.</div>';
+                    return;
+                }
+
+                notesList.innerHTML = `
+                    <div class="notes-grid">
+                        ${notes.map(note => `
+                            <div class="note-card">
+                                <div class="note-header">
+                                    <div>
+                                        <div class="note-title">${note.title}</div>
+                                        <div class="note-date">${new Date(note.createdAt).toLocaleDateString('ko-KR')}</div>
+                                    </div>
+                                </div>
+                                <div class="note-content">${note.content}</div>
+                                <div class="note-actions">
+                                    <button onclick="editNote(${note.id}, '${escapeQuotes(note.title)}', '${escapeQuotes(note.content)}')" class="btn btn-secondary">수정</button>
+                                    <button onclick="deleteNote(${note.id})" class="btn btn-danger">삭제</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } catch (error) {
+                document.getElementById('notesList').innerHTML = 
+                    '<div class="empty-state" style="color: #e53e3e;">노트를 불러올 수 없습니다.</div>';
+            }
+        }
+
+        function escapeQuotes(str) {
+            return str ? str.replace(/'/g, "\\'").replace(/"/g, '\\"') : '';
+        }
+
+        function showCreateForm() {
+            document.getElementById('createForm').style.display = 'block';
+            document.getElementById('noteTitle').focus();
+            editingNoteId = null;
+            document.querySelector('#createForm h4').textContent = '새 노트 작성';
+        }
+
+        function editNote(id, title, content) {
+            editingNoteId = id;
+            document.getElementById('noteTitle').value = title;
+            document.getElementById('noteContent').value = content;
+            document.getElementById('createForm').style.display = 'block';
+            document.querySelector('#createForm h4').textContent = '노트 수정';
+        }
+
+        function cancelNote() {
+            document.getElementById('createForm').style.display = 'none';
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteContent').value = '';
+            editingNoteId = null;
+        }
+
+        async function saveNote() {
+            const title = document.getElementById('noteTitle').value.trim();
+            const content = document.getElementById('noteContent').value.trim();
+
+            if (!title || !content) {
+                alert('제목과 내용을 모두 입력해주세요.');
+                return;
+            }
+
+            try {
+                const url = editingNoteId ? `/api/student/notes/${editingNoteId}` : '/api/student/notes';
+                const method = editingNoteId ? 'PUT' : 'POST';
+
+                const response = await makeRequest(url, {
+                    method,
+                    body: JSON.stringify({ title, content })
+                });
+
+                if (response.ok) {
+                    alert(editingNoteId ? '노트가 수정되었습니다.' : '노트가 저장되었습니다.');
+                    cancelNote();
+                    loadNotes();
+                } else {
+                    throw new Error('저장 실패');
+                }
+            } catch (error) {
+                alert('노트 저장에 실패했습니다: ' + error.message);
+            }
+        }
+
+        async function deleteNote(id) {
+            if (!confirm('정말 이 노트를 삭제하시겠습니까?')) {
+                return;
+            }
+
+            try {
+                const response = await makeRequest(`/api/student/notes/${id}`, {
+                    method: 'DELETE'
+                });
+
+                if (response.ok) {
+                    alert('노트가 삭제되었습니다.');
+                    loadNotes();
+                } else {
+                    throw new Error('삭제 실패');
+                }
+            } catch (error) {
+                alert('노트 삭제에 실패했습니다: ' + error.message);
+            }
+        }
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+            loadNotes();
+        });
+    </script>
+</body>
+</html>

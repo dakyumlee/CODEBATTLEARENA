@@ -1,0 +1,326 @@
+<div id="previewModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 90vw; max-height: 90vh; width: 1000px;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(144, 205, 244, 0.3); padding-bottom: 15px;">
+            <h3 class="modal-title" id="previewTitle">파일 미리보기</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <button class="btn btn-primary" id="downloadBtn" onclick="downloadFromPreview()">다운로드</button>
+                <button class="btn btn-secondary" onclick="closePreviewModal()" style="width: 40px; height: 40px; border-radius: 50%; padding: 0;">×</button>
+            </div>
+        </div>
+        <div class="modal-body" style="height: 70vh; overflow: auto;">
+            <div id="previewContent"></div>
+        </div>
+    </div>
+</div>
+
+<style>
+.preview-container {
+    width: 100%;
+    height: 100%;
+    border: 1px solid rgba(144, 205, 244, 0.3);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.pdf-viewer {
+    width: 100%;
+    height: 100%;
+}
+
+.image-viewer {
+    text-align: center;
+    padding: 20px;
+}
+
+.image-viewer img {
+    max-width: 100%;
+    max-height: 60vh;
+    border-radius: 8px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.text-viewer {
+    background: rgba(26, 31, 54, 0.8);
+    padding: 20px;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    white-space: pre-wrap;
+    overflow-x: auto;
+}
+
+.code-viewer {
+    background: rgba(26, 31, 54, 0.9);
+    padding: 20px;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: auto;
+}
+
+.error-viewer {
+    text-align: center;
+    padding: 40px;
+    color: #a0aec0;
+}
+
+.loading-viewer {
+    text-align: center;
+    padding: 40px;
+    color: #90cdf4;
+}
+
+.file-info {
+    background: rgba(26, 31, 54, 0.6);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.file-details {
+    color: #a0aec0;
+    font-size: 0.9rem;
+}
+
+.file-size {
+    color: #90cdf4;
+    font-weight: 500;
+}
+</style>
+
+<script>
+let currentPreviewMaterial = null;
+
+async function previewMaterial(materialId) {
+    try {
+        const response = await fetch(`/api/materials/${materialId}/preview`, {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            }
+        });
+
+        if (response.status === 401) {
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
+        const material = await response.json();
+        
+        if (material.error) {
+            alert('미리보기 실패: ' + material.error);
+            return;
+        }
+
+        currentPreviewMaterial = material;
+        showPreviewModal(material);
+
+    } catch (error) {
+        console.error('미리보기 로드 실패:', error);
+        alert('미리보기를 불러올 수 없습니다.');
+    }
+}
+
+function showPreviewModal(material) {
+    document.getElementById('previewTitle').textContent = material.title;
+    document.getElementById('previewModal').style.display = 'flex';
+    
+    const content = document.getElementById('previewContent');
+    content.innerHTML = `
+        <div class="file-info">
+            <div class="file-details">
+                <div><strong>${material.originalFilename}</strong></div>
+                <div>${material.fileType.toUpperCase()} 파일</div>
+            </div>
+            <div class="file-size">${formatFileSize(material.fileSize)}</div>
+        </div>
+        <div class="loading-viewer">파일을 불러오는 중...</div>
+    `;
+
+    setTimeout(() => {
+        loadPreviewContent(material);
+    }, 100);
+}
+
+function loadPreviewContent(material) {
+    const container = document.getElementById('previewContent');
+    const contentDiv = container.querySelector('.loading-viewer').parentElement;
+    
+    if (!material.previewable) {
+        contentDiv.innerHTML = `
+            <div class="file-info">
+                <div class="file-details">
+                    <div><strong>${material.originalFilename}</strong></div>
+                    <div>${material.fileType.toUpperCase()} 파일</div>
+                </div>
+                <div class="file-size">${formatFileSize(material.fileSize)}</div>
+            </div>
+            <div class="error-viewer">
+                <h4>미리보기를 지원하지 않는 파일 형식입니다</h4>
+                <p>다운로드 버튼을 클릭하여 파일을 다운로드하세요.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const fileType = material.fileType.toLowerCase();
+    
+    try {
+        if (fileType === 'pdf') {
+            loadPDFPreview(material, contentDiv);
+        } else if (isImageFile(fileType)) {
+            loadImagePreview(material, contentDiv);
+        } else if (isTextFile(fileType)) {
+            loadTextPreview(material, contentDiv);
+        } else {
+            loadUnsupportedPreview(material, contentDiv);
+        }
+    } catch (error) {
+        contentDiv.innerHTML = `
+            <div class="file-info">
+                <div class="file-details">
+                    <div><strong>${material.originalFilename}</strong></div>
+                    <div>${material.fileType.toUpperCase()} 파일</div>
+                </div>
+                <div class="file-size">${formatFileSize(material.fileSize)}</div>
+            </div>
+            <div class="error-viewer">
+                <h4>미리보기 로드 실패</h4>
+                <p>다운로드 버튼을 클릭하여 파일을 다운로드하세요.</p>
+            </div>
+        `;
+    }
+}
+
+function loadPDFPreview(material, container) {
+    container.innerHTML = `
+        <div class="file-info">
+            <div class="file-details">
+                <div><strong>${material.originalFilename}</strong></div>
+                <div>PDF 파일</div>
+            </div>
+            <div class="file-size">${formatFileSize(material.fileSize)}</div>
+        </div>
+        <div class="preview-container">
+            <iframe class="pdf-viewer" src="${material.fileUrl}" frameborder="0"></iframe>
+        </div>
+    `;
+}
+
+function loadImagePreview(material, container) {
+    container.innerHTML = `
+        <div class="file-info">
+            <div class="file-details">
+                <div><strong>${material.originalFilename}</strong></div>
+                <div>이미지 파일</div>
+            </div>
+            <div class="file-size">${formatFileSize(material.fileSize)}</div>
+        </div>
+        <div class="image-viewer">
+            <img src="${material.fileUrl}" alt="${material.title}" onload="this.style.opacity=1" style="opacity:0; transition: opacity 0.3s;">
+        </div>
+    `;
+}
+
+async function loadTextPreview(material, container) {
+    try {
+        const response = await fetch(material.fileUrl);
+        const text = await response.text();
+        
+        const isCode = isCodeFile(material.fileType.toLowerCase());
+        
+        container.innerHTML = `
+            <div class="file-info">
+                <div class="file-details">
+                    <div><strong>${material.originalFilename}</strong></div>
+                    <div>${isCode ? '코드' : '텍스트'} 파일</div>
+                </div>
+                <div class="file-size">${formatFileSize(material.fileSize)}</div>
+            </div>
+            <div class="${isCode ? 'code-viewer' : 'text-viewer'}">
+                ${escapeHtml(text)}
+            </div>
+        `;
+    } catch (error) {
+        container.innerHTML = `
+            <div class="file-info">
+                <div class="file-details">
+                    <div><strong>${material.originalFilename}</strong></div>
+                    <div>텍스트 파일</div>
+                </div>
+                <div class="file-size">${formatFileSize(material.fileSize)}</div>
+            </div>
+            <div class="error-viewer">
+                <h4>텍스트 파일을 불러올 수 없습니다</h4>
+                <p>다운로드하여 확인해주세요.</p>
+            </div>
+        `;
+    }
+}
+
+function loadUnsupportedPreview(material, container) {
+    container.innerHTML = `
+        <div class="file-info">
+            <div class="file-details">
+                <div><strong>${material.originalFilename}</strong></div>
+                <div>${material.fileType.toUpperCase()} 파일</div>
+            </div>
+            <div class="file-size">${formatFileSize(material.fileSize)}</div>
+        </div>
+        <div class="error-viewer">
+            <h4>미리보기를 지원하지 않는 파일입니다</h4>
+            <p>다운로드하여 확인해주세요.</p>
+        </div>
+    `;
+}
+
+function closePreviewModal() {
+    document.getElementById('previewModal').style.display = 'none';
+    currentPreviewMaterial = null;
+}
+
+function downloadFromPreview() {
+    if (currentPreviewMaterial) {
+        window.open(`/api/materials/${currentPreviewMaterial.id}/download`, '_blank');
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function isImageFile(fileType) {
+    return ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileType);
+}
+
+function isTextFile(fileType) {
+    return ['txt', 'md', 'java', 'js', 'html', 'css', 'py', 'cpp', 'c', 'json', 'xml'].includes(fileType);
+}
+
+function isCodeFile(fileType) {
+    return ['java', 'js', 'html', 'css', 'py', 'cpp', 'c', 'json', 'xml'].includes(fileType);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+document.getElementById('previewModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closePreviewModal();
+    }
+});
+</script>

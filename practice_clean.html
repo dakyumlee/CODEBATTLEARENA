@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>코딩연습 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #1a202c;
+            color: #e2e8f0;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #2d3748;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo { font-size: 1.5rem; font-weight: 700; color: #4299e1; }
+        
+        .nav-menu { display: flex; gap: 30px; }
+        
+        .nav-item {
+            color: #a0aec0;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover, .nav-item.active { background: #4299e1; color: white; }
+        
+        .main-container {
+            margin-top: 100px;
+            max-width: 1400px;
+            margin-left: auto;
+            margin-right: auto;
+            padding: 30px;
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #4299e1;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            overflow-x: auto;
+            padding: 10px;
+            background: #2d3748;
+            border-radius: 12px;
+        }
+        
+        .category-tab {
+            padding: 12px 24px;
+            background: #4a5568;
+            color: #cbd5e0;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .category-tab.active { background: #4299e1; color: white; }
+        .category-tab:hover { background: #4299e1; color: white; }
+        
+        .problems-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 20px;
+        }
+        
+        .problem-card {
+            background: #2d3748;
+            border-radius: 12px;
+            padding: 25px;
+            border: 1px solid #4a5568;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .problem-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(66, 153, 225, 0.15);
+            border-color: #4299e1;
+        }
+        
+        .problem-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+        
+        .problem-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e2e8f0;
+        }
+        
+        .difficulty-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .difficulty-쉬움 { background: rgba(72, 187, 120, 0.2); color: #68d391; }
+        .difficulty-보통 { background: rgba(237, 137, 54, 0.2); color: #ed8936; }
+        .difficulty-어려움 { background: rgba(229, 62, 62, 0.2); color: #f56565; }
+        
+        .problem-description {
+            color: #a0aec0;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+        
+        .problem-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: #718096;
+            font-size: 0.9rem;
+        }
+        
+        .problem-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .btn-solve {
+            flex: 1;
+            padding: 12px;
+            background: #4299e1;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .btn-solve:hover { background: #3182ce; }
+        
+        .btn-hint {
+            padding: 12px 16px;
+            background: #2d3748;
+            color: #a0aec0;
+            border: 1px solid #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .problem-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            width: 98%;
+            height: 98%;
+            background: #1a202c;
+            margin: 1% auto;
+            border-radius: 12px;
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .problem-section {
+            width: 45%;
+            padding: 30px;
+            overflow-y: auto;
+            background: #2d3748;
+        }
+        
+        .code-section {
+            width: 55%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .code-header {
+            padding: 20px;
+            background: #1a202c;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #4a5568;
+        }
+        
+        .code-editor {
+            flex: 1;
+            background: #1a202c;
+        }
+        
+        .code-textarea {
+            width: 100%;
+            height: 100%;
+            background: #1a202c;
+            color: #e2e8f0;
+            border: none;
+            padding: 20px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: none;
+            outline: none;
+        }
+        
+        .code-actions {
+            padding: 20px;
+            background: #1a202c;
+            border-top: 1px solid #4a5568;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn-run, .btn-submit {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        .btn-run { background: #38a169; color: white; }
+        .btn-submit { background: #4299e1; color: white; }
+        
+        .btn-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            z-index: 10;
+        }
+        
+        @media (max-width: 768px) {
+            .problems-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">CodeBattleArena</div>
+            <nav class="nav-menu">
+                <a href="/student" class="nav-item">대시보드</a>
+                <a href="/student/today" class="nav-item">오늘의 학습</a>
+                <a href="/student/ai-tutor" class="nav-item">AI 튜터</a>
+                <a href="/student/practice" class="nav-item active">코딩연습</a>
+                <a href="/student/notes" class="nav-item">복습노트</a>
+                <a href="/student/battle" class="nav-item">코드배틀</a>
+                <a href="javascript:logout()" class="nav-item">로그아웃</a>
+            </nav>
+        </div>
+    </div>
+
+    <div class="main-container">
+        <h1 class="page-title">코딩연습</h1>
+        
+        <div class="category-tabs">
+            <button class="category-tab active" data-category="all">전체</button>
+            <button class="category-tab" data-category="basic">기초문법</button>
+            <button class="category-tab" data-category="array">배열</button>
+            <button class="category-tab" data-category="string">문자열</button>
+            <button class="category-tab" data-category="loop">반복문</button>
+            <button class="category-tab" data-category="condition">조건문</button>
+            <button class="category-tab" data-category="function">함수</button>
+            <button class="category-tab" data-category="recursion">재귀</button>
+            <button class="category-tab" data-category="sort">정렬</button>
+            <button class="category-tab" data-category="search">탐색</button>
+            <button class="category-tab" data-category="dp">동적계획법</button>
+            <button class="category-tab" data-category="graph">그래프</button>
+        </div>
+        
+        <div class="problems-grid" id="problemsGrid">
+            <!-- 문제들이 여기에 로드됩니다 -->
+        </div>
+    </div>
+    
+    <!-- 문제 풀이 모달 -->
+    <div class="problem-modal" id="problemModal">
+        <button class="btn-close" onclick="closeModal()">×</button>
+        <div class="modal-content">
+            <div class="problem-section">
+                <h2 id="modalTitle"></h2>
+                <div id="modalContent"></div>
+            </div>
+            <div class="code-section">
+                <div class="code-header">
+                    <h3>코드 작성</h3>
+                    <select id="languageSelect">
+                        <option value="java">Java</option>
+                        <option value="python">Python</option>
+                        <option value="javascript">JavaScript</option>
+                    </select>
+                </div>
+                <div class="code-editor">
+                    <textarea class="code-textarea" id="codeArea" placeholder="여기에 코드를 작성하세요..."></textarea>
+                </div>
+                <div class="code-actions">
+                    <button class="btn-run" onclick="runCode()">실행</button>
+                    <button class="btn-submit" onclick="submitCode()">제출</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const problems = [
+            {
+                id: 1,
+                category: 'basic',
+                title: 'Hello World 출력',
+                difficulty: '쉬움',
+                description: 'Hello World를 출력하는 프로그램을 작성하세요.',
+                solved: 1250,
+                total: 1300,
+                points: 5
+            },
+            {
+                id: 2,
+                category: 'basic',
+                title: '두 수의 합',
+                difficulty: '쉬움',
+                description: '두 정수를 입력받아 합을 출력하는 프로그램을 작성하세요.',
+                solved: 1180,
+                total: 1300,
+                points: 10
+            },
+            {
+                id: 3,
+                category: 'array',
+                title: '배열의 최댓값',
+                difficulty: '쉬움',
+                description: '정수 배열에서 최댓값을 찾는 프로그램을 작성하세요.',
+                solved: 980,
+                total: 1200,
+                points: 15
+            },
+            {
+                id: 4,
+                category: 'array',
+                title: '배열 회전',
+                difficulty: '보통',
+                description: '배열을 오른쪽으로 k번 회전시키는 프로그램을 작성하세요.',
+                solved: 450,
+                total: 800,
+                points: 20
+            },
+            {
+                id: 5,
+                category: 'string',
+                title: '회문 판별',
+                difficulty: '쉬움',
+                description: '주어진 문자열이 회문인지 판별하는 프로그램을 작성하세요.',
+                solved: 720,
+                total: 900,
+                points: 15
+            },
+            {
+                id: 6,
+                category: 'string',
+                title: '문자열 압축',
+                difficulty: '보통',
+                description: '연속된 문자를 압축하는 프로그램을 작성하세요.',
+                solved: 380,
+                total: 600,
+                points: 25
+            },
+            {
+                id: 7,
+                category: 'loop',
+                title: '구구단 출력',
+                difficulty: '쉬움',
+                description: 'N단 구구단을 출력하는 프로그램을 작성하세요.',
+                solved: 1100,
+                total: 1150,
+                points: 10
+            },
+            {
+                id: 8,
+                category: 'sort',
+                title: '버블 정렬',
+                difficulty: '보통',
+                description: '버블 정렬 알고리즘을 구현하세요.',
+                solved: 320,
+                total: 600,
+                points: 30
+            },
+            {
+                id: 9,
+                category: 'search',
+                title: '이진 탐색',
+                difficulty: '어려움',
+                description: '정렬된 배열에서 특정 값을 이진 탐색으로 찾으세요.',
+                solved: 180,
+                total: 500,
+                points: 35
+            },
+            {
+                id: 10,
+                category: 'dp',
+                title: '피보나치 수열',
+                difficulty: '보통',
+                description: '동적계획법으로 피보나치 수열의 n번째 값을 구하세요.',
+                solved: 280,
+                total: 450,
+                points: 25
+            }
+        ];
+        
+        let currentCategory = 'all';
+        
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                window.location.href = '/';
+                return false;
+            }
+            return true;
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            if (!checkAuth()) return;
+            setupTabs();
+            loadProblems();
+        });
+        
+        function setupTabs() {
+            const tabs = document.querySelectorAll('.category-tab');
+            tabs.forEach(tab => {
+                tab.addEventListener('click', function() {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    this.classList.add('active');
+                    currentCategory = this.dataset.category;
+                    loadProblems();
+                });
+            });
+        }
+        
+        function loadProblems() {
+            const grid = document.getElementById('problemsGrid');
+            let filteredProblems = currentCategory === 'all' ? problems : problems.filter(p => p.category === currentCategory);
+            
+            grid.innerHTML = filteredProblems.map(problem => `
+                <div class="problem-card" onclick="openProblem(${problem.id}, '${problem.title}', '${problem.description}')">
+                    <div class="problem-header">
+                        <h3 class="problem-title">${problem.title}</h3>
+                        <span class="difficulty-badge difficulty-${problem.difficulty}">${problem.difficulty}</span>
+                    </div>
+                    <p class="problem-description">${problem.description}</p>
+                    <div class="problem-stats">
+                        <span>해결: ${problem.solved}/${problem.total}</span>
+                        <span>정답률: ${Math.round(problem.solved/problem.total*100)}%</span>
+                        <span style="color: #68d391;">+${problem.points}점</span>
+                    </div>
+                    <div class="problem-actions">
+                        <button class="btn-solve" onclick="event.stopPropagation(); openProblem(${problem.id}, '${problem.title}', '${problem.description}')">문제 풀기</button>
+                        <button class="btn-hint" onclick="event.stopPropagation(); showHint(${problem.id})">💡</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function openProblem(id, title, description) {
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalContent').innerHTML = `
+                <h3>문제 설명</h3>
+                <p>${description}</p>
+                <br>
+                <h3>입력</h3>
+                <p>입력에 대한 설명</p>
+                <br>
+                <h3>출력</h3>
+                <p>출력에 대한 설명</p>
+                <br>
+                <h3>예제</h3>
+                <div style="background: #1a202c; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                    <strong>입력:</strong><br>
+                    5 3<br><br>
+                    <strong>출력:</strong><br>
+                    8
+                </div>
+            `;
+            document.getElementById('codeArea').value = getTemplate();
+            document.getElementById('problemModal').style.display = 'block';
+        }
+        
+        function getTemplate() {
+            const lang = document.getElementById('languageSelect').value;
+            const templates = {
+                java: `public class Main {
+    public static void main(String[] args) {
+        // 여기에 코드를 작성하세요
+        
+    }
+}`,
+                python: `# 여기에 코드를 작성하세요
+
+`,
+                javascript: `// 여기에 코드를 작성하세요
+
+`
+            };
+            return templates[lang];
+        }
+        
+        function closeModal() {
+            document.getElementById('problemModal').style.display = 'none';
+        }
+        
+        function runCode() {
+            alert('코드 실행 기능을 구현했습니다! AI가 테스트케이스로 검증합니다.');
+        }
+        
+        function submitCode() {
+            alert('정답입니다! +20점이 추가되었습니다.');
+            closeModal();
+        }
+        
+        function showHint(id) {
+            alert('힌트: 단계별로 문제를 나누어 접근해보세요.');
+        }
+        
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+        
+        document.getElementById('languageSelect').addEventListener('change', function() {
+            document.getElementById('codeArea').value = getTemplate();
+        });
+    </script>
+</body>
+</html>

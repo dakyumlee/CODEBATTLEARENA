@@ -4,11 +4,17 @@ import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.*;
 import com.codebattlearena.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
+import jakarta.annotation.PostConstruct;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/student")
@@ -27,7 +33,28 @@ public class StudentController {
     private SubmissionRepository submissionRepository;
     
     @Autowired
+    private MaterialRepository materialRepository;
+    
+    @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private Environment env;
+
+    private com.cloudinary.Cloudinary cloudinary;
+
+    @PostConstruct
+    public void init() {
+        try {
+            cloudinary = new com.cloudinary.Cloudinary();
+            cloudinary.config.cloudName = "dgtxjgdit";
+            cloudinary.config.apiKey = "838357254369448";
+            cloudinary.config.apiSecret = "c5xRZ7AD5wTd6l0KBqTnaBYpWSU";
+            cloudinary.config.secure = true;
+        } catch (Exception e) {
+            System.err.println("Cloudinary initialization failed: " + e.getMessage());
+        }
+    }
 
     private Long getUserIdFromRequest(HttpServletRequest request) {
         try {
@@ -68,13 +95,7 @@ public class StudentController {
                 return Map.of("error", "User not found");
             }
             
-            Map<String, Object> userInfo = new HashMap<>();
-            userInfo.put("id", user.getId());
-            userInfo.put("name", user.getName());
-            userInfo.put("email", user.getEmail());
-            userInfo.put("role", user.getRole().toString());
-            
-            return Map.of("user", userInfo);
+            return Map.of("name", user.getName(), "email", user.getEmail(), "role", user.getRole().toString());
         } catch (Exception e) {
             return Map.of("error", "Failed to load profile: " + e.getMessage());
         }
@@ -107,35 +128,56 @@ public class StudentController {
                 return Map.of("error", "Unauthorized");
             }
             
-            List<Map<String, Object>> aiProblems = Arrays.asList(
-                Map.of(
-                    "id", "ai-1",
-                    "title", "배열의 최댓값 찾기",
-                    "description", "주어진 정수 배열에서 최댓값을 찾는 함수를 작성하세요.",
-                    "difficulty", "하",
-                    "category", "배열"
-                ),
-                Map.of(
-                    "id", "ai-2", 
-                    "title", "문자열 뒤집기",
-                    "description", "주어진 문자열을 뒤집어 반환하는 함수를 작성하세요.",
-                    "difficulty", "하",
-                    "category", "문자열"
-                )
-            );
+            List<Material> allMaterials = materialRepository.findAll();
             
-            return Map.of("aiProblems", aiProblems);
+            List<Map<String, Object>> materialData = allMaterials.stream().map(material -> {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", material.getId());
+                data.put("title", material.getTitle());
+                data.put("description", material.getDescription());
+                data.put("fileType", material.getFileType());
+                data.put("fileSize", material.getFileSize());
+                data.put("originalFilename", material.getOriginalFilename());
+                data.put("createdAt", material.getCreatedAt());
+                return data;
+            }).collect(Collectors.toList());
+            
+            return Map.of("materials", materialData);
         } catch (Exception e) {
             return Map.of("error", "Failed to load today data: " + e.getMessage());
         }
     }
 
-    @GetMapping("/teacher-problems")
-    public List<Map<String, Object>> getTeacherProblems(HttpServletRequest request) {
+    @GetMapping("/materials/{id}/download")
+    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpServletRequest request) {
         try {
             Long userId = getUserIdFromRequest(request);
             if (userId == null) {
-                return new ArrayList<>();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
+
+            Material material = materialRepository.findById(id).orElse(null);
+            if (material == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            material.setDownloadCount(material.getDownloadCount() + 1);
+            materialRepository.save(material);
+
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .header("Location", material.getFilePath())
+                    .build();
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/teacher-problems")
+    public Map<String, Object> getTeacherProblems(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
             }
             
             List<Problem> problems = problemRepository.findAll();
@@ -159,11 +201,11 @@ public class StudentController {
                 }
                 
                 Optional<Submission> submissionOpt = submissionRepository.findByUserIdAndProblemId(userId, problem.getId());
-                boolean isSubmitted = submissionOpt.isPresent();
-                boolean isGraded = submissionOpt.isPresent() && "GRADED".equals(submissionOpt.get().getStatus());
+                boolean submitted = submissionOpt.isPresent();
+                boolean graded = submissionOpt.isPresent() && "GRADED".equals(submissionOpt.get().getStatus());
                 
-                problemData.put("isSubmitted", isSubmitted);
-                problemData.put("isGraded", isGraded);
+                problemData.put("submitted", submitted);
+                problemData.put("graded", graded);
                 
                 if (submissionOpt.isPresent()) {
                     Submission submission = submissionOpt.get();
@@ -175,25 +217,27 @@ public class StudentController {
                 problemList.add(problemData);
             }
             
-            return problemList;
+            return Map.of("problems", problemList);
         } catch (Exception e) {
-            return new ArrayList<>();
+            return Map.of("error", "Failed to load teacher problems: " + e.getMessage());
         }
     }
 
     @PostMapping("/submit-answer")
-    public Map<String, Object> submitAnswer(@RequestBody Map<String, Object> submissionData, HttpServletRequest request) {
+    public Map<String, Object> submitAnswer(
+            @RequestParam("problemId") Long problemId,
+            @RequestParam(value = "answer", required = false) String answer,
+            @RequestParam(value = "file", required = false) MultipartFile file,
+            HttpServletRequest request) {
+        
         try {
             Long userId = getUserIdFromRequest(request);
             if (userId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
             
-            Long problemId = Long.parseLong(submissionData.get("problemId").toString());
-            String answer = (String) submissionData.get("answer");
-            
-            if (answer == null || answer.trim().isEmpty()) {
-                return Map.of("success", false, "message", "답안을 입력해주세요.");
+            if ((answer == null || answer.trim().isEmpty()) && (file == null || file.isEmpty())) {
+                return Map.of("success", false, "message", "텍스트 답안을 작성하거나 파일을 첨부해주세요.");
             }
             
             if (submissionRepository.existsByUserIdAndProblemId(userId, problemId)) {
@@ -208,9 +252,34 @@ public class StudentController {
             Submission submission = new Submission();
             submission.setUserId(userId);
             submission.setProblemId(problemId);
-            submission.setAnswer(answer);
             submission.setSubmittedAt(LocalDateTime.now());
             submission.setStatus("PENDING");
+            
+            if (answer != null && !answer.trim().isEmpty()) {
+                submission.setAnswer(answer);
+            }
+            
+            if (file != null && !file.isEmpty()) {
+                try {
+                    if (cloudinary != null) {
+                        String originalFilename = file.getOriginalFilename();
+                        Map uploadResult = cloudinary.uploader().upload(file.getBytes(),
+                                Map.of("folder", "codebattlearena/submissions",
+                                        "public_id", System.currentTimeMillis() + "_" + userId + "_" + problemId,
+                                        "resource_type", "auto"));
+                        
+                        String fileUrl = (String) uploadResult.get("secure_url");
+                        String existingAnswer = submission.getAnswer();
+                        String combinedAnswer = (existingAnswer != null ? existingAnswer + "\n\n" : "") + 
+                                              "첨부 파일: " + originalFilename + "\n파일 링크: " + fileUrl;
+                        submission.setAnswer(combinedAnswer);
+                    } else {
+                        return Map.of("success", false, "message", "파일 업로드 서비스가 설정되지 않았습니다.");
+                    }
+                } catch (Exception e) {
+                    return Map.of("success", false, "message", "파일 업로드 실패: " + e.getMessage());
+                }
+            }
             
             submissionRepository.save(submission);
             

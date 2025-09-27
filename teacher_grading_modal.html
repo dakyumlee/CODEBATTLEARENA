@@ -1,0 +1,297 @@
+<div id="gradingModal" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 1200px; width: 95vw;">
+        <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 1px solid rgba(144, 205, 244, 0.3); padding-bottom: 15px;">
+            <h3 class="modal-title">답안 채점</h3>
+            <button class="btn btn-secondary" onclick="closeGradingModal()" style="width: 40px; height: 40px; border-radius: 50%; padding: 0;">×</button>
+        </div>
+        
+        <div class="grading-container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px; height: 70vh;">
+            <div class="problem-section" style="background: rgba(26, 31, 54, 0.8); border-radius: 12px; padding: 20px; overflow-y: auto;">
+                <h4 style="color: #90cdf4; margin-bottom: 15px;">문제 내용</h4>
+                <div id="gradingProblemContent"></div>
+            </div>
+            
+            <div class="submission-section" style="background: rgba(26, 31, 54, 0.8); border-radius: 12px; padding: 20px; overflow-y: auto;">
+                <h4 style="color: #90cdf4; margin-bottom: 15px;">학생 답안</h4>
+                <div id="gradingSubmissionContent"></div>
+                
+                <div class="grading-form" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(144, 205, 244, 0.3);">
+                    <form id="gradingForm">
+                        <input type="hidden" id="gradingSubmissionId">
+                        
+                        <div class="form-group">
+                            <label class="form-label">점수 (0-100)</label>
+                            <input type="number" id="gradingScore" class="form-control" min="0" max="100" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">피드백</label>
+                            <textarea id="gradingFeedback" class="form-control" rows="4" placeholder="학생에게 전달할 피드백을 작성하세요"></textarea>
+                        </div>
+                        
+                        <div class="modal-actions" style="display: flex; gap: 15px; justify-content: flex-end; margin-top: 20px;">
+                            <button type="button" class="btn btn-secondary" onclick="closeGradingModal()">취소</button>
+                            <button type="submit" class="btn btn-primary">채점 완료</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.grading-container {
+    height: 70vh;
+}
+
+.problem-section, .submission-section {
+    overflow-y: auto;
+}
+
+.problem-details {
+    color: #e2e8f0;
+    line-height: 1.6;
+}
+
+.problem-meta {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.problem-badge {
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.submission-info {
+    background: rgba(45, 53, 97, 0.6);
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.submission-answer {
+    background: rgba(45, 53, 97, 0.8);
+    padding: 15px;
+    border-radius: 8px;
+    color: #e2e8f0;
+    font-family: 'Consolas', 'Monaco', monospace;
+    white-space: pre-wrap;
+    line-height: 1.5;
+}
+
+.submission-file {
+    margin-top: 15px;
+    padding: 15px;
+    background: rgba(45, 53, 97, 0.6);
+    border-radius: 8px;
+    border: 1px solid rgba(144, 205, 244, 0.3);
+}
+
+@media (max-width: 768px) {
+    .grading-container {
+        grid-template-columns: 1fr;
+        height: auto;
+    }
+    
+    .problem-section, .submission-section {
+        max-height: 400px;
+    }
+}
+</style>
+
+<script>
+let currentGradingSubmission = null;
+
+async function openGradingModal(submissionId) {
+    try {
+        const response = await fetch(`/api/teacher/submissions/${submissionId}/details`, {
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            }
+        });
+
+        if (response.status === 401) {
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+
+        const data = await response.json();
+        
+        if (data.error) {
+            alert('상세 정보를 불러올 수 없습니다: ' + data.error);
+            return;
+        }
+
+        currentGradingSubmission = data;
+        displayGradingModal(data);
+
+    } catch (error) {
+        console.error('채점 모달 로드 실패:', error);
+        alert('채점 정보를 불러올 수 없습니다.');
+    }
+}
+
+function displayGradingModal(data) {
+    document.getElementById('gradingSubmissionId').value = data.submission.id;
+    document.getElementById('gradingScore').value = data.submission.score || '';
+    document.getElementById('gradingFeedback').value = data.submission.feedback || '';
+    
+    // 문제 내용 표시
+    const problemContent = document.getElementById('gradingProblemContent');
+    problemContent.innerHTML = `
+        <div class="problem-details">
+            <h5 style="color: #90cdf4; margin-bottom: 10px;">${data.problem.title}</h5>
+            
+            <div class="problem-meta">
+                <span class="problem-badge badge-difficulty-${data.problem.difficulty}" style="background: rgba(72, 187, 120, 0.2); color: #68d391;">${data.problem.difficulty}</span>
+                <span class="problem-badge" style="background: rgba(159, 122, 234, 0.2); color: #a78bfa;">${getTypeKorean(data.problem.type)}</span>
+                <span class="problem-badge" style="background: rgba(66, 153, 225, 0.2); color: #4299e1;">${data.problem.points}점</span>
+            </div>
+            
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #90cdf4;">문제 설명:</strong><br>
+                <div style="margin-top: 8px; padding: 12px; background: rgba(45, 53, 97, 0.6); border-radius: 8px;">
+                    ${data.problem.description || '설명이 없습니다.'}
+                </div>
+            </div>
+            
+            ${data.problem.type === 'QUIZ' ? `
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #90cdf4;">선택지:</strong><br>
+                    <div style="margin-top: 8px; padding: 12px; background: rgba(45, 53, 97, 0.6); border-radius: 8px;">
+                        A) ${data.problem.optionA || ''}<br>
+                        B) ${data.problem.optionB || ''}<br>
+                        C) ${data.problem.optionC || ''}<br>
+                        D) ${data.problem.optionD || ''}<br><br>
+                        <strong style="color: #48bb78;">정답: ${data.problem.correctAnswer}</strong>
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div>
+                <strong style="color: #90cdf4;">제한 시간:</strong> ${data.problem.timeLimit}분<br>
+                <strong style="color: #90cdf4;">출제일:</strong> ${new Date(data.problem.createdAt).toLocaleDateString()}
+            </div>
+        </div>
+    `;
+    
+    // 학생 답안 표시
+    const submissionContent = document.getElementById('gradingSubmissionContent');
+    submissionContent.innerHTML = `
+        <div class="submission-info">
+            <strong style="color: #90cdf4;">학생:</strong> ${data.student.name}<br>
+            <strong style="color: #90cdf4;">제출일:</strong> ${new Date(data.submission.submittedAt).toLocaleString()}<br>
+            <strong style="color: #90cdf4;">상태:</strong> ${getStatusKorean(data.submission.status)}
+        </div>
+        
+        ${data.submission.answer ? `
+            <div style="margin-bottom: 15px;">
+                <strong style="color: #90cdf4;">텍스트 답안:</strong>
+                <div class="submission-answer">${data.submission.answer}</div>
+            </div>
+        ` : ''}
+        
+        ${data.submission.fileUrl ? `
+            <div class="submission-file">
+                <strong style="color: #90cdf4;">첨부 파일:</strong><br>
+                <div style="margin-top: 8px;">
+                    <a href="${data.submission.fileUrl}" target="_blank" class="btn btn-secondary" style="margin-right: 10px;">
+                        📎 ${data.submission.fileName}
+                    </a>
+                    <button class="btn btn-primary" onclick="previewSubmissionFile('${data.submission.fileUrl}', '${data.submission.fileName}')">
+                        미리보기
+                    </button>
+                </div>
+            </div>
+        ` : ''}
+    `;
+    
+    document.getElementById('gradingModal').style.display = 'flex';
+}
+
+function closeGradingModal() {
+    document.getElementById('gradingModal').style.display = 'none';
+    currentGradingSubmission = null;
+}
+
+function getTypeKorean(type) {
+    switch(type) {
+        case 'QUIZ': return '퀴즈';
+        case 'EXAM': return '시험';
+        default: return '문제';
+    }
+}
+
+function getStatusKorean(status) {
+    switch(status) {
+        case 'SUBMITTED': return '제출됨';
+        case 'GRADED': return '채점완료';
+        default: return status;
+    }
+}
+
+function previewSubmissionFile(fileUrl, fileName) {
+    window.open(fileUrl, '_blank');
+}
+
+document.getElementById('gradingForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const submissionId = document.getElementById('gradingSubmissionId').value;
+    const score = document.getElementById('gradingScore').value;
+    const feedback = document.getElementById('gradingFeedback').value;
+    
+    if (!score || score < 0 || score > 100) {
+        alert('올바른 점수를 입력해주세요 (0-100).');
+        return;
+    }
+    
+    try {
+        const response = await fetch('/api/teacher/grade-submission', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            body: JSON.stringify({
+                submissionId: submissionId,
+                score: parseInt(score),
+                feedback: feedback
+            })
+        });
+        
+        if (response.status === 401) {
+            localStorage.clear();
+            window.location.href = '/';
+            return;
+        }
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('채점이 완료되었습니다.');
+            closeGradingModal();
+            if (typeof loadSubmissions === 'function') {
+                loadSubmissions();
+            }
+        } else {
+            alert('채점 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    }
+});
+
+document.getElementById('gradingModal').addEventListener('click', function(e) {
+    if (e.target === this) {
+        closeGradingModal();
+    }
+});
+</script>
