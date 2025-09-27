@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>성적 관리 - CodeBattleArena</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -342,13 +343,33 @@
         let gradeDistributionChart = null;
         let monthlyScoreChart = null;
 
+        function checkAuth() {
+            const token = localStorage.getItem('authToken');
+            if (!token) {
+                alert('로그인이 필요합니다.');
+                window.location.href = '/';
+                return false;
+            }
+            return true;
+        }
+
         async function loadGradeStatistics() {
+            if (!checkAuth()) return;
+            
             try {
                 const response = await fetch('/api/teacher/grade-statistics', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                     }
                 });
+                
+                if (response.status === 401) {
+                    alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+                    localStorage.clear();
+                    window.location.href = '/';
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 if (data.statistics) {
@@ -387,8 +408,8 @@
                         ],
                         backgroundColor: [
                             '#4CAF50',
-                            '#2196F4’,
-			     '#FF9800',
+                            '#2196F3',
+                            '#FF9800',
                             '#F44336',
                             '#9E9E9E'
                         ]
@@ -432,12 +453,22 @@
         }
 
         async function loadGrades() {
+            if (!checkAuth()) return;
+            
             try {
                 const response = await fetch('/api/teacher/grades', {
                     headers: {
                         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                     }
                 });
+                
+                if (response.status === 401) {
+                    alert('인증이 만료되었습니다. 다시 로그인해주세요.');
+                    localStorage.clear();
+                    window.location.href = '/';
+                    return;
+                }
+                
                 const data = await response.json();
                 
                 const container = document.getElementById('gradesContainer');
@@ -578,8 +609,10 @@
         });
 
         document.addEventListener('DOMContentLoaded', function() {
-            loadGradeStatistics();
-            loadGrades();
+            if (checkAuth()) {
+                loadGradeStatistics();
+                loadGrades();
+            }
         });
     </script>
 </body>
