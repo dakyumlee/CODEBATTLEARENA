@@ -28,21 +28,31 @@ public class AuthController {
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody LoginRequest request) {
         try {
+            System.out.println("Login attempt for email: " + request.getEmail());
+            
             Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
             
             if (userOpt.isEmpty()) {
+                System.out.println("User not found: " + request.getEmail());
                 return Map.of("success", false, "message", "사용자를 찾을 수 없습니다.");
             }
             
             User user = userOpt.get();
+            System.out.println("User found: " + user.getEmail());
+            System.out.println("Stored password: " + user.getPassword());
+            System.out.println("Input password: " + request.getPassword());
             
             boolean passwordMatch = false;
             
             if (user.getPassword().startsWith("$2a$")) {
+                System.out.println("Using BCrypt comparison");
                 passwordMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
             } else {
+                System.out.println("Using plain text comparison");
                 passwordMatch = request.getPassword().equals(user.getPassword());
             }
+            
+            System.out.println("Password match: " + passwordMatch);
             
             if (!passwordMatch) {
                 return Map.of("success", false, "message", "비밀번호가 올바르지 않습니다.");
@@ -68,6 +78,8 @@ public class AuthController {
                     break;
             }
             
+            System.out.println("Login successful for: " + user.getEmail());
+            
             return Map.of(
                 "success", true,
                 "token", token,
@@ -80,6 +92,8 @@ public class AuthController {
                 )
             );
         } catch (Exception e) {
+            System.out.println("Login error: " + e.getMessage());
+            e.printStackTrace();
             return Map.of("success", false, "message", "로그인 중 오류가 발생했습니다: " + e.getMessage());
         }
     }
