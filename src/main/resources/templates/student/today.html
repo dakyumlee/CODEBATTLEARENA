@@ -375,12 +375,17 @@
                         </div>
                     `;
                 } else {
-                    section.innerHTML = '<div class="empty-state">오늘의 AI 문제가 준비되지 않았습니다.</div>';
-                }
-            } catch (error) {
-                console.error('AI 문제 로드 실패:', error);
-                document.getElementById('aiProblemSection').innerHTML = '<div class="empty-state">AI 문제를 불러올 수 없습니다.</div>';
-            }
+                    <h3 style="color: #90cdf4; margin-bottom: 15px;">🤖 오늘의 AI 문제</h3>
+                    <div id="aiProblemSection">
+                        <div style="background: #1a365d; border: 1px solid #2b6cb0; border-radius: 12px; padding: 25px;">
+                            <h4 style="color: #90cdf4; margin-bottom: 10px;">두 수의 합 구하기</h4>
+                            <p style="color: #cbd5e0; margin-bottom: 15px;">두 정수 a, b를 입력받아 합을 출력하는 프로그램을 작성하세요.</p>
+                            <div style="display: flex; gap: 12px; align-items: center;">
+                                <button onclick="solveAIProblem()" style="padding: 12px 24px; background: #4299e1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">문제 풀기</button>
+                                <span style="color: #a0aec0;">난이도: 하</span>
+                            </div>
+                        </div>
+                    </div>            }
         }
         
         async function loadMaterials() {
@@ -420,6 +425,9 @@
             }
         }
         
+        function solveAIProblem() {
+            alert("AI 문제 풀이 기능은 개발 중입니다.");
+        }
         function solveTeacherProblem(id, title, description, difficulty) {
             const problemData = {
                 id: id,

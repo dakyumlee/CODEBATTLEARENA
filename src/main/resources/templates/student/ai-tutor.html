@@ -14,21 +14,20 @@
         
         body {
             font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background: #0f1629;
-            color: #e2e8f0;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
         }
         
         .header {
-            background: #1a202c;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
             padding: 15px 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
         }
         
         .header-content {
-            max-width: 1400px;
+            max-width: 1200px;
             margin: 0 auto;
             display: flex;
             justify-content: space-between;
@@ -36,205 +35,208 @@
         }
         
         .logo {
-            font-size: 1.5rem;
+            font-size: 1.3rem;
             font-weight: 700;
-            color: #4299e1;
+            color: #667eea;
         }
         
         .nav-menu {
             display: flex;
-            gap: 30px;
+            gap: 25px;
         }
         
         .nav-item {
-            color: #a0aec0;
+            color: #666;
             text-decoration: none;
             padding: 8px 16px;
-            border-radius: 6px;
+            border-radius: 8px;
             transition: all 0.2s;
         }
         
         .nav-item:hover, .nav-item.active {
-            background: #2d3748;
-            color: #4299e1;
+            background: #667eea;
+            color: white;
         }
         
         .chat-container {
-            flex: 1;
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
+            max-width: 900px;
+            margin: 20px auto;
+            height: calc(100vh - 140px);
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 80px);
+        }
+        
+        .chat-header {
+            padding: 20px 25px;
+            border-bottom: 1px solid #e9ecef;
+            text-align: center;
+        }
+        
+        .chat-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .chat-subtitle {
+            color: #666;
+            font-size: 0.9rem;
         }
         
         .chat-messages {
             flex: 1;
+            padding: 20px;
             overflow-y: auto;
-            padding: 15px;
-            background: #2d3748;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            scroll-behavior: smooth;
-            max-height: calc(100vh - 200px);
-        }
-        
-        .chat-messages::-webkit-scrollbar {
-            width: 8px;
-        }
-        
-        .chat-messages::-webkit-scrollbar-track {
-            background: #4a5568;
-            border-radius: 4px;
-        }
-        
-        .chat-messages::-webkit-scrollbar-thumb {
-            background: #68d391;
-            border-radius: 4px;
-        }
-        
-        .chat-messages::-webkit-scrollbar-thumb:hover {
-            background: #48bb78;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
         }
         
         .message {
-            margin-bottom: 15px;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
-        }
-        
-        .message.user {
-            flex-direction: row-reverse;
-        }
-        
-        .message-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1rem;
-            font-weight: 600;
-            flex-shrink: 0;
-        }
-        
-        .avatar-ai {
-            background: linear-gradient(135deg, #4299e1, #3182ce);
-        }
-        
-        .avatar-user {
-            background: linear-gradient(135deg, #48bb78, #38a169);
-        }
-        
-        .message-content {
-            max-width: 70%;
-            padding: 12px 16px;
-            border-radius: 16px;
-            line-height: 1.6;
+            max-width: 80%;
+            padding: 15px 20px;
+            border-radius: 18px;
             word-wrap: break-word;
             white-space: pre-wrap;
         }
         
-        .message.ai .message-content {
-            background: #4a5568;
-            border-bottom-left-radius: 6px;
+        .message-user {
+            align-self: flex-end;
+            background: #667eea;
+            color: white;
         }
         
-        .message.user .message-content {
-            background: #4299e1;
-            border-bottom-right-radius: 6px;
+        .message-ai {
+            align-self: flex-start;
+            background: #f8f9fa;
+            color: #333;
+            border: 1px solid #e9ecef;
         }
         
-        .typing-indicator {
-            display: none;
-            margin-bottom: 20px;
+        .message-time {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-top: 5px;
         }
         
-        .typing-dots {
+        .chat-input-container {
+            padding: 20px;
+            border-top: 1px solid #e9ecef;
+        }
+        
+        .chat-input-wrapper {
             display: flex;
-            gap: 4px;
-            padding: 15px 20px;
-            background: #4a5568;
-            border-radius: 16px;
-            border-bottom-left-radius: 6px;
-            width: fit-content;
-        }
-        
-        .typing-dot {
-            width: 8px;
-            height: 8px;
-            background: #a0aec0;
-            border-radius: 50%;
-            animation: typing 1.4s infinite ease-in-out;
-        }
-        
-        .typing-dot:nth-child(1) { animation-delay: 0s; }
-        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
-        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
-        
-        @keyframes typing {
-            0%, 60%, 100% {
-                transform: translateY(0);
-                opacity: 0.5;
-            }
-            30% {
-                transform: translateY(-10px);
-                opacity: 1;
-            }
-        }
-        
-        .chat-input-area {
-            display: flex;
-            gap: 15px;
-            padding: 15px;
-            background: #2d3748;
-            border-radius: 12px;
-            flex-shrink: 0;
+            gap: 10px;
+            align-items: flex-end;
         }
         
         .chat-input {
             flex: 1;
             padding: 12px 16px;
-            background: #4a5568;
-            border: none;
-            border-radius: 25px;
-            color: #e2e8f0;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
             font-size: 1rem;
             resize: none;
+            min-height: 24px;
             max-height: 120px;
-            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            overflow-y: auto;
         }
         
         .chat-input:focus {
             outline: none;
-            box-shadow: 0 0 0 2px #4299e1;
+            border-color: #667eea;
         }
         
-        .send-btn {
-            width: 45px;
-            height: 45px;
-            background: #4299e1;
-            border: none;
-            border-radius: 50%;
+        .send-button {
+            padding: 12px 20px;
+            background: #667eea;
             color: white;
+            border: none;
+            border-radius: 12px;
             cursor: pointer;
-            font-size: 1.2rem;
+            font-weight: 600;
             transition: all 0.2s;
-            flex-shrink: 0;
         }
         
-        .send-btn:hover {
-            background: #3182ce;
-            transform: scale(1.05);
+        .send-button:hover:not(:disabled) {
+            background: #5a6fd8;
+            transform: translateY(-1px);
         }
         
-        .send-btn:disabled {
-            background: #4a5568;
+        .send-button:disabled {
+            background: #ccc;
             cursor: not-allowed;
             transform: none;
+        }
+        
+        .typing-indicator {
+            align-self: flex-start;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 18px;
+            padding: 15px 20px;
+            display: none;
+        }
+        
+        .typing-dots {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .dot {
+            width: 8px;
+            height: 8px;
+            background: #667eea;
+            border-radius: 50%;
+            animation: typing 1.4s infinite;
+        }
+        
+        .dot:nth-child(2) { animation-delay: 0.2s; }
+        .dot:nth-child(3) { animation-delay: 0.4s; }
+        
+        @keyframes typing {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-10px); }
+        }
+        
+        .welcome-message {
+            text-align: center;
+            color: #666;
+            padding: 40px 20px;
+        }
+        
+        .welcome-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        
+        .quick-questions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .quick-question {
+            background: #667eea;
+            color: white;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .quick-question:hover {
+            background: #5a6fd8;
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -243,152 +245,173 @@
         <div class="header-content">
             <div class="logo">CodeBattleArena</div>
             <nav class="nav-menu">
-                <a href="/student/today" class="nav-item">대시보드</a>
+                <a href="/student/today" class="nav-item">오늘의 학습</a>
                 <a href="/student/ai-tutor" class="nav-item active">AI 튜터</a>
                 <a href="/student/practice" class="nav-item">코딩연습</a>
                 <a href="/student/notes" class="nav-item">복습노트</a>
                 <a href="/student/battle" class="nav-item">코드배틀</a>
+                <a href="javascript:logout()" class="nav-item">로그아웃</a>
             </nav>
         </div>
     </div>
 
     <div class="chat-container">
+        <div class="chat-header">
+            <div class="chat-title">AI 튜터와 함께 학습하기</div>
+            <div class="chat-subtitle">자바 프로그래밍에 대해 궁금한 것을 물어보세요!</div>
+        </div>
+        
         <div class="chat-messages" id="chatMessages">
-            <div class="message ai">
-                <div class="message-avatar avatar-ai">AI</div>
-                <div class="message-content">
-                    안녕하세요! 저는 CodeBattleArena의 AI 튜터입니다. 코딩 학습에 관한 모든 질문을 도와드릴 수 있어요. 무엇이든 물어보세요!
+            <div class="welcome-message">
+                <div class="welcome-title">안녕하세요! AI 튜터입니다 👨‍🏫</div>
+                <div>자바 프로그래밍에 대해 궁금한 것이 있으시면 언제든 물어보세요!</div>
+                
+                <div class="quick-questions">
+                    <div class="quick-question" onclick="sendQuickQuestion('자바 기초 문법을 알려주세요')">자바 기초 문법</div>
+                    <div class="quick-question" onclick="sendQuickQuestion('배열 사용법을 알려주세요')">배열 사용법</div>
+                    <div class="quick-question" onclick="sendQuickQuestion('반복문 종류와 사용법')">반복문</div>
+                    <div class="quick-question" onclick="sendQuickQuestion('클래스와 객체란 무엇인가요?')">클래스와 객체</div>
                 </div>
             </div>
-        </div>
-        
-        <div class="typing-indicator" id="typingIndicator">
-            <div class="message ai">
-                <div class="message-avatar avatar-ai">AI</div>
+            
+            <div class="typing-indicator" id="typingIndicator">
                 <div class="typing-dots">
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
-                    <div class="typing-dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
+                    <div class="dot"></div>
                 </div>
             </div>
         </div>
         
-        <div class="chat-input-area">
-            <textarea 
-                class="chat-input" 
-                id="chatInput" 
-                placeholder="AI 튜터에게 질문해보세요..."
-                rows="1"
-            ></textarea>
-            <button class="send-btn" id="sendBtn" onclick="sendMessage()">→</button>
+        <div class="chat-input-container">
+            <div class="chat-input-wrapper">
+                <textarea 
+                    id="chatInput" 
+                    class="chat-input" 
+                    placeholder="AI 튜터에게 질문해보세요..."
+                    rows="1"
+                ></textarea>
+                <button id="sendButton" class="send-button" onclick="sendMessage()">전송</button>
+            </div>
         </div>
     </div>
 
     <script>
-        const chatMessages = document.getElementById('chatMessages');
-        const chatInput = document.getElementById('chatInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const typingIndicator = document.getElementById('typingIndicator');
-        
-        chatInput.addEventListener('keypress', function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendMessage();
+        let isWelcomeShown = true;
+
+        function hideWelcomeMessage() {
+            if (isWelcomeShown) {
+                document.querySelector('.welcome-message').style.display = 'none';
+                isWelcomeShown = false;
             }
-        });
-        
-        chatInput.addEventListener('input', function() {
-            this.style.height = 'auto';
-            this.style.height = this.scrollHeight + 'px';
-        });
-        
+        }
+
+        function addMessage(content, isUser = false) {
+            hideWelcomeMessage();
+            
+            const messagesContainer = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'message-user' : 'message-ai'}`;
+            
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('ko-KR', { 
+                hour: '2-digit', 
+                minute: '2-digit' 
+            });
+            
+            messageDiv.innerHTML = `
+                ${content}
+                <div class="message-time">${timeString}</div>
+            `;
+            
+            messagesContainer.appendChild(messageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function showTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'block';
+            const messagesContainer = document.getElementById('chatMessages');
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            document.getElementById('typingIndicator').style.display = 'none';
+        }
+
         async function sendMessage() {
-            const message = chatInput.value.trim();
-            if (!message || sendBtn.disabled) return;
+            const input = document.getElementById('chatInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = input.value.trim();
             
-            addMessage('user', message);
+            if (!message) return;
             
-            chatInput.value = '';
-            chatInput.style.height = 'auto';
-            sendBtn.disabled = true;
+            // 사용자 메시지 표시
+            addMessage(message, true);
             
+            // 입력창 초기화 및 버튼 비활성화
+            input.value = '';
+            sendButton.disabled = true;
+            
+            // 타이핑 인디케이터 표시
             showTypingIndicator();
             
             try {
                 const response = await fetch('/api/ai/chat', {
                     method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    headers: {
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify({ message: message })
                 });
                 
                 const data = await response.json();
                 
-                hideTypingIndicator();
+                // 약간의 지연 후 응답 표시 (더 자연스럽게)
+                setTimeout(() => {
+                    hideTypingIndicator();
+                    addMessage(data.response);
+                    sendButton.disabled = false;
+                    input.focus();
+                }, 1000);
                 
-                if (data.response) {
-                    await typeMessage('ai', data.response);
-                } else {
-                    addMessage('ai', '죄송합니다. 현재 AI 서비스를 이용할 수 없습니다.');
-                }
             } catch (error) {
-                console.error('AI 채팅 오류:', error);
                 hideTypingIndicator();
-                addMessage('ai', '죄송합니다. 연결에 문제가 발생했습니다. 잠시 후 다시 시도해주세요.');
-            } finally {
-                sendBtn.disabled = false;
+                addMessage('죄송합니다. 일시적인 오류가 발생했습니다. 다시 시도해주세요.');
+                sendButton.disabled = false;
+                input.focus();
             }
         }
-        
-        function addMessage(sender, content) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${sender}`;
-            
-            const avatarClass = sender === 'ai' ? 'avatar-ai' : 'avatar-user';
-            const avatarText = sender === 'ai' ? 'AI' : 'You';
-            
-            messageDiv.innerHTML = `
-                <div class="message-avatar ${avatarClass}">${avatarText}</div>
-                <div class="message-content">${content}</div>
-            `;
-            
-            chatMessages.appendChild(messageDiv);
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-            
-            return messageDiv;
+
+        function sendQuickQuestion(question) {
+            document.getElementById('chatInput').value = question;
+            sendMessage();
         }
-        
-        async function typeMessage(sender, content) {
-            const messageDiv = addMessage(sender, '');
-            const contentDiv = messageDiv.querySelector('.message-content');
-            
-            let i = 0;
-            const typing = () => {
-                if (i < content.length) {
-                    contentDiv.textContent += content.charAt(i);
-                    i++;
-                    setTimeout(typing, 20);
-                    chatMessages.scrollTop = chatMessages.scrollHeight;
-                }
-            };
-            
-            typing();
+
+        // 엔터키로 전송
+        document.getElementById('chatInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // 텍스트 영역 자동 크기 조절
+        document.getElementById('chatInput').addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+        });
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
         }
-        
-        function showTypingIndicator() {
-            typingIndicator.style.display = 'block';
-            chatMessages.scrollTop = chatMessages.scrollHeight;
-        }
-        
-        function hideTypingIndicator() {
-            typingIndicator.style.display = 'none';
-        }
+
+        // 페이지 로드 시 입력창에 포커스
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('chatInput').focus();
+        });
     </script>
-    
-    <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
-    <script src="/js/common/student-websocket.js"></script>
 </body>
 </html>

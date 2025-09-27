@@ -235,3 +235,74 @@ public class TeacherController {
         }
     }
 }
+
+    @GetMapping("/groups")
+    public Map<String, Object> getMyGroups(HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "Unauthorized");
+                return error;
+            }
+            
+            List<Group> groups = groupRepository.findByTeacherId(teacherId);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("groups", groups.stream().map(group -> {
+                Map<String, Object> groupData = new HashMap<>();
+                groupData.put("id", group.getId());
+                groupData.put("name", group.getName());
+                groupData.put("description", group.getDescription());
+                groupData.put("createdAt", group.getCreatedAt().toString());
+                
+                // 그룹의 학생 수 계산
+                long studentCount = userRepository.findStudentsByGroupId(group.getId()).size();
+                groupData.put("studentCount", studentCount);
+                
+                return groupData;
+            }).toList());
+            
+            return response;
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("error", "Failed to load groups: " + e.getMessage());
+            return error;
+        }
+    }
+
+    @PostMapping("/groups")
+    public Map<String, Object> createGroup(@RequestBody Map<String, Object> groupData, HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Unauthorized");
+                return error;
+            }
+            
+            Group group = new Group();
+            group.setTeacherId(teacherId);
+            group.setName((String) groupData.get("name"));
+            group.setDescription((String) groupData.get("description"));
+            
+            Group savedGroup = groupRepository.save(group);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("success", true);
+            response.put("message", "그룹이 생성되었습니다");
+            response.put("group", Map.of(
+                "id", savedGroup.getId(),
+                "name", savedGroup.getName(),
+                "description", savedGroup.getDescription()
+            ));
+            
+            return response;
+        } catch (Exception e) {
+            Map<String, Object> error = new HashMap<>();
+            error.put("success", false);
+            error.put("message", "Error: " + e.getMessage());
+            return error;
+        }
+    }

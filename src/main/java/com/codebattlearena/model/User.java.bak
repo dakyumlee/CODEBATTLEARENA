@@ -51,8 +51,6 @@ public class User {
 
     public Long getGroupId() { return groupId; }
     public void setGroupId(Long groupId) { this.groupId = groupId; }
-    public Long getGroupId() { return groupId; }
-    public void setGroupId(Long groupId) { this.groupId = groupId; }
 
     public boolean isOnlineStatus() { return onlineStatus; }
     public void setOnlineStatus(boolean onlineStatus) { this.onlineStatus = onlineStatus; }
