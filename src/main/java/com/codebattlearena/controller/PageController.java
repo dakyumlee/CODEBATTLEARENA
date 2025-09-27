@@ -46,6 +46,16 @@ public class PageController {
         return "student/battle";
     }
 
+    @GetMapping("/student/teacher-problem")
+    public String studentTeacherProblem() {
+        return "student/teacher-problem";
+    }
+
+    @GetMapping("/student/ai-problem")
+    public String studentAiProblem() {
+        return "student/ai-problem";
+    }
+
     @GetMapping("/teacher")
     public String teacherDashboard() {
         return "teacher/dashboard";
