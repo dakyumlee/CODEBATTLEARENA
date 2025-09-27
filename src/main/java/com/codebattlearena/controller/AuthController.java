@@ -36,17 +36,7 @@ public class AuthController {
             
             User user = userOpt.get();
             
-            // 임시로 평문 비교 (개발용)
-            boolean passwordMatch = false;
-            try {
-                // BCrypt 비교 시도
-                passwordMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
-            } catch (Exception e) {
-                // BCrypt 실패 시 평문 비교
-                passwordMatch = request.getPassword().equals(user.getPassword());
-            }
-            
-            if (!passwordMatch) {
+            if (!request.getPassword().equals(user.getPassword())) {
                 return Map.of("success", false, "message", "비밀번호가 올바르지 않습니다.");
             }
             
@@ -96,7 +86,7 @@ public class AuthController {
             User user = new User();
             user.setName(request.getName());
             user.setEmail(request.getEmail());
-            user.setPassword(request.getPassword()); // 평문 저장 (개발용)
+            user.setPassword(request.getPassword());
             user.setRole(UserRole.STUDENT);
             user.setCreatedAt(LocalDateTime.now());
             user.setOnlineStatus(false);
