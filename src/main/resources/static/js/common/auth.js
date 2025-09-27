@@ -7,18 +7,32 @@ class AuthManager {
         })
         .then(response => response.json())
         .then(data => {
+            console.log('Full login response:', data);
+            
             if (data.success) {
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('userRole', data.user.role);
                 localStorage.setItem('userName', data.user.name);
                 
-                // 쿠키에도 토큰 저장 (페이지 이동용)
-                document.cookie = `authToken=${data.token}; path=/; max-age=86400`;
+                document.cookie = `authToken=${data.token}; path=/; max-age=86400; SameSite=Lax`;
                 
-                window.location.href = data.redirectUrl;
+                console.log('Saved to localStorage:', {
+                    token: data.token,
+                    role: data.user.role,
+                    name: data.user.name
+                });
+                
+                setTimeout(() => {
+                    window.location.href = data.redirectUrl;
+                }, 100);
+                
                 return data;
             }
             throw new Error(data.message);
+        })
+        .catch(error => {
+            console.error('Login error:', error);
+            alert('로그인 실패: ' + error.message);
         });
     }
 
