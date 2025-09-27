@@ -167,30 +167,65 @@
             grid-column: 1 / -1;
         }
         
-        .connection-status {
+        .notification-modal {
             position: fixed;
-            top: 100px;
-            right: 30px;
-            padding: 10px 15px;
-            border-radius: 8px;
-            font-size: 0.9rem;
-            font-weight: 500;
-            z-index: 200;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
         
-        .status-connected {
-            background: #22543d;
-            color: #68d391;
+        .modal-content {
+            background: #2d3748;
+            padding: 2rem;
+            border-radius: 1rem;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid #4299e1;
         }
         
-        .status-disconnected {
-            background: #742a2a;
-            color: #feb2b2;
+        .modal-title {
+            color: #4299e1;
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
         }
         
-        .status-reconnecting {
-            background: #744210;
-            color: #f6e05e;
+        .modal-message {
+            color: #e2e8f0;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+        
+        .modal-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+        
+        .btn-modal {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-modal.primary {
+            background: #4299e1;
+            color: white;
+        }
+        
+        .btn-modal.secondary {
+            background: #4a5568;
+            color: #e2e8f0;
         }
         
         @media (max-width: 768px) {
@@ -212,14 +247,10 @@
                 <a href="/student/battle" class="nav-item">코드배틀</a>
             </nav>
             <div class="user-info">
-                <span id="userName">님 환영합니다</span>
+                <span id="userName">학생님 환영합니다</span>
                 <button onclick="logout()" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
             </div>
         </div>
-    </div>
-    
-    <div class="connection-status" id="connectionStatus" style="display: none;">
-        연결 상태
     </div>
 
     <div class="main-container">
@@ -249,14 +280,22 @@
         </div>
     </div>
 
+    <!-- 알림 모달 -->
+    <div id="notificationModal" class="notification-modal">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="modal-title">새 알림</h3>
+            <p id="modalMessage" class="modal-message"></p>
+            <div class="modal-buttons">
+                <button id="modalAccept" class="btn-modal primary">확인하기</button>
+                <button id="modalClose" class="btn-modal secondary">나중에</button>
+            </div>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
         let stompClient = null;
-        let reconnectAttempts = 0;
-        let maxReconnectAttempts = 10;
-        let reconnectInterval = 2000;
-        let connectionStatus = document.getElementById('connectionStatus');
         
         document.addEventListener('DOMContentLoaded', function() {
             loadUserInfo();
@@ -265,98 +304,44 @@
         });
 
         function loadUserInfo() {
-            const token = localStorage.getItem('authToken');
             const userName = localStorage.getItem('userName');
-            
             if (userName) {
                 document.getElementById('userName').textContent = userName + '님 환영합니다';
             }
         }
         
         function connectWebSocket() {
-            updateConnectionStatus('reconnecting', '연결 중...');
-            
             const socket = new SockJS('/ws');
             stompClient = Stomp.over(socket);
             
             stompClient.connect({}, function(frame) {
                 console.log('WebSocket 연결됨: ' + frame);
-                updateConnectionStatus('connected', '실시간 연결됨');
-                reconnectAttempts = 0;
                 
                 stompClient.subscribe('/topic/notifications', function(message) {
                     const notification = JSON.parse(message.body);
-                    handleNotification(notification);
+                    showNotificationModal(notification);
                 });
-                
-                setTimeout(() => {
-                    connectionStatus.style.display = 'none';
-                }, 3000);
                 
             }, function(error) {
                 console.error('WebSocket 연결 실패:', error);
-                updateConnectionStatus('disconnected', '연결 끊어짐');
-                attemptReconnect();
             });
         }
         
-        function updateConnectionStatus(status, message) {
-            connectionStatus.style.display = 'block';
-            connectionStatus.textContent = message;
-            connectionStatus.className = 'connection-status status-' + status;
-        }
-        
-        function attemptReconnect() {
-            if (reconnectAttempts < maxReconnectAttempts) {
-                reconnectAttempts++;
-                updateConnectionStatus('reconnecting', `재연결 중... (${reconnectAttempts}/${maxReconnectAttempts})`);
-                
-                setTimeout(() => {
-                    connectWebSocket();
-                }, reconnectInterval * reconnectAttempts);
-            } else {
-                updateConnectionStatus('disconnected', '연결 실패 - 페이지를 새로고침하세요');
-            }
-        }
-        
-        function handleNotification(notification) {
-            showToast(notification.message || notification.title);
+        function showNotificationModal(notification) {
+            document.getElementById('modalTitle').textContent = notification.title || '새 알림';
+            document.getElementById('modalMessage').textContent = notification.message || '';
+            document.getElementById('notificationModal').style.display = 'flex';
             
-            switch(notification.type) {
-                case 'new_material':
-                    loadMaterials();
-                    break;
-                case 'new_problem':
+            document.getElementById('modalAccept').onclick = function() {
+                document.getElementById('notificationModal').style.display = 'none';
+                if (notification.type === 'NEW_PROBLEM') {
                     loadSubmissions();
-                    break;
-                case 'announcement':
-                    showToast('공지: ' + notification.message);
-                    break;
-            }
-        }
-        
-        function showToast(message) {
-            const toast = document.createElement('div');
-            toast.textContent = message;
-            toast.style.cssText = `
-                position: fixed;
-                top: 150px;
-                right: 30px;
-                background: #2d3748;
-                color: #e2e8f0;
-                padding: 15px 20px;
-                border-radius: 8px;
-                box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-                z-index: 1000;
-                border-left: 4px solid #4299e1;
-                max-width: 300px;
-            `;
+                }
+            };
             
-            document.body.appendChild(toast);
-            
-            setTimeout(() => {
-                toast.remove();
-            }, 5000);
+            document.getElementById('modalClose').onclick = function() {
+                document.getElementById('notificationModal').style.display = 'none';
+            };
         }
         
         async function loadTodayContent() {
@@ -399,31 +384,8 @@
         }
         
         async function loadMaterials() {
-            try {
-                const response = await fetch('/api/teacher/materials', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    }
-                });
-                const materials = await response.json();
-                
-                const section = document.getElementById('materialsSection');
-                
-                if (materials && materials.length > 0) {
-                    section.innerHTML = materials.map(material => `
-                        <div style="background: #4a5568; padding: 15px; border-radius: 8px; margin-bottom: 10px;">
-                            <h4 style="color: #e2e8f0; margin-bottom: 5px;">${material.title}</h4>
-                            <p style="color: #a0aec0; font-size: 0.9rem;">${material.description || ''}</p>
-                            <button class="btn-primary" style="margin-top: 10px; padding: 8px 16px;" onclick="downloadMaterial('${material.id}')">다운로드</button>
-                        </div>
-                    `).join('');
-                } else {
-                    section.innerHTML = '<div class="empty-state">공유된 자료가 없습니다.</div>';
-                }
-            } catch (error) {
-                console.error('자료 로드 실패:', error);
-                document.getElementById('materialsSection').innerHTML = '<div class="empty-state">자료를 불러올 수 없습니다.</div>';
-            }
+            const section = document.getElementById('materialsSection');
+            section.innerHTML = '<div class="empty-state">공유된 자료가 없습니다.</div>';
         }
         
         async function loadSubmissions() {
@@ -435,10 +397,6 @@
             window.location.href = '/student/ai-problem';
         }
         
-        function downloadMaterial(materialId) {
-            window.open(`/api/materials/${materialId}/download`);
-        }
-        
         function logout() {
             localStorage.clear();
             window.location.href = '/';
@@ -446,3 +404,4 @@
     </script>
 </body>
 </html>
+<script src="/js/common/student-websocket.js"></script>

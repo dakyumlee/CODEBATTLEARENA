@@ -1,0 +1,41 @@
+<div class="header">
+    <div class="header-content">
+        <div class="logo">CodeBattleArena</div>
+        <nav class="nav-menu">
+            <a href="/student/today" class="nav-item">대시보드</a>
+            <a href="/student/ai-tutor" class="nav-item">AI 튜터</a>
+            <a href="/student/practice" class="nav-item">코딩연습</a>
+            <a href="/student/notes" class="nav-item">복습노트</a>
+            <a href="/student/battle" class="nav-item">코드배틀</a>
+        </nav>
+        <div class="user-info">
+            <span id="userName">학생님 환영합니다</span>
+            <button onclick="logout()" style="padding: 8px 16px; background: #e53e3e; color: white; border: none; border-radius: 6px; cursor: pointer;">로그아웃</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+<script src="/js/common/student-websocket.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const userName = localStorage.getItem('userName');
+        if (userName) {
+            document.getElementById('userName').textContent = userName + '님 환영합니다';
+        }
+        
+        // 현재 페이지에 맞는 네비게이션 활성화
+        const currentPath = window.location.pathname;
+        document.querySelectorAll('.nav-item').forEach(item => {
+            if (item.getAttribute('href') === currentPath) {
+                item.classList.add('active');
+            }
+        });
+    });
+
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/';
+    }
+</script>
