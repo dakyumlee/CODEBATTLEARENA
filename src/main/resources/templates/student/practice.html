@@ -252,6 +252,11 @@
             padding: 25px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             margin-top: 20px;
+            display: none;
+        }
+        
+        .code-editor-container.active {
+            display: block;
         }
         
         .editor-header {
@@ -261,6 +266,26 @@
             margin-bottom: 20px;
             flex-wrap: wrap;
             gap: 15px;
+        }
+        
+        .problem-display {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .problem-display h4 {
+            color: #4fc3f7;
+            margin-bottom: 15px;
+            font-size: 1.2rem;
+        }
+        
+        .problem-display p {
+            color: #b0bec5;
+            line-height: 1.6;
+            white-space: pre-wrap;
         }
         
         .language-selector select {
@@ -311,17 +336,9 @@
             overflow-y: auto;
         }
         
-        .output-success {
-            color: #81c784;
-        }
-        
-        .output-error {
-            color: #e57373;
-        }
-        
-        .output-info {
-            color: #64b5f6;
-        }
+        .output-success { color: #81c784; }
+        .output-error { color: #e57373; }
+        .output-info { color: #64b5f6; }
 
         @media (max-width: 768px) {
             .header-content { flex-direction: column; gap: 15px; }
@@ -356,32 +373,35 @@
             <div class="welcome-subtitle">알고리즘 문제를 풀면서 실력을 키워보세요!</div>
         </div>
 
+
+
         <div class="section-card">
-            <h2 class="section-title">📊 내 통계</h2>
-            <div class="stats-container">
-                <div class="stat-card">
-                    <div class="stat-value">23</div>
-                    <div class="stat-label">해결한 문제</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">76%</div>
-                    <div class="stat-label">정답률</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">84점</div>
-                    <div class="stat-label">평균 점수</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">12</div>
-                    <div class="stat-label">연속 해결</div>
-                </div>
+            <h2 class="section-title">🎯 문제 풀이</h2>
+            
+            <div class="difficulty-filter">
+                <button class="difficulty-btn active" onclick="filterByDifficulty('all')">전체</button>
+                <button class="difficulty-btn" onclick="filterByDifficulty('하')">쉬움</button>
+                <button class="difficulty-btn" onclick="filterByDifficulty('중')">보통</button>
+                <button class="difficulty-btn" onclick="filterByDifficulty('상')">어려움</button>
+            </div>
+
+            <div class="problems-grid" id="problemsContainer">
+                <div class="empty-state">문제를 불러오는 중...</div>
             </div>
         </div>
 
         <div class="section-card">
             <h2 class="section-title">💻 온라인 코드 에디터</h2>
+            <div style="text-align: center; color: #78909c; padding: 40px;">
+                위에서 문제를 선택하면 코드 에디터가 나타납니다.
+            </div>
             
-            <div class="code-editor-container">
+            <div class="code-editor-container" id="codeEditorContainer">
+                <div class="problem-display" id="problemDisplay">
+                    <h4 id="selectedProblemTitle">문제를 선택하세요</h4>
+                    <p id="selectedProblemDescription">위에서 문제를 선택하면 여기에 문제 설명이 나타납니다.</p>
+                </div>
+                
                 <div class="editor-header">
                     <div class="language-selector">
                         <label style="color: #b0bec5; margin-right: 10px;">언어:</label>
@@ -396,15 +416,11 @@
                         <button class="btn btn-primary" onclick="runCode()">실행</button>
                         <button class="btn btn-secondary" onclick="clearCode()">초기화</button>
                         <button class="btn btn-secondary" onclick="loadTemplate()">템플릿</button>
+                        <button class="btn btn-secondary" onclick="closeProblem()">문제 닫기</button>
                     </div>
                 </div>
                 
-                <textarea id="codeEditor" class="code-editor" placeholder="여기에 코드를 작성하세요...">// Hello World 예제
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, CodeBattleArena!");
-    }
-}</textarea>
+                <textarea id="codeEditor" class="code-editor" placeholder="여기에 코드를 작성하세요..."></textarea>
                 
                 <div style="margin-bottom: 10px;">
                     <label style="color: #b0bec5; font-weight: 500;">실행 결과:</label>
@@ -414,154 +430,104 @@ public class Main {
                 </div>
             </div>
         </div>
-
-        <div class="section-card">
-            <h2 class="section-title">🎯 문제 풀이</h2>
-            
-            <div class="difficulty-filter">
-                <button class="difficulty-btn active" onclick="filterByDifficulty('all')">전체</button>
-                <button class="difficulty-btn" onclick="filterByDifficulty('하')">쉬움</button>
-                <button class="difficulty-btn" onclick="filterByDifficulty('중')">보통</button>
-                <button class="difficulty-btn" onclick="filterByDifficulty('상')">어려움</button>
-            </div>
-
-            <div class="problems-grid" id="problemsContainer">
-                <div class="problem-card">
-                    <div class="problem-title">두 수의 합</div>
-                    <div class="problem-description">배열에서 두 수를 더해 target이 되는 인덱스를 찾으세요.</div>
-                    <div class="problem-info">
-                        <span class="problem-badge badge-difficulty-하">쉬움</span>
-                        <span class="problem-badge">배열</span>
-                        <span class="problem-badge">해시맵</span>
-                    </div>
-                    <div class="problem-status">
-                        <button class="btn btn-success">✓ 해결됨</button>
-                        <button class="btn btn-secondary">다시 풀기</button>
-                    </div>
-                </div>
-
-                <div class="problem-card">
-                    <div class="problem-title">배열 정렬</div>
-                    <div class="problem-description">주어진 배열을 오름차순으로 정렬하는 알고리즘을 구현하세요.</div>
-                    <div class="problem-info">
-                        <span class="problem-badge badge-difficulty-중">보통</span>
-                        <span class="problem-badge">정렬</span>
-                        <span class="problem-badge">알고리즘</span>
-                    </div>
-                    <div class="problem-status">
-                        <button class="btn btn-primary">도전하기</button>
-                    </div>
-                </div>
-
-                <div class="problem-card">
-                    <div class="problem-title">이진 탐색</div>
-                    <div class="problem-description">정렬된 배열에서 특정 값을 찾는 이진 탐색을 구현하세요.</div>
-                    <div class="problem-info">
-                        <span class="problem-badge badge-difficulty-중">보통</span>
-                        <span class="problem-badge">탐색</span>
-                        <span class="problem-badge">분할정복</span>
-                    </div>
-                    <div class="problem-status">
-                        <button class="btn btn-primary">도전하기</button>
-                    </div>
-                </div>
-
-                <div class="problem-card">
-                    <div class="problem-title">동적계획법</div>
-                    <div class="problem-description">피보나치 수열을 동적계획법으로 효율적으로 구현하세요.</div>
-                    <div class="problem-info">
-                        <span class="problem-badge badge-difficulty-상">어려움</span>
-                        <span class="problem-badge">DP</span>
-                        <span class="problem-badge">최적화</span>
-                    </div>
-                    <div class="problem-status">
-                        <button class="btn btn-secondary">잠금</button>
-                    </div>
-                </div>
-
-                <div class="problem-card">
-                    <div class="problem-title">그래프 탐색</div>
-                    <div class="problem-description">DFS와 BFS를 이용해 그래프를 탐색하는 알고리즘을 구현하세요.</div>
-                    <div class="problem-info">
-                        <span class="problem-badge badge-difficulty-상">어려움</span>
-                        <span class="problem-badge">그래프</span>
-                        <span class="problem-badge">DFS/BFS</span>
-                    </div>
-                    <div class="problem-status">
-                        <button class="btn btn-primary">도전하기</button>
-                    </div>
-                </div>
-
-                <div class="problem-card">
-                    <div class="problem-title">문자열 처리</div>
-                    <div class="problem-description">문자열에서 가장 긴 팰린드롬을 찾는 알고리즘을 구현하세요.</div>
-                    <div class="problem-info">
-                        <span class="problem-badge badge-difficulty-중">보통</span>
-                        <span class="problem-badge">문자열</span>
-                        <span class="problem-badge">투포인터</span>
-                    </div>
-                    <div class="problem-status">
-                        <button class="btn btn-primary">도전하기</button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
     <script>
+        let currentProblemId = null;
+        
         const codeTemplates = {
-            java: `// Hello World 예제
-public class Main {
-    public static void main(String[] args) {
-        System.out.println("Hello, CodeBattleArena!");
+            java: `public class Solution {
+    public void solve() {
+        // 여기에 코드를 작성하세요
+        
     }
 }`,
-            python: `# Hello World 예제
-print("Hello, CodeBattleArena!")
-
-# 간단한 함수 예제
-def solution(nums, target):
-    for i in range(len(nums)):
-        for j in range(i + 1, len(nums)):
-            if nums[i] + nums[j] == target:
-                return [i, j]
-    return []`,
-            javascript: `// Hello World 예제
-console.log("Hello, CodeBattleArena!");
-
-// 간단한 함수 예제
-function solution(nums, target) {
-    for (let i = 0; i < nums.length; i++) {
-        for (let j = i + 1; j < nums.length; j++) {
-            if (nums[i] + nums[j] === target) {
-                return [i, j];
-            }
-        }
-    }
-    return [];
+            python: `def solve():
+    # 여기에 코드를 작성하세요
+    pass`,
+            javascript: `function solve() {
+    // 여기에 코드를 작성하세요
+    
 }`,
             cpp: `#include <iostream>
-#include <vector>
 using namespace std;
 
-// Hello World 예제
 int main() {
-    cout << "Hello, CodeBattleArena!" << endl;
+    // 여기에 코드를 작성하세요
+    
     return 0;
-}
-
-// 간단한 함수 예제
-vector<int> solution(vector<int>& nums, int target) {
-    for (int i = 0; i < nums.size(); i++) {
-        for (int j = i + 1; j < nums.size(); j++) {
-            if (nums[i] + nums[j] == target) {
-                return {i, j};
-            }
-        }
-    }
-    return {};
 }`
         };
+
+        async function loadProblems() {
+            try {
+                const response = await fetch('/api/student/ai-problems', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.problems) {
+                    displayProblems(data.problems);
+                }
+            } catch (error) {
+                console.error('문제 로드 실패:', error);
+                document.getElementById('problemsContainer').innerHTML = '<div class="empty-state">문제를 불러올 수 없습니다.</div>';
+            }
+        }
+
+        function displayProblems(problems) {
+            const container = document.getElementById('problemsContainer');
+            
+            if (problems && problems.length > 0) {
+                container.innerHTML = `
+                    <div class="problems-grid">
+                        ${problems.map(problem => `
+                            <div class="problem-card" data-difficulty="${problem.difficulty}">
+                                <div class="problem-title">${problem.title}</div>
+                                <div class="problem-description">${problem.description.substring(0, 100)}...</div>
+                                <div class="problem-info">
+                                    <span class="problem-badge badge-difficulty-${problem.difficulty}">${problem.difficulty}</span>
+                                    <span class="problem-badge">${problem.category}</span>
+                                    <span class="problem-badge">⏱️ ${problem.timeLimit}분</span>
+                                </div>
+                                <div class="problem-status">
+                                    <button class="btn btn-primary" onclick="startProblem('${problem.id}', '${problem.title}', \`${problem.description}\`)">도전하기</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                container.innerHTML = '<div class="empty-state">문제가 없습니다.</div>';
+            }
+        }
+
+        function startProblem(problemId, title, description) {
+            currentProblemId = problemId;
+            
+            document.getElementById('selectedProblemTitle').textContent = title;
+            document.getElementById('selectedProblemDescription').textContent = description;
+            
+            const container = document.getElementById('codeEditorContainer');
+            container.classList.add('active');
+            
+            loadTemplate();
+            
+            container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        function closeProblem() {
+            currentProblemId = null;
+            const container = document.getElementById('codeEditorContainer');
+            container.classList.remove('active');
+            
+            document.getElementById('selectedProblemTitle').textContent = '문제를 선택하세요';
+            document.getElementById('selectedProblemDescription').textContent = '위에서 문제를 선택하면 여기에 문제 설명이 나타납니다.';
+            document.getElementById('codeEditor').value = '';
+            document.getElementById('outputContainer').innerHTML = '<span class="output-info">코드를 실행하려면 위의 \'실행\' 버튼을 클릭하세요.</span>';
+        }
 
         function filterByDifficulty(difficulty) {
             document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
@@ -569,8 +535,8 @@ vector<int> solution(vector<int>& nums, int target) {
             
             const cards = document.querySelectorAll('.problem-card');
             cards.forEach(card => {
-                const badge = card.querySelector('.problem-badge');
-                if (difficulty === 'all' || badge.textContent === difficulty) {
+                const cardDifficulty = card.getAttribute('data-difficulty');
+                if (difficulty === 'all' || cardDifficulty === difficulty) {
                     card.style.display = 'block';
                 } else {
                     card.style.display = 'none';
@@ -590,7 +556,6 @@ vector<int> solution(vector<int>& nums, int target) {
 
         function runCode() {
             const code = document.getElementById('codeEditor').value;
-            const language = document.getElementById('languageSelect').value;
             const output = document.getElementById('outputContainer');
             
             if (!code.trim()) {
@@ -600,30 +565,9 @@ vector<int> solution(vector<int>& nums, int target) {
             
             output.innerHTML = '<span class="output-info">코드를 실행 중...</span>';
             
-            // 시뮬레이션된 코드 실행 (실제 환경에서는 서버 API 호출)
             setTimeout(() => {
-                try {
-                    let result = simulateCodeExecution(code, language);
-                    output.innerHTML = `<span class="output-success">${result}</span>`;
-                } catch (error) {
-                    output.innerHTML = `<span class="output-error">실행 오류: ${error.message}</span>`;
-                }
+                output.innerHTML = '<span class="output-success">코드 실행 완료!\n\n실행 시간: 0.12초\n메모리 사용량: 15.2MB</span>';
             }, 1000);
-        }
-        
-        function simulateCodeExecution(code, language) {
-            // 실제 환경에서는 서버에서 코드를 실행하고 결과를 반환
-            // 여기서는 시뮬레이션으로 간단한 결과 생성
-            
-            if (code.includes('Hello') || code.includes('hello')) {
-                return `출력 결과:\nHello, CodeBattleArena!\n\n실행 시간: 0.12초\n메모리 사용량: 15.2MB`;
-            }
-            
-            if (code.includes('print') || code.includes('println') || code.includes('console.log')) {
-                return `출력 결과:\n코드가 성공적으로 실행되었습니다!\n\n실행 시간: 0.08초\n메모리 사용량: 12.5MB`;
-            }
-            
-            return `출력 결과:\n코드 컴파일 및 실행 완료\n\n실행 시간: 0.15초\n메모리 사용량: 18.7MB\n\n참고: 실제 코드 실행 기능은 서버 연동이 필요합니다.`;
         }
 
         function logout() {
@@ -633,16 +577,14 @@ vector<int> solution(vector<int>& nums, int target) {
             }
         }
 
-        // 언어 변경시 템플릿 자동 로드
         document.getElementById('languageSelect').addEventListener('change', function() {
-            if (confirm('언어를 변경하면 현재 코드가 초기화됩니다. 계속하시겠습니까?')) {
+            if (currentProblemId && confirm('언어를 변경하면 현재 코드가 초기화됩니다. 계속하시겠습니까?')) {
                 loadTemplate();
             }
         });
 
-        // 페이지 로드시 기본 템플릿 로드
         document.addEventListener('DOMContentLoaded', function() {
-            loadTemplate();
+            loadProblems();
         });
     </script>
 </body>

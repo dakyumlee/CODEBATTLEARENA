@@ -101,6 +101,30 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/ai-problems/today")
+    public Map<String, Object> getTodayAiProblem(HttpServletRequest request) {
+    try {
+        Long userId = getUserIdFromRequest(request);
+        if (userId == null) {
+            return Map.of("error", "Unauthorized");
+        }
+        
+        Map<String, Object> todayProblem = Map.of(
+            "id", "ai-today-" + LocalDateTime.now().getDayOfYear(),
+            "title", "배열의 최댓값 찾기",
+            "description", "주어진 정수 배열에서 최댓값을 찾는 함수를 작성하세요.\n\n입력: [3, 1, 4, 1, 5, 9, 2, 6]\n출력: 9\n\n힌트: 반복문을 사용하여 배열을 순회하면서 최댓값을 찾아보세요.",
+            "difficulty", "하",
+            "category", "배열",
+            "timeLimit", 30,
+            "points", 100
+        );
+        
+        return Map.of("success", true, "problem", todayProblem);
+    } catch (Exception e) {
+        return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
+    }
+}
+
     @GetMapping("/today")
     public Map<String, Object> getTodayData(HttpServletRequest request) {
         try {

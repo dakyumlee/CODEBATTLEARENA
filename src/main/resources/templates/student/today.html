@@ -102,13 +102,6 @@
             gap: 10px;
         }
         
-        .problem-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
-            gap: 25px;
-            margin-top: 25px;
-        }
-        
         .problem-card {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
@@ -150,6 +143,7 @@
         .badge-type-PROBLEM { background: rgba(33, 150, 243, 0.2); color: #64b5f6; }
         .badge-type-QUIZ { background: rgba(156, 39, 176, 0.2); color: #ba68c8; }
         .badge-type-EXAM { background: rgba(255, 87, 34, 0.2); color: #ff8a65; }
+        .badge-ai { background: rgba(156, 39, 176, 0.2); color: #ba68c8; }
         
         .btn {
             padding: 12px 24px;
@@ -174,111 +168,10 @@
             box-shadow: 0 10px 25px rgba(79, 195, 247, 0.3);
         }
         
-        .btn-success {
-            background: linear-gradient(135deg, #66bb6a 0%, #4caf50 100%);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: linear-gradient(135deg, #ffb74d 0%, #ff9800 100%);
-            color: white;
-        }
-        
         .btn-secondary {
             background: rgba(255, 255, 255, 0.1);
             color: #b0bec5;
             border: 1px solid rgba(255, 255, 255, 0.2);
-        }
-        
-        .problem-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 20px;
-        }
-        
-        .modal {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.8);
-            display: none;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            backdrop-filter: blur(10px);
-        }
-        
-        .modal-content {
-            background: linear-gradient(135deg, #1a2332 0%, #2d3748 100%);
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 600px;
-            width: 90%;
-            max-height: 80vh;
-            overflow-y: auto;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .modal-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #4fc3f7;
-            margin-bottom: 25px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #e8eaed;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #e8eaed;
-            font-size: 1rem;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #4fc3f7;
-            box-shadow: 0 0 0 3px rgba(79, 195, 247, 0.1);
-        }
-        
-        .upload-area {
-            border: 2px dashed rgba(255, 255, 255, 0.3);
-            border-radius: 12px;
-            padding: 40px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s;
-            background: rgba(255, 255, 255, 0.02);
-        }
-        
-        .upload-area:hover {
-            border-color: #4fc3f7;
-            background: rgba(79, 195, 247, 0.05);
-        }
-        
-        .upload-area.file-selected {
-            border-color: #66bb6a;
-            background: rgba(102, 187, 106, 0.1);
-            color: #81c784;
-        }
-        
-        .modal-actions {
-            display: flex;
-            gap: 15px;
-            justify-content: flex-end;
-            margin-top: 25px;
         }
         
         .materials-grid {
@@ -319,35 +212,12 @@
             padding: 40px;
             font-style: italic;
         }
-        
-        .graded-info {
-            background: rgba(102, 187, 106, 0.1);
-            border: 1px solid rgba(102, 187, 106, 0.3);
-            border-radius: 8px;
-            padding: 15px;
-            margin-top: 15px;
-        }
-        
-        .score-display {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #81c784;
-            margin-bottom: 8px;
-        }
-        
-        .feedback-text {
-            color: #b0bec5;
-            line-height: 1.5;
-        }
 
         @media (max-width: 768px) {
             .header-content { flex-direction: column; gap: 15px; }
             .nav-menu { flex-wrap: wrap; }
             .main-container { padding: 20px 15px; }
-            .problem-grid { grid-template-columns: 1fr; }
             .materials-grid { grid-template-columns: 1fr; }
-            .modal-content { width: 95%; margin: 10px; }
-            .problem-actions { flex-direction: column; }
         }
     </style>
 </head>
@@ -395,41 +265,7 @@
         </div>
     </div>
 
-    <div id="submitModal" class="modal">
-        <div class="modal-content">
-            <h3 class="modal-title">답안 제출</h3>
-            <form id="submitForm" enctype="multipart/form-data">
-                <input type="hidden" id="submitProblemId">
-                <div class="form-group">
-                    <label class="form-label">문제</label>
-                    <input type="text" id="submitProblemTitle" class="form-control" readonly>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">텍스트 답안</label>
-                    <textarea name="answer" id="submitAnswer" class="form-control" rows="8" placeholder="답안을 입력하세요 (선택사항 - 파일만 제출도 가능)"></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">파일 첨부 (선택사항)</label>
-                    <div class="upload-area" id="submitUploadArea">
-                        <p>📎 파일을 클릭하여 선택하세요</p>
-                        <p style="font-size: 0.8rem; color: #78909c; margin-top: 10px;">
-                            지원 형식: PDF, DOC, DOCX, HWP, TXT, 이미지, 소스코드 파일 등
-                        </p>
-                        <input type="file" name="file" id="submitFileInput" style="display: none;" 
-                               accept=".pdf,.doc,.docx,.hwp,.txt,.jpg,.jpeg,.png,.gif,.zip,.java,.js,.html,.css,.py,.cpp,.c">
-                    </div>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeSubmitModal()">취소</button>
-                    <button type="submit" class="btn btn-primary" id="submitBtn">제출하기</button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
-        let selectedSubmitFile = null;
-
         async function loadProfile() {
             try {
                 const response = await fetch('/api/student/profile', {
@@ -445,6 +281,45 @@
             } catch (error) {
                 console.error('프로필 로드 실패:', error);
             }
+        }
+
+        async function loadAiProblem() {
+            try {
+                const response = await fetch('/api/student/ai-problems/today', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.problem) {
+                    displayAiProblem(data.problem);
+                } else {
+                    document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">오늘의 AI 문제를 불러올 수 없습니다.</div>';
+                }
+            } catch (error) {
+                console.error('AI 문제 로드 실패:', error);
+                document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">AI 문제를 불러올 수 없습니다.</div>';
+            }
+        }
+
+        function displayAiProblem(problem) {
+            const container = document.getElementById('aiProblemContainer');
+            container.innerHTML = `
+                <div class="problem-card">
+                    <div class="problem-title">${problem.title}</div>
+                    <div class="problem-info">
+                        <span class="problem-badge badge-difficulty-${problem.difficulty}">${problem.difficulty}</span>
+                        <span class="problem-badge badge-ai">AI 문제</span>
+                        <span class="problem-badge">⏱️ ${problem.timeLimit}분</span>
+                        <span class="problem-badge">📊 ${problem.points}점</span>
+                    </div>
+                    <div style="margin: 15px 0;">
+                        <button class="btn btn-primary" onclick="viewProblemDetail('${problem.id}', '${problem.title}', \`${problem.description}\`)">문제 풀기</button>
+                        <button class="btn btn-secondary" onclick="viewProblemDetail('${problem.id}', '${problem.title}', \`${problem.description}\`)">문제 보기</button>
+                    </div>
+                </div>
+            `;
         }
 
         async function loadTodayData() {
@@ -473,9 +348,14 @@
                 });
                 const data = await response.json();
                 
-                displayTeacherProblems(data.problems || []);
+                if (data.problems && data.problems.length > 0) {
+                    displayTeacherProblems(data.problems);
+                } else {
+                    document.getElementById('teacherProblemsContainer').innerHTML = '<div class="empty-state">출제된 문제가 없습니다.</div>';
+                }
             } catch (error) {
                 console.error('강사 문제 로드 실패:', error);
+                document.getElementById('teacherProblemsContainer').innerHTML = '<div class="empty-state">문제를 불러올 수 없습니다.</div>';
             }
         }
 
@@ -493,10 +373,6 @@
                                     📅 ${new Date(material.createdAt).toLocaleDateString()}
                                 </div>
                                 <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                    ${canPreview(material.fileType) ? 
-                                        `<button class="btn btn-warning" style="padding: 8px 16px; font-size: 0.8rem;" onclick="previewMaterial(${material.id}, '${material.title}', '${material.filePath}', '${material.fileType}')">미리보기</button>` : 
-                                        ''
-                                    }
                                     <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8rem;" onclick="downloadMaterial(${material.id})">
                                         다운로드
                                     </button>
@@ -509,99 +385,31 @@
                 container.innerHTML = '<div class="empty-state">공유된 자료가 없습니다.</div>';
             }
         }
-        
-        function canPreview(fileType) {
-            const previewableTypes = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'];
-            return previewableTypes.includes(fileType?.toLowerCase());
-        }
-        
-        function previewMaterial(id, title, filePath, fileType) {
-            const modal = document.createElement('div');
-            modal.style.cssText = `
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.9); display: flex; align-items: center; justify-content: center;
-                z-index: 10000; backdrop-filter: blur(10px);
-            `;
-            
-            const content = document.createElement('div');
-            content.style.cssText = `
-                background: linear-gradient(135deg, #1a2332 0%, #2d3748 100%);
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 20px; padding: 30px;
-                max-width: 90%; max-height: 90%; overflow: auto;
-                position: relative;
-            `;
-            
-            const closeBtn = document.createElement('button');
-            closeBtn.innerHTML = '✕';
-            closeBtn.style.cssText = `
-                position: absolute; top: 15px; right: 20px; background: none;
-                border: none; font-size: 24px; cursor: pointer; z-index: 1;
-                color: #4fc3f7; font-weight: bold;
-            `;
-            closeBtn.onclick = () => document.body.removeChild(modal);
-            
-            const titleDiv = document.createElement('h3');
-            titleDiv.textContent = title;
-            titleDiv.style.cssText = 'margin-bottom: 20px; color: #4fc3f7; font-size: 1.3rem;';
-            
-            let previewElement;
-            if (fileType.toLowerCase() === 'pdf') {
-                previewElement = document.createElement('iframe');
-                previewElement.src = filePath;
-                previewElement.style.cssText = 'width: 100%; height: 600px; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px;';
-            } else {
-                previewElement = document.createElement('img');
-                previewElement.src = filePath;
-                previewElement.style.cssText = 'max-width: 100%; height: auto; border-radius: 8px;';
-            }
-            
-            content.appendChild(closeBtn);
-            content.appendChild(titleDiv);
-            content.appendChild(previewElement);
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-            
-            modal.onclick = (e) => {
-                if (e.target === modal) document.body.removeChild(modal);
-            };
-        }
 
         function displayTeacherProblems(problems) {
             const container = document.getElementById('teacherProblemsContainer');
-            
-            if (problems && problems.length > 0) {
-                container.innerHTML = `
-                    <div class="problem-grid">
-                        ${problems.map(problem => `
-                            <div class="problem-card">
-                                <div class="problem-title">${problem.title}</div>
-                                <div class="problem-info">
-                                    <span class="problem-badge badge-difficulty-${problem.difficulty}">${problem.difficulty}</span>
-                                    <span class="problem-badge badge-type-${problem.type}">${getTypeKorean(problem.type)}</span>
-                                    <span class="problem-badge">⏱️ ${problem.timeLimit}분</span>
-                                    <span class="problem-badge">📊 ${problem.points}점</span>
-                                </div>
-                                <div class="problem-actions">
-                                    ${problem.submitted ? 
-                                        `<button class="btn btn-secondary" disabled>제출 완료</button>` :
-                                        `<button class="btn btn-primary" onclick="openSubmitModal(${problem.id}, '${problem.title}', '${problem.type}')">답안 제출</button>`
-                                    }
-                                    <button class="btn btn-secondary" onclick="viewProblem(${problem.id})">문제 보기</button>
-                                </div>
-                                ${problem.submitted && problem.graded ? `
-                                    <div class="graded-info">
-                                        <div class="score-display">점수: ${problem.score}점</div>
-                                        ${problem.feedback ? `<div class="feedback-text">피드백: ${problem.feedback}</div>` : ''}
-                                    </div>
-                                ` : ''}
+            container.innerHTML = `
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 25px;">
+                    ${problems.map(problem => `
+                        <div class="problem-card">
+                            <div class="problem-title">${problem.title}</div>
+                            <div class="problem-info">
+                                <span class="problem-badge badge-difficulty-${problem.difficulty}">${problem.difficulty}</span>
+                                <span class="problem-badge badge-type-${problem.type}">${getTypeKorean(problem.type)}</span>
+                                <span class="problem-badge">⏱️ ${problem.timeLimit}분</span>
+                                <span class="problem-badge">📊 ${problem.points}점</span>
                             </div>
-                        `).join('')}
-                    </div>
-                `;
-            } else {
-                container.innerHTML = '<div class="empty-state">출제된 문제가 없습니다.</div>';
-            }
+                            <div style="margin: 15px 0;">
+                                ${problem.submitted ? 
+                                    `<button class="btn btn-secondary" disabled>제출 완료</button>` :
+                                    `<button class="btn btn-primary" onclick="alert('답안 제출 기능은 준비 중입니다.')">답안 제출</button>`
+                                }
+                                <button class="btn btn-secondary" onclick="viewProblemDetail(${problem.id}, '${problem.title}', \`${problem.description}\`)">문제 보기</button>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
         }
 
         function getTypeKorean(type) {
@@ -612,115 +420,13 @@
             }
         }
 
-        function openSubmitModal(problemId, problemTitle, problemType) {
-            document.getElementById('submitProblemId').value = problemId;
-            document.getElementById('submitProblemTitle').value = `${problemTitle} (${getTypeKorean(problemType)})`;
-            document.getElementById('submitModal').style.display = 'flex';
-        }
-
-        function closeSubmitModal() {
-            document.getElementById('submitModal').style.display = 'none';
-            document.getElementById('submitForm').reset();
-            selectedSubmitFile = null;
-            resetSubmitUploadArea();
-        }
-
-        function resetSubmitUploadArea() {
-            const uploadArea = document.getElementById('submitUploadArea');
-            uploadArea.className = 'upload-area';
-            uploadArea.innerHTML = `
-                <p>📎 파일을 클릭하여 선택하세요</p>
-                <p style="font-size: 0.8rem; color: #78909c; margin-top: 10px;">
-                    지원 형식: PDF, DOC, DOCX, HWP, TXT, 이미지, 소스코드 파일 등
-                </p>
-            `;
+        function viewProblemDetail(problemId, title, description) {
+            alert(`문제: ${title}\n\n${description}\n\n문제 상세보기 모달은 준비 중입니다.`);
         }
 
         function downloadMaterial(materialId) {
             window.open(`/api/student/materials/${materialId}/download`, '_blank');
         }
-
-        function viewProblem(problemId) {
-            alert('문제 상세보기 기능은 준비 중입니다.');
-        }
-
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
-
-        // 파일 선택 이벤트
-        document.getElementById('submitUploadArea').addEventListener('click', function() {
-            document.getElementById('submitFileInput').click();
-        });
-
-        document.getElementById('submitFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                selectedSubmitFile = file;
-                const uploadArea = document.getElementById('submitUploadArea');
-                uploadArea.className = 'upload-area file-selected';
-                uploadArea.innerHTML = `
-                    <p>✅ 선택된 파일: ${file.name}</p>
-                    <p>📏 크기: ${formatFileSize(file.size)}</p>
-                `;
-            }
-        });
-
-        // 답안 제출
-        document.getElementById('submitForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData();
-            formData.append('problemId', document.getElementById('submitProblemId').value);
-            
-            const answerText = document.getElementById('submitAnswer').value;
-            if (answerText) {
-                formData.append('answer', answerText);
-            }
-            
-            if (selectedSubmitFile) {
-                formData.append('file', selectedSubmitFile);
-            }
-            
-            // 텍스트와 파일 중 하나는 반드시 있어야 함
-            if (!answerText && !selectedSubmitFile) {
-                alert('텍스트 답안을 작성하거나 파일을 첨부해주세요.');
-                return;
-            }
-            
-            const submitBtn = document.getElementById('submitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '제출 중...';
-            
-            try {
-                const response = await fetch('/api/student/submit-answer', {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    },
-                    body: formData
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('답안이 성공적으로 제출되었습니다.');
-                    closeSubmitModal();
-                    loadTeacherProblems(); // 새로고침
-                } else {
-                    alert('제출 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '제출하기';
-            }
-        });
 
         function logout() {
             if (confirm('로그아웃 하시겠습니까?')) {
@@ -729,14 +435,6 @@
             }
         }
 
-        // 모달 외부 클릭시 닫기
-        document.getElementById('submitModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeSubmitModal();
-            }
-        });
-
-        // 현재 날짜 표시
         function updateCurrentDate() {
             const now = new Date();
             const options = { 
@@ -748,10 +446,10 @@
             document.getElementById('currentDate').textContent = now.toLocaleDateString('ko-KR', options);
         }
 
-        // 페이지 로드시 실행
         document.addEventListener('DOMContentLoaded', function() {
             updateCurrentDate();
             loadProfile();
+            loadAiProblem();
             loadTodayData();
             loadTeacherProblems();
         });
