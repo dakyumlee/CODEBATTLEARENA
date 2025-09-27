@@ -59,7 +59,7 @@
         }
         
         .main-container {
-            max-width: 1000px;
+            max-width: 1400px;
             margin: 0 auto;
             padding: 30px;
             height: calc(100vh - 100px);
@@ -131,6 +131,8 @@
             padding: 15px 20px;
             border-radius: 18px;
             position: relative;
+            word-wrap: break-word;
+            white-space: pre-wrap;
         }
         
         .message.user .message-content {
@@ -156,6 +158,7 @@
             justify-content: center;
             font-weight: 600;
             font-size: 0.8rem;
+            flex-shrink: 0;
         }
         
         .message.user .message-avatar {
@@ -191,6 +194,7 @@
             resize: none;
             max-height: 120px;
             min-height: 44px;
+            font-family: inherit;
         }
         
         .chat-input:focus {
@@ -266,6 +270,29 @@
             margin-bottom: 15px;
         }
         
+        .quick-questions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .quick-question {
+            background: rgba(26, 31, 54, 0.8);
+            border: 1px solid rgba(144, 205, 244, 0.3);
+            border-radius: 12px;
+            padding: 15px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: center;
+        }
+        
+        .quick-question:hover {
+            background: rgba(66, 153, 225, 0.2);
+            border-color: #90cdf4;
+            transform: translateY(-2px);
+        }
+        
         @keyframes fadeIn {
             from {
                 opacity: 0;
@@ -304,12 +331,34 @@
         .chat-messages::-webkit-scrollbar-thumb:hover {
             background: rgba(144, 205, 244, 0.5);
         }
+        
+        .message-content code {
+            background: rgba(26, 31, 54, 0.8);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 0.9em;
+        }
+        
+        .message-content pre {
+            background: rgba(26, 31, 54, 0.8);
+            padding: 12px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 8px 0;
+            border: 1px solid rgba(144, 205, 244, 0.3);
+        }
+        
+        .message-content pre code {
+            background: none;
+            padding: 0;
+        }
     </style>
 </head>
 <body>
     <div class="header">
         <div class="header-content">
-            <div class="logo">CodeBattleArena 학생</div>
+            <div class="logo">CodeBattleArena</div>
             <nav class="nav-menu">
                 <a href="/student" class="nav-item">대시보드</a>
                 <a href="/student/today" class="nav-item">오늘의 학습</a>
@@ -323,19 +372,34 @@
     </div>
 
     <div class="main-container">
-        <h1 class="page-title">🤖 AI 튜터</h1>
+        <h1 class="page-title">🤖 AI 코딩 튜터</h1>
         
         <div class="chat-container">
             <div class="chat-header">
-                <div class="chat-title">AI 코딩 튜터</div>
-                <div class="chat-subtitle">궁금한 것이 있으면 언제든지 물어보세요!</div>
+                <div class="chat-title">GPT-4o Mini 튜터</div>
+                <div class="chat-subtitle">프로그래밍 질문을 자유롭게 해보세요!</div>
             </div>
             
             <div class="chat-messages" id="chatMessages">
                 <div class="welcome-message">
-                    <h3>안녕하세요! AI 튜터입니다</h3>
+                    <h3>안녕하세요! AI 코딩 튜터입니다</h3>
                     <p>프로그래밍에 관한 질문이나 학습에 도움이 필요한 것이 있으면 언제든지 말씀해주세요.<br>
                     코드 리뷰, 알고리즘 설명, 디버깅 도움 등 무엇이든 도와드릴게요!</p>
+                    
+                    <div class="quick-questions">
+                        <div class="quick-question" onclick="sendQuickQuestion('자바 기초 문법을 알려주세요')">
+                            📚 자바 기초 문법
+                        </div>
+                        <div class="quick-question" onclick="sendQuickQuestion('배열과 리스트의 차이점은 무엇인가요?')">
+                            🔍 배열 vs 리스트
+                        </div>
+                        <div class="quick-question" onclick="sendQuickQuestion('반복문 사용법을 예시와 함께 설명해주세요')">
+                            🔄 반복문 사용법
+                        </div>
+                        <div class="quick-question" onclick="sendQuickQuestion('객체지향 프로그래밍이란 무엇인가요?')">
+                            🎯 객체지향 개념
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -365,13 +429,25 @@
             const messageDiv = document.createElement('div');
             messageDiv.className = `message ${isUser ? 'user' : 'ai'}`;
             
+            const formattedContent = isUser ? content : formatAIResponse(content);
+            
             messageDiv.innerHTML = `
                 <div class="message-avatar">${isUser ? 'U' : 'AI'}</div>
-                <div class="message-content">${content}</div>
+                <div class="message-content">${formattedContent}</div>
             `;
             
             chatMessages.appendChild(messageDiv);
             scrollToBottom();
+        }
+
+        function formatAIResponse(content) {
+            // 코드 블록 포맷팅
+            content = content.replace(/```(\w+)?\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+            // 인라인 코드 포맷팅
+            content = content.replace(/`([^`]+)`/g, '<code>$1</code>');
+            // 줄바꿈 처리
+            content = content.replace(/\n/g, '<br>');
+            return content;
         }
 
         function showTypingIndicator() {
@@ -386,7 +462,7 @@
                 <div class="message-avatar">AI</div>
                 <div class="message-content">
                     <div class="typing-indicator">
-                        <span>AI가 답변을 작성하고 있습니다</span>
+                        <span>답변을 작성하고 있습니다</span>
                         <div class="typing-dots">
                             <div class="typing-dot"></div>
                             <div class="typing-dot"></div>
@@ -420,6 +496,12 @@
         async function sendMessage(message) {
             if (!message.trim()) return;
             
+            // 환영 메시지 제거
+            const welcomeMessage = document.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.remove();
+            }
+            
             addMessage(message, true);
             messageInput.value = '';
             adjustTextareaHeight();
@@ -443,6 +525,8 @@
                 
                 if (data.response) {
                     addMessage(data.response);
+                } else if (data.error) {
+                    addMessage('죄송합니다. ' + data.error);
                 } else {
                     addMessage('죄송합니다. 현재 AI 서비스에 문제가 있습니다. 잠시 후 다시 시도해주세요.');
                 }
@@ -453,6 +537,10 @@
             } finally {
                 sendButton.disabled = false;
             }
+        }
+
+        function sendQuickQuestion(question) {
+            sendMessage(question);
         }
 
         chatForm.addEventListener('submit', (e) => {
@@ -477,17 +565,6 @@
                 window.location.href = '/';
             }
         }
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const welcomeMessage = document.querySelector('.welcome-message');
-            if (welcomeMessage) {
-                welcomeMessage.remove();
-            }
-            
-            setTimeout(() => {
-                addMessage('안녕하세요! 저는 AI 코딩 튜터입니다. 프로그래밍에 관한 질문이나 학습에 도움이 필요한 것이 있으면 언제든지 말씀해주세요!');
-            }, 500);
-        });
     </script>
 </body>
 </html>

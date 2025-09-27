@@ -31,42 +31,111 @@ public class AuthController {
             Optional<User> userOpt = userRepository.findByEmail(request.getEmail());
             
             if (userOpt.isEmpty()) {
-                return Map.of("success", false, "message", "사용자를 찾을 수 없습니다.");
-            }
-            
-            User user = userOpt.get();
-            
+        String redirectUrl;
+        switch (user.getRole()) {
+            case ADMIN:
+                redirectUrl = "/admin";
+                break;
+            case TEACHER:
+                redirectUrl = "/teacher";
+                break;
+            case STUDENT:
+            default:
+                redirectUrl = "/student";
+                break;
+        }
+        
+        return Map.of(
+            "success", true,
+            "token", token,
+            "redirectUrl", redirectUrl,
+            "user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString()
+            )
+        );            
             if (!passwordEncoder.matches(request.getPassword(), user.getPassword())) {
-                return Map.of("success", false, "message", "비밀번호가 올바르지 않습니다.");
-            }
-            
-            user.setOnlineStatus(true);
-            user.setLastActivity(LocalDateTime.now());
+        String redirectUrl;
+        switch (user.getRole()) {
+            case ADMIN:
+                redirectUrl = "/admin";
+                break;
+            case TEACHER:
+                redirectUrl = "/teacher";
+                break;
+            case STUDENT:
+            default:
+                redirectUrl = "/student";
+                break;
+        }
+        
+        return Map.of(
+            "success", true,
+            "token", token,
+            "redirectUrl", redirectUrl,
+            "user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString()
+            )
+        );            user.setLastActivity(LocalDateTime.now());
             userRepository.save(user);
             
             String token = jwtUtil.generateToken(user.getEmail());
             
-            return Map.of(
-                "success", true,
-                "token", token,
-                "user", Map.of(
-                    "id", user.getId(),
-                    "name", user.getName(),
-                    "email", user.getEmail(),
-                    "role", user.getRole().toString()
-                )
-            );
-        } catch (Exception e) {
-            return Map.of("success", false, "message", "로그인 중 오류가 발생했습니다: " + e.getMessage());
+        String redirectUrl;
+        switch (user.getRole()) {
+            case ADMIN:
+                redirectUrl = "/admin";
+                break;
+            case TEACHER:
+                redirectUrl = "/teacher";
+                break;
+            case STUDENT:
+            default:
+                redirectUrl = "/student";
+                break;
         }
-    }
-
-    @PostMapping("/register")
-    public Map<String, Object> register(@RequestBody RegisterRequest request) {
-        try {
-            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
-                return Map.of("success", false, "message", "이미 존재하는 이메일입니다.");
-            }
+        
+        return Map.of(
+            "success", true,
+            "token", token,
+            "redirectUrl", redirectUrl,
+            "user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString()
+            )
+        );        } catch (Exception e) {
+        String redirectUrl;
+        switch (user.getRole()) {
+            case ADMIN:
+                redirectUrl = "/admin";
+                break;
+            case TEACHER:
+                redirectUrl = "/teacher";
+                break;
+            case STUDENT:
+            default:
+                redirectUrl = "/student";
+                break;
+        }
+        
+        return Map.of(
+            "success", true,
+            "token", token,
+            "redirectUrl", redirectUrl,
+            "user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString()
+            )
+        );            }
 
             User user = new User();
             user.setName(request.getName());
@@ -78,10 +147,31 @@ public class AuthController {
 
             userRepository.save(user);
 
-            return Map.of("success", true, "message", "회원가입이 완료되었습니다.");
-        } catch (Exception e) {
-            return Map.of("success", false, "message", "회원가입 중 오류가 발생했습니다: " + e.getMessage());
+        String redirectUrl;
+        switch (user.getRole()) {
+            case ADMIN:
+                redirectUrl = "/admin";
+                break;
+            case TEACHER:
+                redirectUrl = "/teacher";
+                break;
+            case STUDENT:
+            default:
+                redirectUrl = "/student";
+                break;
         }
+        
+        return Map.of(
+            "success", true,
+            "token", token,
+            "redirectUrl", redirectUrl,
+            "user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString()
+            )
+        );        }
     }
 
     @PostMapping("/logout")
@@ -100,10 +190,31 @@ public class AuthController {
                 }
             }
             
-            return Map.of("success", true, "message", "로그아웃되었습니다.");
-        } catch (Exception e) {
-            return Map.of("success", false, "message", "로그아웃 중 오류가 발생했습니다.");
+        String redirectUrl;
+        switch (user.getRole()) {
+            case ADMIN:
+                redirectUrl = "/admin";
+                break;
+            case TEACHER:
+                redirectUrl = "/teacher";
+                break;
+            case STUDENT:
+            default:
+                redirectUrl = "/student";
+                break;
         }
+        
+        return Map.of(
+            "success", true,
+            "token", token,
+            "redirectUrl", redirectUrl,
+            "user", Map.of(
+                "id", user.getId(),
+                "name", user.getName(),
+                "email", user.getEmail(),
+                "role", user.getRole().toString()
+            )
+        );        }
     }
 
     public static class LoginRequest {
