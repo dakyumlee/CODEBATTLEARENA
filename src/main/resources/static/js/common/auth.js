@@ -22,9 +22,16 @@ class AuthManager {
                     name: data.user.name
                 });
                 
-                setTimeout(() => {
-                    this.redirectByRole();
-                }, 100);
+                const role = data.user.role;
+                if (role === 'STUDENT') {
+                    window.location.href = '/student/today';
+                } else if (role === 'TEACHER') {
+                    window.location.href = '/teacher/dashboard';
+                } else if (role === 'ADMIN') {
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    window.location.href = '/';
+                }
                 
                 return data;
             }
