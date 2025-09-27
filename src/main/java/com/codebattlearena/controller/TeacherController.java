@@ -50,7 +50,7 @@ public class TeacherController {
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
 
-    private final Path fileStorageLocation = Paths.get("src/main/resources/uploads").toAbsolutePath().normalize();
+    private final Path fileStorageLocation = Paths.get(System.getProperty("java.io.tmpdir"), "uploads").toAbsolutePath().normalize();
 
     public TeacherController() {
         try {
