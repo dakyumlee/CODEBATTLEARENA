@@ -32,3 +32,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     @Query("SELECT u FROM User u WHERE u.groupId = :groupId AND u.role = 'STUDENT'")
     List<User> findStudentsByGroupId(@Param("groupId") Long groupId);
 }
+
+    long countByRole(UserRole role);
+    long countByOnlineStatusTrue();
+    List<User> findAllByOrderByCreatedAtDesc();
+    List<User> findByRoleAndGroupIdIsNull(UserRole role);

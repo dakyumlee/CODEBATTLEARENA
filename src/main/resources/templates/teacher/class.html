@@ -14,7 +14,7 @@
         
         body {
             font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, #f0f8ff 0%, #e6f3ff 100%);
             min-height: 100vh;
             color: #333;
         }
@@ -23,7 +23,8 @@
             background: rgba(255, 255, 255, 0.95);
             backdrop-filter: blur(10px);
             padding: 20px 30px;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.05);
+            border-bottom: 1px solid #e3f2fd;
         }
         
         .header-content {
@@ -37,7 +38,7 @@
         .logo {
             font-size: 1.5rem;
             font-weight: 700;
-            color: #667eea;
+            color: #2196f3;
         }
         
         .nav-menu {
@@ -54,7 +55,7 @@
         }
         
         .nav-item:hover, .nav-item.active {
-            background: #667eea;
+            background: #2196f3;
             color: white;
         }
         
@@ -67,88 +68,31 @@
         .page-title {
             font-size: 2.5rem;
             font-weight: 700;
-            color: white;
+            color: #1976d2;
             margin-bottom: 30px;
             text-align: center;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }
         
-        .tab-container {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .tab-header {
-            display: flex;
-            background: #f8f9fa;
-        }
-        
-        .tab-button {
-            flex: 1;
-            padding: 20px;
-            background: none;
-            border: none;
-            font-size: 1.1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            color: #666;
-        }
-        
-        .tab-button.active {
+        .section-card {
             background: white;
-            color: #667eea;
-            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
-        }
-        
-        .tab-content {
+            border-radius: 16px;
             padding: 30px;
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        .form-section {
-            background: #f8f9fa;
-            border-radius: 12px;
-            padding: 25px;
             margin-bottom: 30px;
+            box-shadow: 0 4px 20px rgba(33, 150, 243, 0.1);
+            border: 1px solid #e3f2fd;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
         }
         
         .section-title {
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             font-weight: 600;
-            margin-bottom: 20px;
-            color: #333;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 1rem;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: #667eea;
-            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+            color: #1976d2;
         }
         
         .btn {
@@ -163,94 +107,211 @@
         }
         
         .btn-primary {
-            background: #667eea;
+            background: #2196f3;
             color: white;
         }
         
         .btn-primary:hover {
-            background: #5a6fd8;
+            background: #1976d2;
             transform: translateY(-1px);
         }
         
         .btn-success {
-            background: #28a745;
+            background: #4caf50;
             color: white;
         }
         
         .btn-success:hover {
-            background: #218838;
+            background: #388e3c;
         }
         
         .btn-warning {
-            background: #ffc107;
-            color: #212529;
+            background: #ff9800;
+            color: white;
         }
         
         .btn-warning:hover {
-            background: #e0a800;
+            background: #f57c00;
         }
         
-        .form-row {
+        .btn-danger {
+            background: #f44336;
+            color: white;
+        }
+        
+        .btn-danger:hover {
+            background: #d32f2f;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .materials-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
-        }
-        
-        .created-items {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
             margin-top: 20px;
         }
         
-        .item-card {
-            background: #f8f9fa;
-            border: 1px solid #e9ecef;
-            border-radius: 8px;
-            padding: 15px;
+        .material-card {
+            background: linear-gradient(135deg, #f8fafe 0%, #e8f4f8 100%);
+            border: 1px solid #bbdefb;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .material-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 8px;
+        }
+        
+        .material-info {
+            color: #666;
+            font-size: 0.9rem;
             margin-bottom: 15px;
         }
         
-        .item-title {
+        .material-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+        }
+        
+        .problems-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        
+        .problems-table th,
+        .problems-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e3f2fd;
+        }
+        
+        .problems-table th {
+            background: #f5faff;
             font-weight: 600;
-            color: #333;
-            margin-bottom: 5px;
+            color: #1976d2;
         }
         
-        .item-meta {
-            color: #666;
-            font-size: 0.9rem;
+        .difficulty-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
         }
         
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 12px 16px;
-            border-radius: 8px;
-            margin-top: 15px;
+        .difficulty-easy {
+            background: rgba(76, 175, 80, 0.2);
+            color: #4caf50;
+        }
+        
+        .difficulty-medium {
+            background: rgba(255, 152, 0, 0.2);
+            color: #ff9800;
+        }
+        
+        .difficulty-hard {
+            background: rgba(244, 67, 54, 0.2);
+            color: #f44336;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
             display: none;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
         }
         
-        .example-section {
-            background: #e7f3ff;
-            border-left: 4px solid #007bff;
-            padding: 15px;
-            margin-top: 15px;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .example-title {
-            font-weight: 600;
-            color: #007bff;
-            margin-bottom: 10px;
-        }
-        
-        .example-content {
-            font-family: 'Courier New', monospace;
+        .modal-content {
             background: white;
-            padding: 10px;
-            border-radius: 4px;
-            margin-top: 10px;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1976d2;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #bbdefb;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #2196f3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        
+        .upload-area {
+            border: 2px dashed #bbdefb;
+            border-radius: 8px;
+            padding: 40px;
+            text-align: center;
+            color: #666;
+            transition: all 0.2s;
+        }
+        
+        .upload-area:hover {
+            border-color: #2196f3;
+            background: #f5faff;
+        }
+        
+        .upload-area.dragover {
+            border-color: #2196f3;
+            background: #e3f2fd;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #666;
+            padding: 40px;
         }
     </style>
 </head>
@@ -270,205 +331,297 @@
     <div class="main-container">
         <h1 class="page-title">수업 관리</h1>
         
-        <div class="tab-container">
-            <div class="tab-header">
-                <button class="tab-button active" onclick="switchTab('problems')">문제 출제</button>
-                <button class="tab-button" onclick="switchTab('quiz')">퀴즈 생성</button>
-                <button class="tab-button" onclick="switchTab('exam')">시험 출제</button>
-            </div>
-            
-            <!-- 문제 출제 탭 -->
-            <div id="problems" class="tab-content active">
-                <div class="form-section">
-                    <h3 class="section-title">코딩 문제 출제</h3>
-                    <form id="problemForm">
-                        <div class="form-group">
-                            <label class="form-label">문제 제목</label>
-                            <input type="text" name="title" class="form-control" placeholder="예: 두 수의 합 구하기" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">문제 설명</label>
-                            <textarea name="description" class="form-control" rows="4" 
-                                placeholder="문제에 대한 자세한 설명을 작성하세요..." required></textarea>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">난이도</label>
-                                <select name="difficulty" class="form-control" required>
-                                    <option value="하">하 (초급)</option>
-                                    <option value="중">중 (중급)</option>
-                                    <option value="상">상 (고급)</option>
-                                </select>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">제한시간 (분)</label>
-                                <input type="number" name="timeLimit" class="form-control" value="30" min="5" max="180" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">예제 입력</label>
-                                <textarea name="exampleInput" class="form-control" rows="3" 
-                                    placeholder="5 3"></textarea>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">예제 출력</label>
-                                <textarea name="exampleOutput" class="form-control" rows="3" 
-                                    placeholder="8"></textarea>
-                            </div>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-primary">문제 출제하기</button>
-                    </form>
-                    
-                    <div class="success-message" id="problemSuccess">
-                        문제가 성공적으로 출제되었습니다! 학생들에게 알림이 전송되었습니다.
-                    </div>
-                </div>
-                
-                <div class="example-section">
-                    <div class="example-title">💡 문제 출제 예시</div>
-                    <div><strong>제목:</strong> 두 수의 합</div>
-                    <div><strong>설명:</strong> 두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하세요.</div>
-                    <div class="example-content">
-                        입력: 첫째 줄에 A와 B가 주어진다. (1 ≤ A, B ≤ 1000)<br>
-                        출력: 첫째 줄에 A+B를 출력한다.
-                    </div>
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">학습 자료 관리</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="showUploadModal()">자료 업로드</button>
+                    <button class="btn btn-success" onclick="refreshMaterials()">새로고침</button>
                 </div>
             </div>
             
-            <!-- 퀴즈 생성 탭 -->
-            <div id="quiz" class="tab-content">
-                <div class="form-section">
-                    <h3 class="section-title">퀴즈 생성</h3>
-                    <form id="quizForm">
-                        <div class="form-group">
-                            <label class="form-label">퀴즈 제목</label>
-                            <input type="text" name="title" class="form-control" placeholder="예: 자바 기초 개념 퀴즈" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">질문</label>
-                            <textarea name="question" class="form-control" rows="3" 
-                                placeholder="퀴즈 질문을 작성하세요..." required></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">제한시간 (분)</label>
-                            <input type="number" name="timeLimit" class="form-control" value="10" min="1" max="60" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">답안 옵션 (한 줄에 하나씩)</label>
-                            <textarea name="options" class="form-control" rows="4" 
-                                placeholder="1. 옵션 1&#10;2. 옵션 2&#10;3. 옵션 3&#10;4. 옵션 4"></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">정답 번호</label>
-                            <select name="correctAnswer" class="form-control" required>
-                                <option value="1">1번</option>
-                                <option value="2">2번</option>
-                                <option value="3">3번</option>
-                                <option value="4">4번</option>
-                            </select>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-success">퀴즈 생성하기</button>
-                    </form>
-                    
-                    <div class="success-message" id="quizSuccess">
-                        퀴즈가 성공적으로 생성되었습니다! 학생들에게 알림이 전송되었습니다.
-                    </div>
-                </div>
-                
-                <div class="example-section">
-                    <div class="example-title">💡 퀴즈 생성 예시</div>
-                    <div><strong>제목:</strong> 자바 변수 타입 퀴즈</div>
-                    <div><strong>질문:</strong> 자바에서 정수를 저장하는 기본 데이터 타입은?</div>
-                    <div class="example-content">
-                        1. String<br>
-                        2. int<br>
-                        3. double<br>
-                        4. boolean
-                    </div>
+            <div id="materialsContainer">
+                <div class="empty-state">자료를 불러오는 중...</div>
+            </div>
+        </div>
+        
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">문제/퀴즈/시험 관리</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="showCreateProblemModal()">문제 출제</button>
+                    <button class="btn btn-warning" onclick="showCreateQuizModal()">퀴즈 생성</button>
+                    <button class="btn btn-danger" onclick="showCreateExamModal()">시험 생성</button>
                 </div>
             </div>
             
-            <!-- 시험 출제 탭 -->
-            <div id="exam" class="tab-content">
-                <div class="form-section">
-                    <h3 class="section-title">시험 출제</h3>
-                    <form id="examForm">
-                        <div class="form-group">
-                            <label class="form-label">시험 제목</label>
-                            <input type="text" name="title" class="form-control" placeholder="예: 자바 기초 중간고사" required>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">시험 안내사항</label>
-                            <textarea name="instructions" class="form-control" rows="5" 
-                                placeholder="시험에 대한 안내사항을 작성하세요..." required></textarea>
-                        </div>
-                        
-                        <div class="form-row">
-                            <div class="form-group">
-                                <label class="form-label">시험 시간 (분)</label>
-                                <input type="number" name="timeLimit" class="form-control" value="90" min="30" max="300" required>
-                            </div>
-                            
-                            <div class="form-group">
-                                <label class="form-label">만점</label>
-                                <input type="number" name="totalPoints" class="form-control" value="100" min="50" max="200" required>
-                            </div>
-                        </div>
-                        
-                        <div class="form-group">
-                            <label class="form-label">출제 문제 수</label>
-                            <input type="number" name="questionCount" class="form-control" value="10" min="5" max="30" required>
-                        </div>
-                        
-                        <button type="submit" class="btn btn-warning">시험 출제하기</button>
-                    </form>
-                    
-                    <div class="success-message" id="examSuccess">
-                        시험이 성공적으로 출제되었습니다! 학생들에게 알림이 전송되었습니다.
-                    </div>
-                </div>
-                
-                <div class="example-section">
-                    <div class="example-title">💡 시험 출제 예시</div>
-                    <div><strong>제목:</strong> 자바 프로그래밍 중간고사</div>
-                    <div><strong>안내사항:</strong></div>
-                    <div class="example-content">
-                        1. 시험 시간: 90분<br>
-                        2. 총 10문제 (객관식 5문제, 주관식 5문제)<br>
-                        3. 부정행위 시 0점 처리<br>
-                        4. 문제에 대한 질문은 시험 중 불가
-                    </div>
-                </div>
+            <div id="problemsContainer">
+                <div class="empty-state">문제를 불러오는 중...</div>
+            </div>
+        </div>
+        
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">채점 대기</h2>
+                <button class="btn btn-success" onclick="refreshSubmissions()">새로고침</button>
+            </div>
+            
+            <div id="submissionsContainer">
+                <div class="empty-state">제출된 답안이 없습니다.</div>
             </div>
         </div>
     </div>
 
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">자료 업로드</h3>
+            <form id="uploadForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">제목</label>
+                    <input type="text" name="title" class="form-control" placeholder="자료 제목" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">설명</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="자료에 대한 설명"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">파일</label>
+                    <div class="upload-area" id="uploadArea">
+                        <p>파일을 끌어다 놓거나 클릭하여 선택하세요</p>
+                        <input type="file" name="file" id="fileInput" style="display: none;" accept=".pdf,.ppt,.pptx,.doc,.docx,.txt,.zip">
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeUploadModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">업로드</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="createProblemModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">문제 출제</h3>
+            <form id="createProblemForm">
+                <div class="form-group">
+                    <label class="form-label">문제 제목</label>
+                    <input type="text" name="title" class="form-control" placeholder="문제 제목" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">문제 설명</label>
+                    <textarea name="description" class="form-control" rows="6" placeholder="문제 내용을 자세히 설명하세요" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">난이도</label>
+                    <select name="difficulty" class="form-control" required>
+                        <option value="">선택하세요</option>
+                        <option value="하">하</option>
+                        <option value="중">중</option>
+                        <option value="상">상</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">문제 유형</label>
+                    <select name="type" class="form-control" required>
+                        <option value="">선택하세요</option>
+                        <option value="PROBLEM">일반 문제</option>
+                        <option value="QUIZ">퀴즈</option>
+                        <option value="EXAM">시험</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">제한 시간 (분)</label>
+                    <input type="number" name="timeLimit" class="form-control" value="60" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">배점</label>
+                    <input type="number" name="points" class="form-control" value="100" min="1">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeCreateProblemModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">출제</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
-        function switchTab(tabName) {
-            // 모든 탭 버튼과 콘텐츠 비활성화
-            document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
-            
-            // 선택된 탭 활성화
-            event.target.classList.add('active');
-            document.getElementById(tabName).classList.add('active');
+        async function loadMaterials() {
+            try {
+                const response = await fetch('/api/teacher/materials', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById('materialsContainer');
+                
+                if (data.materials && data.materials.length > 0) {
+                    container.innerHTML = `
+                        <div class="materials-grid">
+                            ${data.materials.map(material => `
+                                <div class="material-card">
+                                    <div class="material-title">${material.title}</div>
+                                    <div class="material-info">
+                                        크기: ${formatFileSize(material.fileSize)}<br>
+                                        다운로드: ${material.downloadCount || 0}회<br>
+                                        업로드: ${new Date(material.createdAt).toLocaleDateString()}
+                                    </div>
+                                    <div class="material-actions">
+                                        <button class="btn btn-primary btn-small" onclick="downloadMaterial(${material.id})">다운로드</button>
+                                        <button class="btn btn-danger btn-small" onclick="deleteMaterial(${material.id})">삭제</button>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="empty-state">업로드된 자료가 없습니다.</div>';
+                }
+            } catch (error) {
+                console.error('자료 로드 실패:', error);
+                document.getElementById('materialsContainer').innerHTML = '<div class="empty-state">자료를 불러올 수 없습니다.</div>';
+            }
         }
 
-        // 문제 출제 폼 제출
-        document.getElementById('problemForm').addEventListener('submit', async (e) => {
+        async function loadProblems() {
+            try {
+                const response = await fetch('/api/teacher/problems', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                const data = await response.json();
+                
+                const container = document.getElementById('problemsContainer');
+                
+                if (data.problems && data.problems.length > 0) {
+                    container.innerHTML = `
+                        <table class="problems-table">
+                            <thead>
+                                <tr>
+                                    <th>제목</th>
+                                    <th>유형</th>
+                                    <th>난이도</th>
+                                    <th>제한시간</th>
+                                    <th>배점</th>
+                                    <th>출제일</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.problems.map(problem => `
+                                    <tr>
+                                        <td>${problem.title}</td>
+                                        <td>${problem.type || 'PROBLEM'}</td>
+                                        <td><span class="difficulty-badge difficulty-${getDifficultyClass(problem.difficulty)}">${problem.difficulty}</span></td>
+                                        <td>${problem.timeLimit}분</td>
+                                        <td>${problem.points}점</td>
+                                        <td>${new Date(problem.createdAt).toLocaleDateString()}</td>
+                                        <td>
+                                            <button class="btn btn-warning btn-small" onclick="editProblem(${problem.id})">수정</button>
+                                            <button class="btn btn-danger btn-small" onclick="deleteProblem(${problem.id})">삭제</button>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="empty-state">출제된 문제가 없습니다.</div>';
+                }
+            } catch (error) {
+                console.error('문제 로드 실패:', error);
+                document.getElementById('problemsContainer').innerHTML = '<div class="empty-state">문제를 불러올 수 없습니다.</div>';
+            }
+        }
+
+        function getDifficultyClass(difficulty) {
+            switch(difficulty) {
+                case '하': return 'easy';
+                case '중': return 'medium';
+                case '상': return 'hard';
+                default: return 'easy';
+            }
+        }
+
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadModal').style.display = 'flex';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+            document.getElementById('uploadForm').reset();
+        }
+
+        function showCreateProblemModal() {
+            document.getElementById('createProblemModal').style.display = 'flex';
+        }
+
+        function closeCreateProblemModal() {
+            document.getElementById('createProblemModal').style.display = 'none';
+            document.getElementById('createProblemForm').reset();
+        }
+
+        function showCreateQuizModal() {
+            alert('퀴즈 생성 기능은 개발 중입니다.');
+        }
+
+        function showCreateExamModal() {
+            alert('시험 생성 기능은 개발 중입니다.');
+        }
+
+        function refreshMaterials() {
+            loadMaterials();
+        }
+
+        function refreshSubmissions() {
+            alert('채점 대기 기능은 개발 중입니다.');
+        }
+
+        function downloadMaterial(id) {
+            window.open(`/api/teacher/materials/${id}/download`, '_blank');
+        }
+
+        function deleteMaterial(id) {
+            if (confirm('정말 이 자료를 삭제하시겠습니까?')) {
+                // 삭제 API 호출
+                alert('자료 삭제 기능은 개발 중입니다.');
+            }
+        }
+
+        function editProblem(id) {
+            alert('문제 수정 기능은 개발 중입니다.');
+        }
+
+        function deleteProblem(id) {
+            if (confirm('정말 이 문제를 삭제하시겠습니까?')) {
+                // 삭제 API 호출
+                alert('문제 삭제 기능은 개발 중입니다.');
+            }
+        }
+
+        document.getElementById('uploadArea').addEventListener('click', function() {
+            document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('uploadArea').innerHTML = `<p>선택된 파일: ${file.name}</p>`;
+            }
+        });
+
+        document.getElementById('createProblemForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData(e.target);
@@ -476,13 +629,13 @@
                 title: formData.get('title'),
                 description: formData.get('description'),
                 difficulty: formData.get('difficulty'),
-                timeLimit: parseInt(formData.get('timeLimit')),
-                exampleInput: formData.get('exampleInput'),
-                exampleOutput: formData.get('exampleOutput')
+                type: formData.get('type'),
+                timeLimit: formData.get('timeLimit'),
+                points: formData.get('points')
             };
 
             try {
-                const response = await fetch('/api/teacher/problem', {
+                const response = await fetch('/api/teacher/problems', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
@@ -494,91 +647,11 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    document.getElementById('problemSuccess').style.display = 'block';
-                    e.target.reset();
-                    setTimeout(() => {
-                        document.getElementById('problemSuccess').style.display = 'none';
-                    }, 5000);
+                    alert('문제가 성공적으로 출제되었습니다.');
+                    closeCreateProblemModal();
+                    loadProblems();
                 } else {
                     alert('문제 출제 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        // 퀴즈 생성 폼 제출
-        document.getElementById('quizForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const quizData = {
-                title: formData.get('title'),
-                question: formData.get('question'),
-                timeLimit: parseInt(formData.get('timeLimit')),
-                options: formData.get('options'),
-                correctAnswer: parseInt(formData.get('correctAnswer'))
-            };
-
-            try {
-                const response = await fetch('/api/teacher/quiz', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    },
-                    body: JSON.stringify(quizData)
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('quizSuccess').style.display = 'block';
-                    e.target.reset();
-                    setTimeout(() => {
-                        document.getElementById('quizSuccess').style.display = 'none';
-                    }, 5000);
-                } else {
-                    alert('퀴즈 생성 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        // 시험 출제 폼 제출
-        document.getElementById('examForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const examData = {
-                title: formData.get('title'),
-                instructions: formData.get('instructions'),
-                timeLimit: parseInt(formData.get('timeLimit')),
-                totalPoints: parseInt(formData.get('totalPoints')),
-                questionCount: parseInt(formData.get('questionCount'))
-            };
-
-            try {
-                const response = await fetch('/api/teacher/exam', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    },
-                    body: JSON.stringify(examData)
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    document.getElementById('examSuccess').style.display = 'block';
-                    e.target.reset();
-                    setTimeout(() => {
-                        document.getElementById('examSuccess').style.display = 'none';
-                    }, 5000);
-                } else {
-                    alert('시험 출제 실패: ' + result.message);
                 }
             } catch (error) {
                 alert('오류가 발생했습니다: ' + error.message);
@@ -591,6 +664,23 @@
                 window.location.href = '/';
             }
         }
+
+        document.getElementById('uploadModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeUploadModal();
+            }
+        });
+
+        document.getElementById('createProblemModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateProblemModal();
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            loadMaterials();
+            loadProblems();
+        });
     </script>
 </body>
 </html>
