@@ -265,3 +265,28 @@ public class StudentController {
         return response;
     }
 }
+
+    @GetMapping("/profile")
+    public Map<String, Object> getProfile(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null) {
+                return Map.of("error", "User not found");
+            }
+            
+            Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", user.getId());
+            userInfo.put("name", user.getName());
+            userInfo.put("email", user.getEmail());
+            userInfo.put("role", user.getRole().toString());
+            
+            return Map.of("user", userInfo);
+        } catch (Exception e) {
+            return Map.of("error", "Failed to load profile: " + e.getMessage());
+        }
+    }
