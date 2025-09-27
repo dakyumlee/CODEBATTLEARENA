@@ -2,9 +2,16 @@ package com.codebattlearena.controller;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 @Controller
 public class PageController {
+
+    @GetMapping("/test")
+    @ResponseBody
+    public String test() {
+        return "페이지 컨트롤러 작동 중!";
+    }
 
     @GetMapping("/")
     public String index() {
@@ -24,30 +31,5 @@ public class PageController {
     @GetMapping("/admin/dashboard")
     public String adminDashboard() {
         return "admin/dashboard";
-    }
-
-    @GetMapping("/student/ai-tutor")
-    public String studentAiTutor() {
-        return "student/ai-tutor";
-    }
-
-    @GetMapping("/student/practice")
-    public String studentPractice() {
-        return "student/practice";
-    }
-
-    @GetMapping("/student/notes")
-    public String studentNotes() {
-        return "student/notes";
-    }
-
-    @GetMapping("/teacher/class")
-    public String teacherClass() {
-        return "teacher/class";
-    }
-
-    @GetMapping("/teacher/grades")
-    public String teacherGrades() {
-        return "teacher/grades";
     }
 }

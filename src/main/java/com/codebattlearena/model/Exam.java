@@ -1,4 +1,4 @@
-package main.java.com.codebattlearena.model;
+package com.codebattlearena.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;

@@ -20,6 +20,10 @@ spring:
 server:
   port: 8080
 
+jwt:
+  secret: codebattlearena-secret-key-2025-very-long-and-secure-key
+  expiration: 86400000
+
 logging:
   level:
     org.springframework.messaging: DEBUG
