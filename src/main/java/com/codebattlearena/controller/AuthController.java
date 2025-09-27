@@ -1,11 +1,11 @@
 package com.codebattlearena.controller;
 
-import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.User;
 import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import jakarta.servlet.http.HttpSession;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -15,9 +15,6 @@ public class AuthController {
 
     @Autowired
     private UserRepository userRepository;
-
-    @Autowired
-    private JwtUtil jwtUtil;
 
     public static class LoginRequest {
         private String email;
@@ -65,7 +62,7 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public Map<String, Object> login(@RequestBody LoginRequest request) {
+    public Map<String, Object> login(@RequestBody LoginRequest request, HttpSession session) {
         try {
             User user = userRepository.findByEmail(request.getEmail()).orElse(null);
             
@@ -73,12 +70,13 @@ public class AuthController {
                 return Map.of("success", false, "message", "이메일 또는 비밀번호가 올바르지 않습니다.");
             }
             
-            String token = jwtUtil.generateToken(user.getEmail());
+            session.setAttribute("userId", user.getId());
+            session.setAttribute("userRole", user.getRole().toString());
+            session.setAttribute("userName", user.getName());
             
             return Map.of(
                 "success", true,
                 "message", "로그인 성공",
-                "token", token,
                 "user", Map.of(
                     "id", user.getId(),
                     "email", user.getEmail(),
@@ -89,5 +87,11 @@ public class AuthController {
         } catch (Exception e) {
             return Map.of("success", false, "message", "로그인 실패: " + e.getMessage());
         }
+    }
+
+    @PostMapping("/logout")
+    public Map<String, Object> logout(HttpSession session) {
+        session.invalidate();
+        return Map.of("success", true, "message", "로그아웃 되었습니다.");
     }
 }
