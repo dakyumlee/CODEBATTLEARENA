@@ -10,6 +10,12 @@ public class Material {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column(name = "teacher_id", nullable = false)
+    private Long teacherId;
+    
+    @Column(name = "group_id")
+    private Long groupId;
+    
     @Column(nullable = false)
     private String title;
     
@@ -24,17 +30,27 @@ public class Material {
     @Column(name = "file_size")
     private Long fileSize;
     
-    private String url;
+    @Column(name = "original_filename")
+    private String originalFilename;
     
-    @Column(name = "downloads_count")
-    private Integer downloadsCount = 0;
+    @Column(name = "download_count")
+    private Integer downloadCount = 0;
     
     @Column(name = "created_at")
     private LocalDateTime createdAt;
-
-    // Getters and Setters
+    
+    public Material() {
+        this.createdAt = LocalDateTime.now();
+    }
+    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
+    
+    public Long getTeacherId() { return teacherId; }
+    public void setTeacherId(Long teacherId) { this.teacherId = teacherId; }
+    
+    public Long getGroupId() { return groupId; }
+    public void setGroupId(Long groupId) { this.groupId = groupId; }
     
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
@@ -51,11 +67,11 @@ public class Material {
     public Long getFileSize() { return fileSize; }
     public void setFileSize(Long fileSize) { this.fileSize = fileSize; }
     
-    public String getUrl() { return url; }
-    public void setUrl(String url) { this.url = url; }
+    public String getOriginalFilename() { return originalFilename; }
+    public void setOriginalFilename(String originalFilename) { this.originalFilename = originalFilename; }
     
-    public Integer getDownloadsCount() { return downloadsCount; }
-    public void setDownloadsCount(Integer downloadsCount) { this.downloadsCount = downloadsCount; }
+    public Integer getDownloadCount() { return downloadCount; }
+    public void setDownloadCount(Integer downloadCount) { this.downloadCount = downloadCount; }
     
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }

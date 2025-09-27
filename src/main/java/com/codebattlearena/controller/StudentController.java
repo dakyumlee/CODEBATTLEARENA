@@ -9,7 +9,6 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/student")
@@ -23,9 +22,6 @@ public class StudentController {
     
     @Autowired
     private StudyNoteRepository studyNoteRepository;
-    
-    @Autowired
-    private MaterialRepository materialRepository;
     
     @Autowired
     private JwtUtil jwtUtil;
@@ -70,80 +66,61 @@ public class StudentController {
         }
     }
 
-    @GetMapping("/ai-problem")
-    public Map<String, Object> getAIProblem(HttpServletRequest request) {
+    @GetMapping("/today")
+    public Map<String, Object> getTodayData(HttpServletRequest request) {
         try {
             Long userId = getUserIdFromRequest(request);
             if (userId == null) {
                 return Map.of("error", "Unauthorized");
             }
             
-            Map<String, Object> problem = new HashMap<>();
-            problem.put("id", 1);
-            problem.put("title", "두 수의 합 구하기");
-            problem.put("description", "두 정수 a, b를 입력받아 합을 출력하는 프로그램을 작성하세요.");
-            problem.put("difficulty", "하");
+            Map<String, Object> aiProblem = new HashMap<>();
+            aiProblem.put("id", "ai_001");
+            aiProblem.put("title", "두 수의 합 구하기");
+            aiProblem.put("description", "두 정수 a, b를 입력받아 a+b를 출력하는 프로그램을 작성하시오.");
+            aiProblem.put("difficulty", "하");
+            aiProblem.put("points", 10);
             
-            return Map.of("problem", problem);
+            return Map.of("aiProblem", aiProblem);
         } catch (Exception e) {
-            return Map.of("error", "Failed to load AI problem: " + e.getMessage());
+            return Map.of("error", "Failed to load today data: " + e.getMessage());
         }
     }
 
-    @GetMapping("/materials")
-    public Map<String, Object> getMaterials(HttpServletRequest request) {
+    @GetMapping("/teacher-problems")
+    public List<Map<String, Object>> getTeacherProblems(HttpServletRequest request) {
         try {
-            Long userId = getUserIdFromRequest(request);
-            if (userId == null) {
-                return Map.of("error", "Unauthorized");
-            }
-            
-            List<Material> materials = materialRepository.findAll();
-            return Map.of("materials", materials);
-        } catch (Exception e) {
-            return Map.of("error", "Failed to load materials: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/problems")
-    public Map<String, Object> getProblems(HttpServletRequest request) {
-        try {
-            Long userId = getUserIdFromRequest(request);
-            if (userId == null) {
-                return Map.of("error", "Unauthorized");
-            }
-            
             List<Problem> problems = problemRepository.findAll();
+            List<Map<String, Object>> problemList = new ArrayList<>();
             
-            List<Map<String, Object>> problemData = problems.stream().map(problem -> {
-                Map<String, Object> data = new HashMap<>();
-                data.put("id", problem.getId());
-                data.put("title", problem.getTitle());
-                data.put("description", problem.getDescription());
-                data.put("difficulty", problem.getDifficulty());
-                data.put("status", "PENDING");
-                data.put("feedback", null);
-                return data;
-            }).collect(Collectors.toList());
+            for (Problem problem : problems) {
+                Map<String, Object> problemData = new HashMap<>();
+                problemData.put("id", problem.getId());
+                problemData.put("title", problem.getTitle());
+                problemData.put("description", problem.getDescription());
+                problemData.put("difficulty", problem.getDifficulty());
+                problemData.put("timeLimit", problem.getTimeLimit());
+                problemData.put("points", problem.getPoints());
+                problemList.add(problemData);
+            }
             
-            return Map.of("problems", problemData);
+            return problemList;
         } catch (Exception e) {
-            return Map.of("error", "Failed to load problems: " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 
     @GetMapping("/notes")
-    public Map<String, Object> getNotes(HttpServletRequest request) {
+    public List<StudyNote> getNotes(HttpServletRequest request) {
         try {
             Long userId = getUserIdFromRequest(request);
             if (userId == null) {
-                return Map.of("error", "Unauthorized");
+                return new ArrayList<>();
             }
             
-            List<StudyNote> notes = studyNoteRepository.findByUserIdOrderByCreatedAtDesc(userId);
-            return Map.of("notes", notes);
+            return studyNoteRepository.findByUserIdOrderByCreatedAtDesc(userId);
         } catch (Exception e) {
-            return Map.of("error", "Failed to load notes: " + e.getMessage());
+            return new ArrayList<>();
         }
     }
 
@@ -162,11 +139,11 @@ public class StudentController {
             note.setCreatedAt(LocalDateTime.now());
             note.setUpdatedAt(LocalDateTime.now());
             
-            StudyNote savedNote = studyNoteRepository.save(note);
+            studyNoteRepository.save(note);
             
-            return Map.of("success", true, "message", "노트가 저장되었습니다.", "note", savedNote);
+            return Map.of("success", true, "message", "노트가 저장되었습니다.");
         } catch (Exception e) {
-            return Map.of("success", false, "message", "노트 저장 실패: " + e.getMessage());
+            return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
 
@@ -187,11 +164,11 @@ public class StudentController {
             note.setContent(noteData.get("content"));
             note.setUpdatedAt(LocalDateTime.now());
             
-            StudyNote savedNote = studyNoteRepository.save(note);
+            studyNoteRepository.save(note);
             
-            return Map.of("success", true, "message", "노트가 수정되었습니다.", "note", savedNote);
+            return Map.of("success", true, "message", "노트가 수정되었습니다.");
         } catch (Exception e) {
-            return Map.of("success", false, "message", "노트 수정 실패: " + e.getMessage());
+            return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
 
@@ -212,7 +189,7 @@ public class StudentController {
             
             return Map.of("success", true, "message", "노트가 삭제되었습니다.");
         } catch (Exception e) {
-            return Map.of("success", false, "message", "노트 삭제 실패: " + e.getMessage());
+            return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
 }

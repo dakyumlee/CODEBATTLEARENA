@@ -40,7 +40,14 @@ public class User {
         this.lastActivity = LocalDateTime.now();
     }
     
-    // Getters and Setters
+    public User(String email, String password, String name, UserRole role) {
+        this();
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.role = role;
+    }
+    
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
     

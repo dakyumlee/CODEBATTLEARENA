@@ -260,7 +260,14 @@
             <div class="section-card">
                 <h2 class="section-title">🤖 AI 추천 문제</h2>
                 <div id="aiProblemSection">
-                    <div class="empty-state">AI 문제를 불러오는 중...</div>
+                    <div class="ai-problem-card">
+                        <h3 class="problem-title">두 수의 합 구하기</h3>
+                        <p class="problem-description">두 정수 a, b를 입력받아 a+b를 출력하는 프로그램을 작성하시오.</p>
+                        <div class="problem-actions">
+                            <button class="btn-primary" onclick="solveAIProblem()">문제 풀기</button>
+                            <span class="points">+10점</span>
+                        </div>
+                    </div>
                 </div>
             </div>
             
@@ -280,7 +287,6 @@
         </div>
     </div>
 
-    <!-- 알림 모달 -->
     <div id="notificationModal" class="notification-modal">
         <div class="modal-content">
             <h3 id="modalTitle" class="modal-title">새 알림</h3>
@@ -303,10 +309,20 @@
             connectWebSocket();
         });
 
-        function loadUserInfo() {
-            const userName = localStorage.getItem('userName');
-            if (userName) {
-                document.getElementById('userName').textContent = userName + '님 환영합니다';
+        async function loadUserInfo() {
+            try {
+                const response = await fetch('/api/student/profile', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                const data = await response.json();
+                
+                if (data.user && data.user.name) {
+                    document.getElementById('userName').textContent = data.user.name + '님 환영합니다';
+                }
+            } catch (error) {
+                console.error('사용자 정보 로드 실패:', error);
             }
         }
         
@@ -346,46 +362,9 @@
         
         async function loadTodayContent() {
             await Promise.all([
-                loadAIProblem(),
                 loadMaterials(),
                 loadSubmissions()
             ]);
-        }
-        
-        async function loadAIProblem() {
-            try {
-                const response = await fetch('/api/student/today', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    }
-                });
-                const data = await response.json();
-                
-                const section = document.getElementById('aiProblemSection');
-                
-                if (data.aiProblem) {
-                    section.innerHTML = `
-                        <div class="ai-problem-card">
-                            <h3 class="problem-title">${data.aiProblem.title}</h3>
-                            <p class="problem-description">${data.aiProblem.description}</p>
-                            <div class="problem-actions">
-                                <button class="btn-primary" onclick="startAIProblem()">문제 풀기</button>
-                                <span class="points">+${data.aiProblem.points}점</span>
-                            </div>
-                        </div>
-                    `;
-                } else {
-                    <h3 style="color: #90cdf4; margin-bottom: 15px;">🤖 오늘의 AI 문제</h3>
-                    <div id="aiProblemSection">
-                        <div style="background: #1a365d; border: 1px solid #2b6cb0; border-radius: 12px; padding: 25px;">
-                            <h4 style="color: #90cdf4; margin-bottom: 10px;">두 수의 합 구하기</h4>
-                            <p style="color: #cbd5e0; margin-bottom: 15px;">두 정수 a, b를 입력받아 합을 출력하는 프로그램을 작성하세요.</p>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <button onclick="solveAIProblem()" style="padding: 12px 24px; background: #4299e1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">문제 풀기</button>
-                                <span style="color: #a0aec0;">난이도: 하</span>
-                            </div>
-                        </div>
-                    </div>            }
         }
         
         async function loadMaterials() {
@@ -426,8 +405,9 @@
         }
         
         function solveAIProblem() {
-            alert("AI 문제 풀이 기능은 개발 중입니다.");
+            window.location.href = '/student/ai-problem';
         }
+        
         function solveTeacherProblem(id, title, description, difficulty) {
             const problemData = {
                 id: id,
@@ -438,9 +418,6 @@
             
             localStorage.setItem("currentTeacherProblem", JSON.stringify(problemData));
             window.location.href = "/student/teacher-problem";
-        }        
-        function startAIProblem() {
-            window.location.href = '/student/ai-problem';
         }
         
         function logout() {
@@ -450,4 +427,3 @@
     </script>
 </body>
 </html>
-<script src="/js/common/student-websocket.js"></script>

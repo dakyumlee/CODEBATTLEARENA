@@ -14,12 +14,10 @@ import java.util.Optional;
 public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmail(String email);
     
-    @Query("SELECT u FROM User u WHERE u.role = :role AND u.groupId = :groupId")
+    @Query("SELECT u FROM User u WHERE u.groupId = :groupId AND u.role = 'STUDENT'")
     List<User> findStudentsByGroupId(@Param("groupId") Long groupId);
     
-    long countByRole(UserRole role);
-    long countByOnlineStatusTrue();
-    List<User> findAllByOrderByCreatedAtDesc();
     List<User> findByRoleAndGroupIdIsNull(UserRole role);
-    void deleteByEmail(String email);
+    
+    List<User> findByRole(UserRole role);
 }
