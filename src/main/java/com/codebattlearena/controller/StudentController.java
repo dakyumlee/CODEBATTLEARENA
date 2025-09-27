@@ -101,25 +101,6 @@ public class StudentController {
         }
     }
 
-    @GetMapping("/auth-check")
-    public Map<String, Object> checkAuth(HttpServletRequest request) {
-        try {
-            Long userId = getUserIdFromRequest(request);
-            if (userId == null) {
-                return Map.of("authenticated", false);
-            }
-            
-            User user = userRepository.findById(userId).orElse(null);
-            if (user == null || user.getRole() != UserRole.STUDENT) {
-                return Map.of("authenticated", false);
-            }
-            
-            return Map.of("authenticated", true, "userId", userId, "userName", user.getName());
-        } catch (Exception e) {
-            return Map.of("authenticated", false);
-        }
-    }
-
     @GetMapping("/today")
     public Map<String, Object> getTodayData(HttpServletRequest request) {
         try {
@@ -139,6 +120,7 @@ public class StudentController {
                 data.put("fileSize", material.getFileSize());
                 data.put("originalFilename", material.getOriginalFilename());
                 data.put("createdAt", material.getCreatedAt());
+                data.put("filePath", material.getFilePath());
                 return data;
             }).collect(Collectors.toList());
             
@@ -169,6 +151,50 @@ public class StudentController {
                     .build();
         } catch (Exception e) {
             return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    @GetMapping("/ai-problems")
+    public Map<String, Object> getAiProblems(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            List<Map<String, Object>> aiProblems = Arrays.asList(
+                Map.of(
+                    "id", "ai-1",
+                    "title", "배열의 최댓값 찾기",
+                    "description", "주어진 정수 배열에서 최댓값을 찾는 함수를 작성하세요.\n\n입력: [3, 1, 4, 1, 5, 9, 2, 6]\n출력: 9\n\n힌트: 반복문을 사용하여 배열을 순회하면서 최댓값을 찾아보세요.",
+                    "difficulty", "하",
+                    "category", "배열",
+                    "timeLimit", 30,
+                    "points", 100
+                ),
+                Map.of(
+                    "id", "ai-2", 
+                    "title", "문자열 뒤집기",
+                    "description", "주어진 문자열을 뒤집어 반환하는 함수를 작성하세요.\n\n입력: \"Hello\"\n출력: \"olleH\"\n\n힌트: 문자열의 끝에서부터 시작까지 역순으로 문자를 이어붙이면 됩니다.",
+                    "difficulty", "하",
+                    "category", "문자열",
+                    "timeLimit", 20,
+                    "points", 80
+                ),
+                Map.of(
+                    "id", "ai-3", 
+                    "title", "피보나치 수열",
+                    "description", "n번째 피보나치 수를 구하는 함수를 작성하세요.\n\n입력: 10\n출력: 55\n\n설명: 피보나치 수열은 0, 1, 1, 2, 3, 5, 8, 13, 21, 34, 55, ... 입니다.\n각 수는 앞의 두 수의 합으로 이루어집니다.",
+                    "difficulty", "중",
+                    "category", "DP",
+                    "timeLimit", 45,
+                    "points", 150
+                )
+            );
+            
+            return Map.of("success", true, "problems", aiProblems);
+        } catch (Exception e) {
+            return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
         }
     }
 
@@ -220,6 +246,55 @@ public class StudentController {
             return Map.of("problems", problemList);
         } catch (Exception e) {
             return Map.of("error", "Failed to load teacher problems: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/problem/{id}")
+    public Map<String, Object> getProblemDetail(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            Problem problem = problemRepository.findById(id).orElse(null);
+            if (problem == null) {
+                return Map.of("error", "문제를 찾을 수 없습니다.");
+            }
+            
+            Map<String, Object> problemData = new HashMap<>();
+            problemData.put("id", problem.getId());
+            problemData.put("title", problem.getTitle());
+            problemData.put("description", problem.getDescription());
+            problemData.put("difficulty", problem.getDifficulty());
+            problemData.put("timeLimit", problem.getTimeLimit());
+            problemData.put("points", problem.getPoints());
+            problemData.put("type", problem.getType());
+            problemData.put("createdAt", problem.getCreatedAt());
+            
+            if ("QUIZ".equals(problem.getType())) {
+                problemData.put("optionA", problem.getOptionA());
+                problemData.put("optionB", problem.getOptionB());
+                problemData.put("optionC", problem.getOptionC());
+                problemData.put("optionD", problem.getOptionD());
+            }
+            
+            Optional<Submission> submissionOpt = submissionRepository.findByUserIdAndProblemId(userId, problem.getId());
+            if (submissionOpt.isPresent()) {
+                Submission submission = submissionOpt.get();
+                problemData.put("submitted", true);
+                problemData.put("submissionAnswer", submission.getAnswer());
+                problemData.put("submissionScore", submission.getScore());
+                problemData.put("submissionFeedback", submission.getFeedback());
+                problemData.put("submissionStatus", submission.getStatus());
+                problemData.put("submittedAt", submission.getSubmittedAt());
+            } else {
+                problemData.put("submitted", false);
+            }
+            
+            return Map.of("success", true, "problem", problemData);
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "문제 상세 정보를 불러올 수 없습니다: " + e.getMessage());
         }
     }
 
