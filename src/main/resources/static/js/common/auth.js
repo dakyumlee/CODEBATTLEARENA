@@ -7,10 +7,14 @@ class AuthManager {
         })
         .then(response => response.json())
         .then(data => {
-            console.log('Full login response:', data);
+            console.log('전체 응답:', JSON.stringify(data, null, 2));
+            console.log('data.user:', data.user);
+            console.log('data.user.role:', data.user ? data.user.role : 'user 객체 없음');
             
             if (data.success) {
                 const role = data.user.role;
+                console.log('역할:', role);
+                
                 if (role === 'STUDENT') {
                     window.location.href = '/student/today';
                 } else if (role === 'TEACHER') {
@@ -18,7 +22,8 @@ class AuthManager {
                 } else if (role === 'ADMIN') {
                     window.location.href = '/admin/dashboard';
                 } else {
-                    window.location.href = '/';
+                    console.error('알 수 없는 역할:', role);
+                    window.location.href = '/student/today';
                 }
                 return data;
             }
