@@ -11,6 +11,10 @@ class AuthManager {
                 localStorage.setItem('authToken', data.token);
                 localStorage.setItem('userRole', data.user.role);
                 localStorage.setItem('userName', data.user.name);
+                
+                // 쿠키에도 토큰 저장 (페이지 이동용)
+                document.cookie = `authToken=${data.token}; path=/; max-age=86400`;
+                
                 window.location.href = data.redirectUrl;
                 return data;
             }
@@ -20,6 +24,7 @@ class AuthManager {
 
     static logout() {
         localStorage.clear();
+        document.cookie = 'authToken=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT';
         window.location.href = '/';
     }
 
