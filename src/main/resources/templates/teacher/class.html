@@ -132,6 +132,12 @@
             background: #e3f2fd;
         }
         
+        .upload-area.file-selected {
+            border-color: #4caf50;
+            background: #e8f5e8;
+            color: #2e7d32;
+        }
+        
         .difficulty-badge {
             padding: 4px 8px;
             border-radius: 20px;
@@ -253,6 +259,15 @@
         .type-problem { background: rgba(33, 150, 243, 0.2); color: #1976d2; }
         .type-quiz { background: rgba(255, 152, 0, 0.2); color: #f57c00; }
         .type-exam { background: rgba(244, 67, 54, 0.2); color: #d32f2f; }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; gap: 15px; }
+            .nav-menu { flex-wrap: wrap; }
+            .action-buttons { flex-direction: column; }
+            .materials-grid { grid-template-columns: 1fr; }
+            .main-container { padding: 15px; }
+            .modal-content { width: 95%; margin: 10px; }
+        }
     </style>
 </head>
 <body>
@@ -319,6 +334,7 @@
         </div>
     </div>
 
+    <!-- 자료 업로드 모달 -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <h3 class="modal-title">자료 업로드</h3>
@@ -334,18 +350,19 @@
                 <div class="form-group">
                     <label class="form-label">파일</label>
                     <div class="upload-area" id="uploadArea">
-                        <p>파일을 드래그하여 놓거나 클릭하여 선택하세요</p>
+                        <p>파일을 클릭하여 선택하세요</p>
                         <input type="file" name="file" id="fileInput" style="display: none;" accept=".pdf,.ppt,.pptx,.doc,.docx,.txt,.zip,.jpg,.jpeg,.png,.gif,.mp4,.avi,.mov,.mp3,.wav,.java,.js,.html,.css,.py,.cpp,.c">
                     </div>
                 </div>
                 <div class="modal-actions">
                     <button type="button" class="btn" onclick="closeUploadModal()">취소</button>
-                    <button type="submit" class="btn btn-primary">업로드</button>
+                    <button type="submit" class="btn btn-primary" id="uploadSubmitBtn">업로드</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- 문제 출제 모달 -->
     <div id="createProblemModal" class="modal">
         <div class="modal-content">
             <h3 class="modal-title">문제 출제</h3>
@@ -383,6 +400,7 @@
         </div>
     </div>
 
+    <!-- 퀴즈 생성 모달 -->
     <div id="createQuizModal" class="modal">
         <div class="modal-content">
             <h3 class="modal-title">퀴즈 생성 (4지선다)</h3>
@@ -437,6 +455,7 @@
         </div>
     </div>
 
+    <!-- 시험지 업로드 모달 -->
     <div id="createExamModal" class="modal">
         <div class="modal-content">
             <h3 class="modal-title">시험지 업로드</h3>
@@ -453,7 +472,7 @@
                     <label class="form-label">시험지 파일</label>
                     <div class="upload-area" id="examUploadArea">
                         <p>시험지 파일을 업로드하세요 (PDF, DOC, HWP 등)</p>
-                        <input type="file" name="examFile" id="examFileInput" style="display: none;" accept=".pdf,.doc,.docx,.hwp,.ppt,.pptx">
+                        <input type="file" name="file" id="examFileInput" style="display: none;" accept=".pdf,.doc,.docx,.hwp,.ppt,.pptx">
                     </div>
                 </div>
                 <div class="form-group">
@@ -472,6 +491,7 @@
         </div>
     </div>
 
+    <!-- 채점 모달 -->
     <div id="gradeModal" class="modal">
         <div class="modal-content">
             <h3 class="modal-title">답안 채점</h3>
@@ -509,9 +529,77 @@
         </div>
     </div>
 
+    <!-- 문제 수정 모달 -->
+    <div id="editProblemModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">문제 수정</h3>
+            <form id="editProblemForm">
+                <input type="hidden" id="editProblemId">
+                <div class="form-group">
+                    <label class="form-label">문제 제목</label>
+                    <input type="text" name="title" id="editProblemTitle" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">문제 설명</label>
+                    <textarea name="description" id="editProblemDescription" class="form-control" rows="6" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">난이도</label>
+                    <select name="difficulty" id="editProblemDifficulty" class="form-control" required>
+                        <option value="하">하</option>
+                        <option value="중">중</option>
+                        <option value="상">상</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">제한 시간 (분)</label>
+                    <input type="number" name="timeLimit" id="editProblemTimeLimit" class="form-control" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">배점</label>
+                    <input type="number" name="points" id="editProblemPoints" class="form-control" min="1">
+                </div>
+                <div id="editQuizOptions" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">선택지 A</label>
+                        <input type="text" name="optionA" id="editOptionA" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">선택지 B</label>
+                        <input type="text" name="optionB" id="editOptionB" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">선택지 C</label>
+                        <input type="text" name="optionC" id="editOptionC" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">선택지 D</label>
+                        <input type="text" name="optionD" id="editOptionD" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">정답</label>
+                        <select name="correctAnswer" id="editCorrectAnswer" class="form-control">
+                            <option value="A">A</option>
+                            <option value="B">B</option>
+                            <option value="C">C</option>
+                            <option value="D">D</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeEditProblemModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">수정 완료</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         let allSubmissions = [];
+        let allProblems = [];
         let currentFilter = 'ALL';
+        let selectedFile = null;
+        let selectedExamFile = null;
 
         async function loadMaterials() {
             try {
@@ -561,9 +649,10 @@
                 });
                 const data = await response.json();
                 
+                allProblems = data.problems || [];
                 const container = document.getElementById('problemsContainer');
                 
-                if (data.problems && data.problems.length > 0) {
+                if (allProblems.length > 0) {
                     container.innerHTML = `
                         <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
                             <thead>
@@ -578,7 +667,7 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                ${data.problems.map(problem => `
+                                ${allProblems.map(problem => `
                                     <tr>
                                         <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.title}</td>
                                         <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;"><span class="type-badge type-${(problem.type || 'PROBLEM').toLowerCase()}">${getTypeKorean(problem.type || 'PROBLEM')}</span></td>
@@ -620,10 +709,11 @@
                 console.error('제출물 로드 실패:', error);
                 document.getElementById('submissionsContainer').innerHTML = '<div class="empty-state">제출물을 불러올 수 없습니다.</div>';
             }
-        }function filterSubmissions(type) {
+        }
+
+        function filterSubmissions(type) {
             currentFilter = type;
             
-            // 탭 활성화
             document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
             event?.target?.classList.add('active') || document.querySelector(`[onclick="filterSubmissions('${type}')"]`).classList.add('active');
             
@@ -648,7 +738,7 @@
                             <div style="display: flex; gap: 10px; align-items: center;">
                                 <span class="status-badge status-${submission.status.toLowerCase()}">${submission.status === 'PENDING' ? '채점 대기' : '채점 완료'}</span>
                                 ${submission.status === 'PENDING' ? 
-                                    `<button class="btn btn-primary btn-small" onclick="openGradeModal(${submission.id}, '${submission.studentName}', '${submission.problemTitle}', '${submission.problemType || 'PROBLEM'}', \`${submission.answer.replace(/`/g, '\\`')}\`)">채점하기</button>` : 
+                                    `<button class="btn btn-primary btn-small" onclick="openGradeModal(${submission.id}, '${submission.studentName}', '${submission.problemTitle}', '${submission.problemType || 'PROBLEM'}', \`${submission.answer.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\`)">채점하기</button>` : 
                                     `<span style="color: #4caf50; font-weight: 600;">${submission.score}점</span>`
                                 }
                             </div>
@@ -660,6 +750,39 @@
             } else {
                 container.innerHTML = `<div class="empty-state">${type === 'ALL' ? '제출된 답안이 없습니다.' : getTypeKorean(type) + ' 제출물이 없습니다.'}</div>`;
             }
+        }
+
+        function editProblem(id) {
+            const problem = allProblems.find(p => p.id === id);
+            if (!problem) {
+                alert('문제 정보를 찾을 수 없습니다.');
+                return;
+            }
+            
+            document.getElementById('editProblemId').value = problem.id;
+            document.getElementById('editProblemTitle').value = problem.title;
+            document.getElementById('editProblemDescription').value = problem.description;
+            document.getElementById('editProblemDifficulty').value = problem.difficulty;
+            document.getElementById('editProblemTimeLimit').value = problem.timeLimit;
+            document.getElementById('editProblemPoints').value = problem.points;
+            
+            if (problem.type === 'QUIZ') {
+                document.getElementById('editQuizOptions').style.display = 'block';
+                document.getElementById('editOptionA').value = problem.optionA || '';
+                document.getElementById('editOptionB').value = problem.optionB || '';
+                document.getElementById('editOptionC').value = problem.optionC || '';
+                document.getElementById('editOptionD').value = problem.optionD || '';
+                document.getElementById('editCorrectAnswer').value = problem.correctAnswer || '';
+            } else {
+                document.getElementById('editQuizOptions').style.display = 'none';
+            }
+            
+            document.getElementById('editProblemModal').style.display = 'flex';
+        }
+
+        function closeEditProblemModal() {
+            document.getElementById('editProblemModal').style.display = 'none';
+            document.getElementById('editProblemForm').reset();
         }
 
         function getTypeKorean(type) {
@@ -695,6 +818,20 @@
         function closeUploadModal() {
             document.getElementById('uploadModal').style.display = 'none';
             document.getElementById('uploadForm').reset();
+            selectedFile = null;
+            resetUploadArea();
+        }
+
+        function resetUploadArea() {
+            const uploadArea = document.getElementById('uploadArea');
+            uploadArea.className = 'upload-area';
+            uploadArea.innerHTML = '<p>파일을 클릭하여 선택하세요</p>';
+        }
+
+        function resetExamUploadArea() {
+            const examUploadArea = document.getElementById('examUploadArea');
+            examUploadArea.className = 'upload-area';
+            examUploadArea.innerHTML = '<p>시험지 파일을 업로드하세요 (PDF, DOC, HWP 등)</p>';
         }
 
         function showCreateProblemModal() {
@@ -722,6 +859,8 @@
         function closeCreateExamModal() {
             document.getElementById('createExamModal').style.display = 'none';
             document.getElementById('createExamForm').reset();
+            selectedExamFile = null;
+            resetExamUploadArea();
         }
 
         function openGradeModal(submissionId, studentName, problemTitle, problemType, answer) {
@@ -796,7 +935,6 @@
             }
         }
 
-        // 파일 업로드 이벤트
         document.getElementById('uploadArea').addEventListener('click', function() {
             document.getElementById('fileInput').click();
         });
@@ -808,22 +946,39 @@
         document.getElementById('fileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                document.getElementById('uploadArea').innerHTML = `<p>선택된 파일: ${file.name}</p>`;
+                selectedFile = file;
+                const uploadArea = document.getElementById('uploadArea');
+                uploadArea.className = 'upload-area file-selected';
+                uploadArea.innerHTML = `<p>✓ 선택된 파일: ${file.name}</p><p>크기: ${formatFileSize(file.size)}</p>`;
             }
         });
 
         document.getElementById('examFileInput').addEventListener('change', function(e) {
             const file = e.target.files[0];
             if (file) {
-                document.getElementById('examUploadArea').innerHTML = `<p>선택된 파일: ${file.name}</p>`;
+                selectedExamFile = file;
+                const examUploadArea = document.getElementById('examUploadArea');
+                examUploadArea.className = 'upload-area file-selected';
+                examUploadArea.innerHTML = `<p>✓ 선택된 파일: ${file.name}</p><p>크기: ${formatFileSize(file.size)}</p>`;
             }
         });
 
-        // 폼 제출 이벤트
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
+            if (!selectedFile) {
+                alert('파일을 선택해주세요.');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('title', e.target.title.value);
+            formData.append('description', e.target.description.value);
+            formData.append('file', selectedFile);
+            
+            const submitBtn = document.getElementById('uploadSubmitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '업로드 중...';
             
             try {
                 const response = await fetch('/api/teacher/materials', {
@@ -845,6 +1000,9 @@
                 }
             } catch (error) {
                 alert('오류가 발생했습니다: ' + error.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = '업로드';
             }
         });
 
@@ -929,9 +1087,16 @@
         document.getElementById('createExamForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
+            if (!selectedExamFile) {
+                alert('시험지 파일을 선택해주세요.');
+                return;
+            }
             
-            // 시험지는 자료로 업로드
+            const formData = new FormData();
+            formData.append('title', e.target.title.value);
+            formData.append('description', e.target.description.value);
+            formData.append('file', selectedExamFile);
+            
             try {
                 const response = await fetch('/api/teacher/materials', {
                     method: 'POST',
@@ -990,6 +1155,53 @@
             }
         });
 
+        document.getElementById('editProblemForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const problemId = document.getElementById('editProblemId').value;
+            
+            const problemData = {
+                title: formData.get('title'),
+                description: formData.get('description'),
+                difficulty: formData.get('difficulty'),
+                timeLimit: formData.get('timeLimit'),
+                points: formData.get('points')
+            };
+            
+            if (document.getElementById('editQuizOptions').style.display !== 'none') {
+                problemData.optionA = formData.get('optionA');
+                problemData.optionB = formData.get('optionB');
+                problemData.optionC = formData.get('optionC');
+                problemData.optionD = formData.get('optionD');
+                problemData.correctAnswer = formData.get('correctAnswer');
+                problemData.type = 'QUIZ';
+            }
+
+            try {
+                const response = await fetch(`/api/teacher/problems/${problemId}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify(problemData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('문제가 성공적으로 수정되었습니다.');
+                    closeEditProblemModal();
+                    loadProblems();
+                } else {
+                    alert('문제 수정 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
+
         function logout() {
             if (confirm('로그아웃 하시겠습니까?')) {
                 localStorage.clear();
@@ -997,7 +1209,6 @@
             }
         }
 
-        // 모달 외부 클릭시 닫기
         document.querySelectorAll('.modal').forEach(modal => {
             modal.addEventListener('click', function(e) {
                 if (e.target === this) {

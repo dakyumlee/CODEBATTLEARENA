@@ -1,0 +1,64 @@
+<!-- 기존 모달들 뒤에 추가 -->
+<div id="editProblemModal" class="modal">
+    <div class="modal-content">
+        <h3 class="modal-title">문제 수정</h3>
+        <form id="editProblemForm">
+            <input type="hidden" id="editProblemId">
+            <div class="form-group">
+                <label class="form-label">문제 제목</label>
+                <input type="text" name="title" id="editProblemTitle" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label class="form-label">문제 설명</label>
+                <textarea name="description" id="editProblemDescription" class="form-control" rows="6" required></textarea>
+            </div>
+            <div class="form-group">
+                <label class="form-label">난이도</label>
+                <select name="difficulty" id="editProblemDifficulty" class="form-control" required>
+                    <option value="하">하</option>
+                    <option value="중">중</option>
+                    <option value="상">상</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label class="form-label">제한 시간 (분)</label>
+                <input type="number" name="timeLimit" id="editProblemTimeLimit" class="form-control" min="1">
+            </div>
+            <div class="form-group">
+                <label class="form-label">배점</label>
+                <input type="number" name="points" id="editProblemPoints" class="form-control" min="1">
+            </div>
+            <div id="editQuizOptions" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">선택지 A</label>
+                    <input type="text" name="optionA" id="editOptionA" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 B</label>
+                    <input type="text" name="optionB" id="editOptionB" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 C</label>
+                    <input type="text" name="optionC" id="editOptionC" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 D</label>
+                    <input type="text" name="optionD" id="editOptionD" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">정답</label>
+                    <select name="correctAnswer" id="editCorrectAnswer" class="form-control">
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn" onclick="closeEditProblemModal()">취소</button>
+                <button type="submit" class="btn btn-primary">수정 완료</button>
+            </div>
+        </form>
+    </div>
+</div>
