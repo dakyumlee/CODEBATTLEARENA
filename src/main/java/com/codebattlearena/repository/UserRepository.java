@@ -20,4 +20,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
     List<User> findByRoleAndGroupIdIsNull(UserRole role);
     
     List<User> findByRole(UserRole role);
+    
+    Long countByRole(UserRole role);
+    
+    Long countByOnlineStatusTrue();
+    
+    List<User> findAllByOrderByCreatedAtDesc();
 }

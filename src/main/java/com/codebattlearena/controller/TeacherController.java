@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -153,7 +154,7 @@ public class TeacherController {
         try {
             Long teacherId = getUserIdFromRequest(request);
             if (teacherId == null) {
-                return ResponseEntity.unauthorized().build();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
             Material material = materialRepository.findById(id).orElse(null);

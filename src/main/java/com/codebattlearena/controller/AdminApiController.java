@@ -5,13 +5,11 @@ import com.codebattlearena.model.User;
 import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/admin")
@@ -22,9 +20,6 @@ public class AdminApiController {
     
     @Autowired
     private JwtUtil jwtUtil;
-    
-    @Autowired
-    private PasswordEncoder passwordEncoder;
 
     private Long getUserIdFromRequest(HttpServletRequest request) {
         try {
@@ -51,30 +46,50 @@ public class AdminApiController {
                 return user != null && user.getRole() == UserRole.ADMIN;
             }
         } catch (Exception e) {
-            System.err.println("권한 확인 오류: " + e.getMessage());
+            System.err.println("관리자 권한 확인 오류: " + e.getMessage());
         }
         return false;
     }
 
+    public static class CreateUserRequest {
+        private String email;
+        private String password;
+        private String name;
+        private UserRole role;
+        
+        public String getEmail() { return email; }
+        public void setEmail(String email) { this.email = email; }
+        
+        public String getPassword() { return password; }
+        public void setPassword(String password) { this.password = password; }
+        
+        public String getName() { return name; }
+        public void setName(String name) { this.name = name; }
+        
+        public UserRole getRole() { return role; }
+        public void setRole(UserRole role) { this.role = role; }
+    }
+
     @GetMapping("/statistics")
-    public Map<String, Object> getStatistics(HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            return Map.of("error", "Unauthorized");
-        }
-
+    public Map<String, Object> getSystemStatistics(HttpServletRequest request) {
         try {
+            if (!isAdmin(request)) {
+                return Map.of("error", "Unauthorized");
+            }
+            
             long totalUsers = userRepository.count();
-            long totalStudents = userRepository.countByRole(UserRole.STUDENT);
-            long totalTeachers = userRepository.countByRole(UserRole.TEACHER);
+            long studentCount = userRepository.countByRole(UserRole.STUDENT);
+            long teacherCount = userRepository.countByRole(UserRole.TEACHER);
             long onlineUsers = userRepository.countByOnlineStatusTrue();
-
-            Map<String, Object> statistics = new HashMap<>();
-            statistics.put("totalUsers", totalUsers);
-            statistics.put("totalStudents", totalStudents);
-            statistics.put("totalTeachers", totalTeachers);
-            statistics.put("onlineUsers", onlineUsers);
-
-            return Map.of("statistics", statistics);
+            
+            Map<String, Object> stats = new HashMap<>();
+            stats.put("totalUsers", totalUsers);
+            stats.put("studentCount", studentCount);
+            stats.put("teacherCount", teacherCount);
+            stats.put("onlineUsers", onlineUsers);
+            stats.put("adminCount", totalUsers - studentCount - teacherCount);
+            
+            return Map.of("statistics", stats);
         } catch (Exception e) {
             return Map.of("error", "Failed to load statistics: " + e.getMessage());
         }
@@ -82,11 +97,11 @@ public class AdminApiController {
 
     @GetMapping("/users")
     public Map<String, Object> getAllUsers(HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            return Map.of("error", "Unauthorized");
-        }
-
         try {
+            if (!isAdmin(request)) {
+                return Map.of("error", "Unauthorized");
+            }
+            
             List<User> users = userRepository.findAllByOrderByCreatedAtDesc();
             
             List<Map<String, Object>> userData = users.stream().map(user -> {
@@ -99,8 +114,8 @@ public class AdminApiController {
                 data.put("onlineStatus", user.isOnlineStatus());
                 data.put("lastActivity", user.getLastActivity());
                 return data;
-            }).collect(Collectors.toList());
-
+            }).toList();
+            
             return Map.of("users", userData);
         } catch (Exception e) {
             return Map.of("error", "Failed to load users: " + e.getMessage());
@@ -108,107 +123,74 @@ public class AdminApiController {
     }
 
     @PostMapping("/users")
-    public Map<String, Object> createUser(@RequestBody CreateUserRequest request, HttpServletRequest httpRequest) {
-        if (!isAdmin(httpRequest)) {
-            return Map.of("success", false, "message", "Unauthorized");
-        }
-
+    public Map<String, Object> createUser(@RequestBody CreateUserRequest userRequest, HttpServletRequest request) {
         try {
-            if (userRepository.findByEmail(request.getEmail()).isPresent()) {
+            if (!isAdmin(request)) {
+                return Map.of("success", false, "message", "Unauthorized");
+            }
+            
+            if (userRepository.findByEmail(userRequest.getEmail()).isPresent()) {
                 return Map.of("success", false, "message", "이미 존재하는 이메일입니다.");
             }
-
+            
             User user = new User();
-            user.setName(request.getName());
-            user.setEmail(request.getEmail());
-            user.setPassword(passwordEncoder.encode(request.getPassword()));
-            user.setRole(UserRole.valueOf(request.getRole()));
+            user.setEmail(userRequest.getEmail());
+            user.setPassword(userRequest.getPassword());
+            user.setName(userRequest.getName());
+            user.setRole(userRequest.getRole());
             user.setCreatedAt(LocalDateTime.now());
-            user.setOnlineStatus(false);
-
-            User savedUser = userRepository.save(user);
-
-            return Map.of(
-                "success", true,
-                "message", "사용자가 성공적으로 생성되었습니다.",
-                "user", Map.of(
-                    "id", savedUser.getId(),
-                    "name", savedUser.getName(),
-                    "email", savedUser.getEmail(),
-                    "role", savedUser.getRole().toString()
-                )
-            );
+            
+            userRepository.save(user);
+            
+            return Map.of("success", true, "message", "사용자가 생성되었습니다.");
         } catch (Exception e) {
-            return Map.of("success", false, "message", "사용자 생성 실패: " + e.getMessage());
-        }
-    }
-
-    @PutMapping("/users/{id}/role")
-    public Map<String, Object> changeUserRole(@PathVariable Long id, @RequestBody Map<String, String> roleData, HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            return Map.of("success", false, "message", "Unauthorized");
-        }
-
-        try {
-            User user = userRepository.findById(id).orElse(null);
-            if (user == null) {
-                return Map.of("success", false, "message", "사용자를 찾을 수 없습니다.");
-            }
-
-            String newRole = roleData.get("role");
-            if (newRole == null || newRole.trim().isEmpty()) {
-                return Map.of("success", false, "message", "역할을 입력해주세요.");
-            }
-
-            try {
-                UserRole role = UserRole.valueOf(newRole.toUpperCase());
-                user.setRole(role);
-                userRepository.save(user);
-
-                return Map.of("success", true, "message", "역할이 성공적으로 변경되었습니다.");
-            } catch (IllegalArgumentException e) {
-                return Map.of("success", false, "message", "잘못된 역할입니다.");
-            }
-        } catch (Exception e) {
-            return Map.of("success", false, "message", "역할 변경 실패: " + e.getMessage());
+            return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
 
     @DeleteMapping("/users/{id}")
     public Map<String, Object> deleteUser(@PathVariable Long id, HttpServletRequest request) {
-        if (!isAdmin(request)) {
-            return Map.of("success", false, "message", "Unauthorized");
-        }
-
         try {
+            if (!isAdmin(request)) {
+                return Map.of("success", false, "message", "Unauthorized");
+            }
+            
             User user = userRepository.findById(id).orElse(null);
             if (user == null) {
                 return Map.of("success", false, "message", "사용자를 찾을 수 없습니다.");
             }
-
+            
+            if (user.getRole() == UserRole.ADMIN) {
+                return Map.of("success", false, "message", "관리자는 삭제할 수 없습니다.");
+            }
+            
             userRepository.delete(user);
+            
             return Map.of("success", true, "message", "사용자가 삭제되었습니다.");
         } catch (Exception e) {
-            return Map.of("success", false, "message", "사용자 삭제 실패: " + e.getMessage());
+            return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
 
-    public static class CreateUserRequest {
-        private String name;
-        private String email;
-        private String password;
-        private String role;
-
-        public String getName() { return name; }
-        public void setName(String name) { this.name = name; }
-
-        public String getEmail() { return email; }
-        public void setEmail(String email) { this.email = email; }
-
-        public String getPassword() { return password; }
-        public void setPassword(String password) { this.password = password; }
-
-        public String getRole() { return role; }
-        public void setRole(String role) { this.role = role; }
+    @PutMapping("/users/{id}/role")
+    public Map<String, Object> updateUserRole(@PathVariable Long id, @RequestBody Map<String, String> roleData, HttpServletRequest request) {
+        try {
+            if (!isAdmin(request)) {
+                return Map.of("success", false, "message", "Unauthorized");
+            }
+            
+            User user = userRepository.findById(id).orElse(null);
+            if (user == null) {
+                return Map.of("success", false, "message", "사용자를 찾을 수 없습니다.");
+            }
+            
+            String newRole = roleData.get("role");
+            user.setRole(UserRole.valueOf(newRole));
+            userRepository.save(user);
+            
+            return Map.of("success", true, "message", "역할이 업데이트되었습니다.");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "Error: " + e.getMessage());
+        }
     }
 }
