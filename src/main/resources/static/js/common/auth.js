@@ -9,8 +9,9 @@ class AuthManager {
         .then(data => {
             if (data.success) {
                 localStorage.setItem('authToken', data.token);
-                localStorage.setItem('userRole', data.role);
-                localStorage.setItem('userName', data.name);
+                localStorage.setItem('userRole', data.user.role);
+                localStorage.setItem('userName', data.user.name);
+                window.location.href = data.redirectUrl;
                 return data;
             }
             throw new Error(data.message);
