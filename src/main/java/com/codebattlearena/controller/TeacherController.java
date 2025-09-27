@@ -356,13 +356,14 @@ public class TeacherController {
 
             String fileName = System.currentTimeMillis() + "_" + originalFilename;
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
+            
+            Files.createDirectories(targetLocation.getParent());
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 
             Material material = new Material();
             material.setTeacherId(teacherId);
             material.setTitle(title);
             material.setDescription(description);
-            material.setFilePath("/api/teacher/materials/" + materialRepository.count() + "/download");
             material.setFileType(fileExtension);
             material.setFileSize(file.getSize());
             material.setOriginalFilename(originalFilename);
@@ -370,7 +371,7 @@ public class TeacherController {
             material.setCreatedAt(LocalDateTime.now());
 
             Material savedMaterial = materialRepository.save(material);
-            savedMaterial.setFilePath("/api/teacher/materials/" + savedMaterial.getId() + "/download");
+            savedMaterial.setFilePath("/api/teacher/materials/" + savedMaterial.getId() + "/download-fixed");
             materialRepository.save(savedMaterial);
 
             return Map.of("success", true, "message", "자료가 업로드되었습니다.");
@@ -382,8 +383,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/api/teacher/materials/{id}/download")
-    public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id, HttpSession session) {
+    @GetMapping("/api/teacher/materials/{id}/download-fixed")
+    public ResponseEntity<Resource> downloadMaterialFixed(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
@@ -395,27 +396,34 @@ public class TeacherController {
                 return ResponseEntity.notFound().build();
             }
 
+            if (material.getLocalFilePath() == null) {
+                return ResponseEntity.notFound().build();
+            }
+
             Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (resource.exists()) {
+            if (resource.exists() && resource.isReadable()) {
                 material.setDownloadCount(material.getDownloadCount() + 1);
                 materialRepository.save(material);
 
                 return ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_OCTET_STREAM)
                         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
+                        .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(resource.contentLength()))
                         .body(resource);
             } else {
                 return ResponseEntity.notFound().build();
             }
-        } catch (MalformedURLException ex) {
-            return ResponseEntity.badRequest().build();
+        } catch (Exception ex) {
+            System.err.println("Download error: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/api/teacher/materials/{id}/preview")
-    public ResponseEntity<Resource> previewMaterial(@PathVariable Long id, HttpSession session) {
+    @GetMapping("/api/teacher/materials/{id}/preview-file")
+    public ResponseEntity<Resource> previewFile(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
@@ -427,19 +435,71 @@ public class TeacherController {
                 return ResponseEntity.notFound().build();
             }
 
+            if (material.getLocalFilePath() == null) {
+                return ResponseEntity.notFound().build();
+            }
+
             Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
 
-            if (resource.exists()) {
+            if (resource.exists() && resource.isReadable()) {
+                String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
+                MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
+                
+                switch (fileType) {
+                    case "pdf":
+                        mediaType = MediaType.APPLICATION_PDF;
+                        break;
+                    case "jpg":
+                    case "jpeg":
+                        mediaType = MediaType.IMAGE_JPEG;
+                        break;
+                    case "png":
+                        mediaType = MediaType.IMAGE_PNG;
+                        break;
+                    case "gif":
+                        mediaType = MediaType.IMAGE_GIF;
+                        break;
+                }
+
                 return ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_PDF)
+                        .contentType(mediaType)
                         .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + material.getOriginalFilename() + "\"")
                         .body(resource);
             } else {
                 return ResponseEntity.notFound().build();
             }
-        } catch (MalformedURLException ex) {
-            return ResponseEntity.badRequest().build();
+        } catch (Exception ex) {
+            System.err.println("Preview error: " + ex.getMessage());
+            ex.printStackTrace();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @GetMapping("/teacher/materials/{id}/preview")
+    public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
+        Long teacherId = getUserIdFromSession(session);
+        if (teacherId == null) {
+            return "redirect:/";
+        }
+        
+        Material material = materialRepository.findById(id).orElse(null);
+        
+        if (material == null || !material.getTeacherId().equals(teacherId)) {
+            model.addAttribute("error", "자료를 찾을 수 없습니다.");
+            return "teacher/preview-error";
+        }
+        
+        material.setFilePath("/api/teacher/materials/" + material.getId() + "/preview-file");
+        model.addAttribute("material", material);
+        
+        String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
+        if (fileType.equals("pdf")) {
+            return "teacher/preview-pdf";
+        } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
+            return "teacher/preview-image";
+        } else {
+            return "teacher/preview-general";
         }
     }
 
@@ -470,53 +530,7 @@ public class TeacherController {
             return Map.of("success", false, "message", "삭제 실패: " + e.getMessage());
         }
     }
-    @GetMapping("/api/teacher/materials/{id}/download-fixed")
-public ResponseEntity<Resource> downloadMaterialFixed(@PathVariable Long id, HttpSession session) {
-    try {
-        Long teacherId = getUserIdFromSession(session);
-        if (teacherId == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-        }
 
-        Material material = materialRepository.findById(id).orElse(null);
-        if (material == null || !material.getTeacherId().equals(teacherId)) {
-            return ResponseEntity.notFound().build();
-        }
-
-        Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
-        Resource resource = new UrlResource(filePath.toUri());
-
-        if (resource.exists()) {
-            material.setDownloadCount(material.getDownloadCount() + 1);
-            materialRepository.save(material);
-
-            String contentType = "application/octet-stream";
-            String fileExtension = material.getFileType();
-            if (fileExtension != null) {
-                switch (fileExtension.toLowerCase()) {
-                    case "pdf": contentType = "application/pdf"; break;
-                    case "jpg":
-                    case "jpeg": contentType = "image/jpeg"; break;
-                    case "png": contentType = "image/png"; break;
-                    case "gif": contentType = "image/gif"; break;
-                    case "doc": contentType = "application/msword"; break;
-                    case "docx": contentType = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"; break;
-                    case "ppt": contentType = "application/vnd.ms-powerpoint"; break;
-                    case "pptx": contentType = "application/vnd.openxmlformats-officedocument.presentationml.presentation"; break;
-                }
-            }
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType(contentType))
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
-                    .body(resource);
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-    } catch (Exception ex) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-    }
-}
     @GetMapping("/api/teacher/problems")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getMyProblems(HttpSession session) {
@@ -741,35 +755,6 @@ public ResponseEntity<Resource> downloadMaterialFixed(@PathVariable Long id, Htt
             return Map.of("success", true, "message", "채점이 완료되었습니다.");
         } catch (Exception e) {
             return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/teacher/materials/{id}/preview")
-    public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
-        Object userId = session.getAttribute("userId");
-        Object userRole = session.getAttribute("userRole");
-        
-        if (userId == null || !"TEACHER".equals(userRole)) {
-            return "redirect:/";
-        }
-        
-        Long teacherId = (Long) userId;
-        Material material = materialRepository.findById(id).orElse(null);
-        
-        if (material == null || !material.getTeacherId().equals(teacherId)) {
-            model.addAttribute("error", "자료를 찾을 수 없습니다.");
-            return "teacher/preview-error";
-        }
-        
-        model.addAttribute("material", material);
-        
-        String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
-        if (fileType.equals("pdf")) {
-            return "teacher/preview-pdf";
-        } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
-            return "teacher/preview-image";
-        } else {
-            return "teacher/preview-general";
         }
     }
 

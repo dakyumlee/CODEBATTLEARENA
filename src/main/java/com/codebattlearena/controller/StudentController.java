@@ -408,6 +408,33 @@ public class StudentController {
             return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
+    @GetMapping("/student/materials/{id}/preview")
+public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
+    Object userId = session.getAttribute("userId");
+    Object userRole = session.getAttribute("userRole");
+    
+    if (userId == null || !"STUDENT".equals(userRole)) {
+        return "redirect:/";
+    }
+    
+    Material material = materialRepository.findById(id).orElse(null);
+    
+    if (material == null) {
+        model.addAttribute("error", "자료를 찾을 수 없습니다.");
+        return "student/preview-error";
+    }
+    
+    model.addAttribute("material", material);
+    
+    String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
+    if (fileType.equals("pdf")) {
+        return "student/preview-pdf";
+    } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
+        return "student/preview-image";
+    } else {
+        return "student/preview-general";
+    }
+}
 
     @DeleteMapping("/notes/{id}")
     public Map<String, Object> deleteNote(@PathVariable Long id, HttpSession session) {

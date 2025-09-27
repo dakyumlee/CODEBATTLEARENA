@@ -266,13 +266,12 @@
     </div>
 
     <script>
+        let currentProblem = null;
+        let selectedAnswer = null;
+
         async function loadProfile() {
             try {
-                const response = await fetch('/api/student/profile', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    }
-                });
+                const response = await fetch('/api/student/profile');
                 const data = await response.json();
                 
                 if (data.name) {
@@ -285,11 +284,7 @@
 
         async function loadAiProblem() {
             try {
-                const response = await fetch('/api/student/ai-problems/today', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    }
-                });
+                const response = await fetch('/api/student/ai-problems/today');
                 const data = await response.json();
                 
                 if (data.problem) {
@@ -315,8 +310,8 @@
                         <span class="problem-badge">📊 ${problem.points}점</span>
                     </div>
                     <div style="margin: 15px 0;">
-                        <button class="btn btn-primary" onclick="viewProblemDetail('${problem.id}', '${problem.title}', \`${problem.description}\`)">문제 풀기</button>
-                        <button class="btn btn-secondary" onclick="viewProblemDetail('${problem.id}', '${problem.title}', \`${problem.description}\`)">문제 보기</button>
+                        <button class="btn btn-primary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}')">문제 풀기</button>
+                        <button class="btn btn-secondary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}')">문제 보기</button>
                     </div>
                 </div>
             `;
@@ -324,11 +319,7 @@
 
         async function loadTodayData() {
             try {
-                const response = await fetch('/api/student/today', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    }
-                });
+                const response = await fetch('/api/student/today');
                 const data = await response.json();
                 
                 if (data.materials) {
@@ -341,11 +332,7 @@
 
         async function loadTeacherProblems() {
             try {
-                const response = await fetch('/api/student/teacher-problems', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    }
-                });
+                const response = await fetch('/api/student/teacher-problems');
                 const data = await response.json();
                 
                 if (data.problems && data.problems.length > 0) {
@@ -370,9 +357,11 @@
                                 <div class="material-title">${material.title}</div>
                                 <div class="material-info">
                                     📄 ${material.fileType ? material.fileType.toUpperCase() : 'FILE'}<br>
-                                    📅 ${new Date(material.createdAt).toLocaleDateString()}
+                                    📅 ${new Date(material.createdAt).toLocaleDateString()}<br>
+                                    📥 ${material.downloadCount || 0}회 다운로드
                                 </div>
                                 <div style="display: flex; gap: 10px; margin-top: 15px;">
+                                    ${getFilePreviewButton(material)}
                                     <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8rem;" onclick="downloadMaterial(${material.id})">
                                         다운로드
                                     </button>
@@ -384,6 +373,14 @@
             } else {
                 container.innerHTML = '<div class="empty-state">공유된 자료가 없습니다.</div>';
             }
+        }
+
+        function getFilePreviewButton(material) {
+            const previewableTypes = ['pdf', 'jpg', 'jpeg', 'png', 'gif', 'bmp'];
+            if (material.fileType && previewableTypes.includes(material.fileType.toLowerCase())) {
+                return `<button class="btn btn-secondary" style="padding: 8px 16px; font-size: 0.8rem;" onclick="previewMaterial(${material.id})">미리보기</button>`;
+            }
+            return '';
         }
 
         function displayTeacherProblems(problems) {
@@ -401,10 +398,11 @@
                             </div>
                             <div style="margin: 15px 0;">
                                 ${problem.submitted ? 
-                                    `<button class="btn btn-secondary" disabled>제출 완료</button>` :
-                                    `<button class="btn btn-primary" onclick="alert('답안 제출 기능은 준비 중입니다.')">답안 제출</button>`
+                                    `<button class="btn btn-secondary" disabled>제출 완료 ${problem.score !== null ? '(' + problem.score + '점)' : ''}</button>` :
+                                    `<button class="btn btn-primary" onclick="openProblemModal(${problem.id})">문제 풀기</button>`
                                 }
-                                <button class="btn btn-secondary" onclick="viewProblemDetail(${problem.id}, '${problem.title}', \`${problem.description}\`)">문제 보기</button>
+                                <button class="btn btn-secondary" onclick="openProblemModal(${problem.id})">문제 보기</button>
+                                ${problem.submitted && problem.feedback ? `<div style="margin-top:10px; color:#81c784; font-size:0.85rem;">"${problem.feedback}"</div>` : ''}
                             </div>
                         </div>
                     `).join('')}
@@ -420,12 +418,142 @@
             }
         }
 
-        function viewProblemDetail(problemId, title, description) {
-            alert(`문제: ${title}\n\n${description}\n\n문제 상세보기 모달은 준비 중입니다.`);
+        function openAiProblemModal(id, title, description, difficulty, timeLimit, points) {
+            currentProblem = {
+                id: id,
+                title: title,
+                description: description,
+                difficulty: difficulty,
+                timeLimit: timeLimit,
+                points: points,
+                type: 'AI'
+            };
+
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalSubtitle').textContent = `AI 문제 | ${difficulty} | ${timeLimit}분 | ${points}점`;
+            document.getElementById('modalDescription').textContent = description;
+            
+            document.getElementById('quizOptionsContainer').innerHTML = '';
+            document.getElementById('answerContainer').innerHTML = `
+                <textarea class="answer-textarea" id="answerInput" placeholder="답안을 작성해주세요..."></textarea>
+            `;
+            
+            document.getElementById('problemModal').style.display = 'block';
+        }
+
+        async function openProblemModal(problemId) {
+            try {
+                const response = await fetch(`/api/student/problem/${problemId}`);
+                const data = await response.json();
+                
+                if (data.success && data.problem) {
+                    const problem = data.problem;
+                    currentProblem = problem;
+                    
+                    document.getElementById('modalTitle').textContent = problem.title;
+                    document.getElementById('modalSubtitle').textContent = `${getTypeKorean(problem.type)} | ${problem.difficulty} | ${problem.timeLimit}분 | ${problem.points}점`;
+                    document.getElementById('modalDescription').textContent = problem.description;
+                    
+                    if (problem.type === 'QUIZ') {
+                        displayQuizOptions(problem);
+                        document.getElementById('answerContainer').innerHTML = '';
+                    } else {
+                        document.getElementById('quizOptionsContainer').innerHTML = '';
+                        document.getElementById('answerContainer').innerHTML = `
+                            <textarea class="answer-textarea" id="answerInput" placeholder="답안을 작성해주세요..." ${problem.submitted ? 'readonly' : ''}>${problem.submitted ? problem.submissionAnswer || '' : ''}</textarea>
+                        `;
+                    }
+                    
+                    const submitBtn = document.getElementById('submitBtn');
+                    if (problem.submitted) {
+                        submitBtn.style.display = 'none';
+                    } else {
+                        submitBtn.style.display = 'inline-block';
+                    }
+                    
+                    document.getElementById('problemModal').style.display = 'block';
+                } else {
+                    alert('문제를 불러올 수 없습니다.');
+                }
+            } catch (error) {
+                console.error('문제 로드 실패:', error);
+                alert('문제를 불러올 수 없습니다.');
+            }
+        }
+
+        function displayQuizOptions(problem) {
+            const container = document.getElementById('quizOptionsContainer');
+            container.innerHTML = `
+                <div class="quiz-options">
+                    <div class="quiz-option" data-option="A" onclick="selectOption('A')">A. ${problem.optionA}</div>
+                    <div class="quiz-option" data-option="B" onclick="selectOption('B')">B. ${problem.optionB}</div>
+                    <div class="quiz-option" data-option="C" onclick="selectOption('C')">C. ${problem.optionC}</div>
+                    <div class="quiz-option" data-option="D" onclick="selectOption('D')">D. ${problem.optionD}</div>
+                </div>
+            `;
+        }
+
+        function selectOption(option) {
+            document.querySelectorAll('.quiz-option').forEach(el => el.classList.remove('selected'));
+            document.querySelector(`[data-option="${option}"]`).classList.add('selected');
+            selectedAnswer = option;
+        }
+
+        async function submitAnswer() {
+            if (!currentProblem) return;
+            
+            let answer = '';
+            if (currentProblem.type === 'QUIZ') {
+                answer = selectedAnswer;
+                if (!answer) {
+                    alert('답을 선택해주세요.');
+                    return;
+                }
+            } else {
+                answer = document.getElementById('answerInput').value.trim();
+                if (!answer) {
+                    alert('답안을 작성해주세요.');
+                    return;
+                }
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('problemId', currentProblem.id);
+                formData.append('answer', answer);
+                
+                const response = await fetch('/api/student/submit-answer', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('답안이 제출되었습니다!');
+                    closeModal();
+                    loadTeacherProblems();
+                } else {
+                    alert(result.message || '제출에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('제출 실패:', error);
+                alert('제출에 실패했습니다.');
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('problemModal').style.display = 'none';
+            currentProblem = null;
+            selectedAnswer = null;
         }
 
         function downloadMaterial(materialId) {
             window.open(`/api/student/materials/${materialId}/download`, '_blank');
+        }
+
+        function previewMaterial(materialId) {
+            window.open(`/student/materials/${materialId}/preview`, '_blank');
         }
 
         function logout() {

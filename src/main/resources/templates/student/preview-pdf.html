@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PDF 미리보기 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+            color: #e8eaed;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: rgba(255, 255, 255, 0.02);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #4fc3f7;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
+            color: white;
+        }
+        
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #b0bec5;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .preview-container {
+            height: calc(100vh - 80px);
+            padding: 20px;
+        }
+        
+        .pdf-viewer {
+            width: 100%;
+            height: 100%;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            background: white;
+        }
+        
+        .file-info {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .file-name {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #4fc3f7;
+            margin-bottom: 8px;
+        }
+        
+        .file-details {
+            color: #b0bec5;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-title">PDF 미리보기</div>
+        <div class="header-actions">
+            <a href="#" onclick="downloadFile()" class="btn btn-primary">다운로드</a>
+            <a href="javascript:history.back()" class="btn btn-secondary">닫기</a>
+        </div>
+    </div>
+    
+    <div class="preview-container">
+        <div class="file-info">
+            <div class="file-name" th:text="${material.originalFilename}">파일명</div>
+            <div class="file-details">
+                <span>크기: </span><span th:text="${#numbers.formatDecimal(material.fileSize / 1024, 0, 2)}">0</span> KB
+                <span> | 업로드: </span><span th:text="${#temporals.format(material.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+            </div>
+        </div>
+        
+        <iframe class="pdf-viewer" th:src="@{'/api/student/materials/' + ${material.id} + '/preview'}" 
+                frameborder="0" allowfullscreen>
+            이 브라우저는 PDF 미리보기를 지원하지 않습니다.
+            <a th:href="@{'/api/student/materials/' + ${material.id} + '/download'}">파일을 다운로드하세요.</a>
+        </iframe>
+    </div>
+    
+    <script>
+        function downloadFile() {
+            const materialId = window.location.pathname.match(/materials\/(\d+)\/preview/)[1];
+            window.open(`/api/student/materials/${materialId}/download`, '_blank');
+        }
+    </script>
+</body>
+</html>
