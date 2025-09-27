@@ -1,25 +1,20 @@
 package com.codebattlearena.controller;
 
 import com.codebattlearena.config.JwtUtil;
-import com.codebattlearena.model.StudyNote;
-import com.codebattlearena.model.User;
-import com.codebattlearena.model.Problem;
-import com.codebattlearena.repository.StudyNoteRepository;
-import com.codebattlearena.repository.UserRepository;
-import com.codebattlearena.repository.ProblemRepository;
+import com.codebattlearena.model.*;
+import com.codebattlearena.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/student")
 public class StudentController {
 
-    @Autowired
-    private StudyNoteRepository studyNoteRepository;
-    
     @Autowired
     private UserRepository userRepository;
     
@@ -27,244 +22,28 @@ public class StudentController {
     private ProblemRepository problemRepository;
     
     @Autowired
+    private StudyNoteRepository studyNoteRepository;
+    
+    @Autowired
+    private MaterialRepository materialRepository;
+    
+    @Autowired
     private JwtUtil jwtUtil;
 
     private Long getUserIdFromRequest(HttpServletRequest request) {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            String token = authHeader.substring(7);
-            return jwtUtil.extractUserId(token);
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ")) {
+                String token = authHeader.substring(7);
+                String email = jwtUtil.extractEmail(token);
+                User user = userRepository.findByEmail(email).orElse(null);
+                return user != null ? user.getId() : null;
+            }
+        } catch (Exception e) {
+            System.err.println("토큰 파싱 오류: " + e.getMessage());
         }
         return null;
     }
-
-    @GetMapping("/today")
-    public Map<String, Object> getTodayContent(HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Unauthorized");
-            return error;
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        response.put("aiProblem", null);
-        response.put("materials", new ArrayList<>());
-        response.put("submissions", new ArrayList<>());
-        
-        return response;
-    }
-
-    @GetMapping("/teacher-problems")
-    public List<Map<String, Object>> getTeacherProblems(HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        if (userId == null) {
-            return new ArrayList<>();
-        }
-        
-        try {
-            Optional<User> userOpt = userRepository.findById(userId);
-            if (userOpt.isEmpty() || userOpt.get().getGroupId() == null) {
-                return new ArrayList<>();
-            }
-            
-            Long groupId = userOpt.get().getGroupId();
-            List<Problem> problems = problemRepository.findTeacherProblemsByGroupId(groupId);
-            List<Map<String, Object>> problemList = new ArrayList<>();
-            
-            for (Problem problem : problems) {
-                Map<String, Object> problemMap = new HashMap<>();
-                problemMap.put("id", problem.getId());
-                problemMap.put("title", problem.getTitle());
-                problemMap.put("description", problem.getDescription());
-                problemMap.put("difficulty", problem.getDifficulty());
-                problemMap.put("timeLimit", problem.getTimeLimit());
-                problemMap.put("type", problem.getType());
-                problemMap.put("createdAt", problem.getCreatedAt().toString());
-                problemList.add(problemMap);
-            }
-            
-            return problemList;
-        } catch (Exception e) {
-            return new ArrayList<>();
-        }
-    }
-
-    @GetMapping("/stats")
-    public Map<String, Object> getStats(HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Unauthorized");
-            return error;
-        }
-        
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("solvedProblems", 0);
-        stats.put("battleWins", 0);
-        stats.put("accuracy", 0);
-        stats.put("studyDays", 0);
-        return stats;
-    }
-
-    @GetMapping("/battle-stats")
-    public Map<String, Object> getBattleStats(HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Unauthorized");
-            return error;
-        }
-        
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("rating", 1000);
-        stats.put("wins", 0);
-        stats.put("losses", 0);
-        return stats;
-    }
-
-    @GetMapping("/practice-stats")
-    public Map<String, Object> getPracticeStats(HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("error", "Unauthorized");
-            return error;
-        }
-        
-        Map<String, Object> stats = new HashMap<>();
-        stats.put("totalAttempts", 0);
-        stats.put("solvedCount", 0);
-        stats.put("successRate", 0);
-        stats.put("avgScore", 0);
-        return stats;
-    }
-
-    @GetMapping("/notes")
-    public List<Map<String, Object>> getNotes(HttpServletRequest request) {
-        Long userId = getUserIdFromRequest(request);
-        if (userId == null) {
-            return new ArrayList<>();
-        }
-        
-        try {
-            List<StudyNote> notes = studyNoteRepository.findByUserId(userId);
-            List<Map<String, Object>> noteList = new ArrayList<>();
-            
-            for (StudyNote note : notes) {
-                Map<String, Object> noteMap = new HashMap<>();
-                noteMap.put("id", note.getId());
-                noteMap.put("title", note.getTitle());
-                noteMap.put("content", note.getContent());
-                noteMap.put("createdAt", note.getCreatedAt().toString());
-                noteMap.put("updatedAt", note.getUpdatedAt().toString());
-                noteList.add(noteMap);
-            }
-            
-            return noteList;
-        } catch (Exception e) {
-            return new ArrayList<>();
-        }
-    }
-
-    @PostMapping("/notes")
-    public Map<String, Object> createNote(@RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
-        Long userId = getUserIdFromRequest(httpRequest);
-        if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Unauthorized");
-            return error;
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            StudyNote note = new StudyNote();
-            note.setUserId(userId);
-            note.setTitle(request.get("title"));
-            note.setContent(request.get("content"));
-            note.setCreatedAt(LocalDateTime.now());
-            note.setUpdatedAt(LocalDateTime.now());
-            
-            studyNoteRepository.save(note);
-            
-            response.put("success", true);
-            response.put("message", "노트가 저장되었습니다");
-            response.put("id", note.getId());
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "저장 실패: " + e.getMessage());
-        }
-        
-        return response;
-    }
-
-    @PutMapping("/notes/{id}")
-    public Map<String, Object> updateNote(@PathVariable Long id, @RequestBody Map<String, String> request, HttpServletRequest httpRequest) {
-        Long userId = getUserIdFromRequest(httpRequest);
-        if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Unauthorized");
-            return error;
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            Optional<StudyNote> noteOpt = studyNoteRepository.findByIdAndUserId(id, userId);
-            if (noteOpt.isPresent()) {
-                StudyNote note = noteOpt.get();
-                note.setTitle(request.get("title"));
-                note.setContent(request.get("content"));
-                note.setUpdatedAt(LocalDateTime.now());
-                
-                studyNoteRepository.save(note);
-                
-                response.put("success", true);
-                response.put("message", "노트가 수정되었습니다");
-            } else {
-                response.put("success", false);
-                response.put("message", "노트를 찾을 수 없습니다");
-            }
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "수정 실패: " + e.getMessage());
-        }
-        
-        return response;
-    }
-
-    @DeleteMapping("/notes/{id}")
-    public Map<String, Object> deleteNote(@PathVariable Long id, HttpServletRequest httpRequest) {
-        Long userId = getUserIdFromRequest(httpRequest);
-        if (userId == null) {
-            Map<String, Object> error = new HashMap<>();
-            error.put("success", false);
-            error.put("message", "Unauthorized");
-            return error;
-        }
-        
-        Map<String, Object> response = new HashMap<>();
-        
-        try {
-            if (studyNoteRepository.existsByIdAndUserId(id, userId)) {
-                studyNoteRepository.deleteById(id);
-                response.put("success", true);
-                response.put("message", "노트가 삭제되었습니다");
-            } else {
-                response.put("success", false);
-                response.put("message", "노트를 찾을 수 없습니다");
-            }
-        } catch (Exception e) {
-            response.put("success", false);
-            response.put("message", "삭제 실패: " + e.getMessage());
-        }
-        
-        return response;
-    }
-}
 
     @GetMapping("/profile")
     public Map<String, Object> getProfile(HttpServletRequest request) {
@@ -290,3 +69,150 @@ public class StudentController {
             return Map.of("error", "Failed to load profile: " + e.getMessage());
         }
     }
+
+    @GetMapping("/ai-problem")
+    public Map<String, Object> getAIProblem(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            Map<String, Object> problem = new HashMap<>();
+            problem.put("id", 1);
+            problem.put("title", "두 수의 합 구하기");
+            problem.put("description", "두 정수 a, b를 입력받아 합을 출력하는 프로그램을 작성하세요.");
+            problem.put("difficulty", "하");
+            
+            return Map.of("problem", problem);
+        } catch (Exception e) {
+            return Map.of("error", "Failed to load AI problem: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/materials")
+    public Map<String, Object> getMaterials(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            List<Material> materials = materialRepository.findAll();
+            return Map.of("materials", materials);
+        } catch (Exception e) {
+            return Map.of("error", "Failed to load materials: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/problems")
+    public Map<String, Object> getProblems(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            List<Problem> problems = problemRepository.findAll();
+            
+            List<Map<String, Object>> problemData = problems.stream().map(problem -> {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", problem.getId());
+                data.put("title", problem.getTitle());
+                data.put("description", problem.getDescription());
+                data.put("difficulty", problem.getDifficulty());
+                data.put("status", "PENDING");
+                data.put("feedback", null);
+                return data;
+            }).collect(Collectors.toList());
+            
+            return Map.of("problems", problemData);
+        } catch (Exception e) {
+            return Map.of("error", "Failed to load problems: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/notes")
+    public Map<String, Object> getNotes(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            List<StudyNote> notes = studyNoteRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            return Map.of("notes", notes);
+        } catch (Exception e) {
+            return Map.of("error", "Failed to load notes: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/notes")
+    public Map<String, Object> createNote(@RequestBody Map<String, String> noteData, HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("success", false, "message", "Unauthorized");
+            }
+            
+            StudyNote note = new StudyNote();
+            note.setUserId(userId);
+            note.setTitle(noteData.get("title"));
+            note.setContent(noteData.get("content"));
+            note.setCreatedAt(LocalDateTime.now());
+            note.setUpdatedAt(LocalDateTime.now());
+            
+            StudyNote savedNote = studyNoteRepository.save(note);
+            
+            return Map.of("success", true, "message", "노트가 저장되었습니다.", "note", savedNote);
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "노트 저장 실패: " + e.getMessage());
+        }
+    }
+
+    @PutMapping("/notes/{id}")
+    public Map<String, Object> updateNote(@PathVariable Long id, @RequestBody Map<String, String> noteData, HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("success", false, "message", "Unauthorized");
+            }
+            
+            StudyNote note = studyNoteRepository.findById(id).orElse(null);
+            if (note == null || !note.getUserId().equals(userId)) {
+                return Map.of("success", false, "message", "노트를 찾을 수 없습니다.");
+            }
+            
+            note.setTitle(noteData.get("title"));
+            note.setContent(noteData.get("content"));
+            note.setUpdatedAt(LocalDateTime.now());
+            
+            StudyNote savedNote = studyNoteRepository.save(note);
+            
+            return Map.of("success", true, "message", "노트가 수정되었습니다.", "note", savedNote);
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "노트 수정 실패: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/notes/{id}")
+    public Map<String, Object> deleteNote(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("success", false, "message", "Unauthorized");
+            }
+            
+            StudyNote note = studyNoteRepository.findById(id).orElse(null);
+            if (note == null || !note.getUserId().equals(userId)) {
+                return Map.of("success", false, "message", "노트를 찾을 수 없습니다.");
+            }
+            
+            studyNoteRepository.delete(note);
+            
+            return Map.of("success", true, "message", "노트가 삭제되었습니다.");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "노트 삭제 실패: " + e.getMessage());
+        }
+    }
+}
