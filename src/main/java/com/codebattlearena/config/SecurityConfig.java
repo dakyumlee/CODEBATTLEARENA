@@ -20,8 +20,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable())
+        http.csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/register", "/login").permitAll()
@@ -32,18 +31,16 @@ public class SecurityConfig {
                 .requestMatchers("/admin/**").hasRole("ADMIN")
                 .anyRequest().permitAll()
             )
-            .exceptionHandling(ex -> ex
-                .authenticationEntryPoint((req, res, e) -> {
-                    String uri = req.getRequestURI();
-                    if (uri.startsWith("/api/")) {
-                        res.setStatus(401);
-                        res.setContentType("application/json;charset=UTF-8");
-                        res.getWriter().write("{\"success\":false,\"message\":\"UNAUTHORIZED\"}");
-                    } else {
-                        res.sendRedirect("/");
-                    }
-                })
-            );
+            .exceptionHandling(ex -> ex.authenticationEntryPoint((req, res, e) -> {
+                String uri = req.getRequestURI();
+                if (uri.startsWith("/api/")) {
+                    res.setStatus(401);
+                    res.setContentType("application/json;charset=UTF-8");
+                    res.getWriter().write("{\"success\":false,\"message\":\"UNAUTHORIZED\"}");
+                } else {
+                    res.sendRedirect("/");
+                }
+            }));
         http.addFilterBefore(sessionAuthFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
     }
