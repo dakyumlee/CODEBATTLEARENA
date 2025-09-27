@@ -20,6 +20,7 @@ class StudentWebSocket {
             
             this.stompClient.subscribe('/topic/notifications', (message) => {
                 const notification = JSON.parse(message.body);
+                console.log('알림 수신:', notification);
                 this.showNotificationModal(notification);
             });
             
@@ -51,7 +52,10 @@ class StudentWebSocket {
     }
 
     addModalStyles() {
+        if (document.getElementById('global-modal-styles')) return;
+        
         const style = document.createElement('style');
+        style.id = 'global-modal-styles';
         style.textContent = `
             .global-notification-modal {
                 position: fixed;
@@ -134,27 +138,46 @@ class StudentWebSocket {
         const acceptBtn = document.getElementById('globalModalAccept');
         const closeBtn = document.getElementById('globalModalClose');
 
+        if (!modal || !title || !message || !acceptBtn || !closeBtn) {
+            console.error('모달 요소를 찾을 수 없습니다');
+            return;
+        }
+
         title.textContent = notification.title || '새 알림';
         message.textContent = notification.message || '';
         
         modal.style.display = 'flex';
 
-        acceptBtn.onclick = () => {
+        // 기존 이벤트 리스너 제거
+        const newAcceptBtn = acceptBtn.cloneNode(true);
+        const newCloseBtn = closeBtn.cloneNode(true);
+        acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
+        closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
+
+        // 새 이벤트 리스너 추가
+        newAcceptBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             modal.style.display = 'none';
             if (notification.type === 'NEW_PROBLEM') {
                 window.location.href = '/student/today';
             }
-        };
+        });
 
-        closeBtn.onclick = () => {
+        newCloseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             modal.style.display = 'none';
-        };
+        });
 
-        modal.onclick = (e) => {
+        // 모달 외부 클릭 방지
+        modal.addEventListener('click', (e) => {
             if (e.target === modal) {
+                e.preventDefault();
+                e.stopPropagation();
                 modal.style.display = 'none';
             }
-        };
+        });
     }
 }
 
