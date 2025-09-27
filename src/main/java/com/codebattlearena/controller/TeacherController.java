@@ -95,6 +95,69 @@ public class TeacherController {
         return null;
     }
 
+    @GetMapping("/materials/{id}/preview")
+public ResponseEntity<Map<String, Object>> previewMaterial(@PathVariable Long id, HttpServletRequest request) {
+    try {
+        Long teacherId = getUserIdFromRequest(request);
+        if (teacherId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+        }
+
+        Material material = materialRepository.findById(id).orElse(null);
+        if (material == null || !material.getTeacherId().equals(teacherId)) {
+            return ResponseEntity.status(404).body(Map.of("error", "Material not found"));
+        }
+
+        Map<String, Object> previewData = new HashMap<>();
+        previewData.put("id", material.getId());
+        previewData.put("title", material.getTitle());
+        previewData.put("filePath", material.getFilePath());
+        previewData.put("fileType", material.getFileType());
+        previewData.put("originalFilename", material.getOriginalFilename());
+
+        return ResponseEntity.ok(previewData);
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body(Map.of("error", "Preview failed: " + e.getMessage()));
+    }
+}
+
+    @GetMapping("/problems/{id}/detail")
+    public ResponseEntity<Map<String, Object>> getProblemDetail(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            Problem problem = problemRepository.findById(id).orElse(null);
+            if (problem == null || !problem.getTeacherId().equals(teacherId)) {
+                return ResponseEntity.status(404).body(Map.of("error", "Problem not found"));
+            }
+
+            Map<String, Object> problemData = new HashMap<>();
+            problemData.put("id", problem.getId());
+            problemData.put("title", problem.getTitle());
+            problemData.put("description", problem.getDescription());
+            problemData.put("difficulty", problem.getDifficulty());
+            problemData.put("type", problem.getType());
+            problemData.put("timeLimit", problem.getTimeLimit());
+            problemData.put("points", problem.getPoints());
+            problemData.put("createdAt", problem.getCreatedAt());
+
+            if ("QUIZ".equals(problem.getType())) {
+                problemData.put("optionA", problem.getOptionA());
+                problemData.put("optionB", problem.getOptionB());
+                problemData.put("optionC", problem.getOptionC());
+                problemData.put("optionD", problem.getOptionD());
+                problemData.put("correctAnswer", problem.getCorrectAnswer());
+            }
+
+            return ResponseEntity.ok(Map.of("success", true, "problem", problemData));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to load problem: " + e.getMessage()));
+        }
+    }
+
     @GetMapping("/materials")
     public ResponseEntity<Map<String, Object>> getMaterials(HttpServletRequest request) {
         try {

@@ -650,6 +650,34 @@
         }
 
         function previewMaterial(id, title, filePath, fileType) {
+            fetch(`/api/teacher/materials/${id}/preview`, {
+                headers: {
+                    'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                }
+            })
+            .then(response => {
+                if (response.status === 401) {
+                    localStorage.clear();
+                    window.location.href = '/';
+                    return;
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.error) {
+                    alert('미리보기 실패: ' + data.error);
+                    return;
+                }
+                
+                showPreviewModal(data.title, data.filePath, data.fileType);
+            })
+            .catch(error => {
+                console.error('미리보기 오류:', error);
+                alert('미리보기를 불러올 수 없습니다.');
+            });
+        }
+        
+        function showPreviewModal(title, filePath, fileType) {
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -677,14 +705,21 @@
             titleDiv.style.cssText = 'margin-bottom: 15px; color: #333;';
             
             let previewElement;
-            if (fileType.toLowerCase() === 'pdf') {
+            if (fileType && fileType.toLowerCase() === 'pdf') {
                 previewElement = document.createElement('iframe');
                 previewElement.src = filePath;
                 previewElement.style.cssText = 'width: 100%; height: 600px; border: none;';
-            } else {
+            } else if (fileType && ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileType.toLowerCase())) {
                 previewElement = document.createElement('img');
                 previewElement.src = filePath;
                 previewElement.style.cssText = 'max-width: 100%; height: auto;';
+            } else {
+                previewElement = document.createElement('div');
+                previewElement.innerHTML = `
+                    <p>이 파일 형식은 미리보기를 지원하지 않습니다.</p>
+                    <a href="${filePath}" target="_blank" style="color: #2196f3;">파일 다운로드</a>
+                `;
+                previewElement.style.cssText = 'padding: 40px; text-align: center; color: #666;';
             }
             
             content.appendChild(closeBtn);

@@ -31,10 +31,6 @@ public class SecurityConfig {
             )
             .headers(headers -> headers
                 .frameOptions().sameOrigin()
-                .contentTypeOptions().and()
-                .httpStrictTransportSecurity(hstsConfig -> hstsConfig
-                    .maxAgeInSeconds(31536000)
-                    .includeSubdomains(true))
             );
 
         return http.build();
