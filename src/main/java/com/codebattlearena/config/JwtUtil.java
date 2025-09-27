@@ -4,6 +4,7 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -15,8 +16,10 @@ import java.util.function.Function;
 @Component
 public class JwtUtil {
 
-    private final String SECRET = "codebattlearena-secret-key-2025-very-long-and-secure-key";
-    private final int EXPIRATION = 86400000; // 24시간
+    @Value("${jwt.secret:codebattlearena-secret-key-2025-very-long-and-secure-key}")
+    private String SECRET;
+    
+    private final int EXPIRATION = 86400000;
 
     private SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(SECRET.getBytes());
