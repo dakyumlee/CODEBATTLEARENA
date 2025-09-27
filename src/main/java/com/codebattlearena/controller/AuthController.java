@@ -45,12 +45,17 @@ public class AuthController {
             case ADMIN -> "/admin/dashboard";
         };
         return ResponseEntity.ok(Map.of(
-                "success", true,
-                "id", user.getId(),
-                "name", user.getName(),
-                "role", user.getRole().name(),
-                "next", next
-        ));
+    "success", true,
+    "id", user.getId(),
+    "name", user.getName(),
+    "role", user.getRole().name(),
+    "next", next,
+    "user", Map.of(
+        "id", user.getId(),
+        "name", user.getName(),
+        "role", user.getRole().name()
+    )
+));
     }
 
     @PostMapping("/api/auth/logout")

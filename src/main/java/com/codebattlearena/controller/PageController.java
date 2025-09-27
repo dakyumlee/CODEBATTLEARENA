@@ -27,6 +27,7 @@ public class PageController {
     public String studentToday() {
         return "student/today";
     }
+    
 
     @GetMapping("/student/ai-tutor")
     public String studentAiTutor() {
