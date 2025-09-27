@@ -1,7 +1,5 @@
 document.addEventListener('DOMContentLoaded', function() {
     loadTodayContent();
-    
-    // WebSocket에서 호출할 수 있도록 전역 함수로 등록
     window.loadTodayContent = loadTodayContent;
 });
 
@@ -88,17 +86,14 @@ function updateMaterialsSection(materials) {
 }
 
 function startAIProblem(problemId) {
-    // AI 문제 풀이 모달 열기
     window.location.href = `/student/ai-problem?id=${problemId}`;
 }
 
 function previewFile(fileId) {
-    // 파일 미리보기 (PDF 등)
     window.open(`/api/materials/${fileId}/preview`, '_blank');
 }
 
 function downloadFile(fileId) {
-    // 파일 다운로드
     window.open(`/api/materials/${fileId}/download`);
 }
 

@@ -1,6 +1,7 @@
 package com.codebattlearena.controller;
 
 import com.codebattlearena.model.User;
+import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
@@ -18,17 +19,6 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
 
-    @GetMapping("/login")
-    public String loginPage(HttpSession session) {
-        Object role = session.getAttribute("userRole");
-        if (role == null) return "index";
-        return "redirect:" + switch (role.toString()) {
-            case "TEACHER" -> "/teacher/dashboard";
-            case "ADMIN" -> "/admin/dashboard";
-            default -> "/student/today";
-        };
-    }
-
     @PostMapping("/api/auth/login")
     @ResponseBody
     public ResponseEntity<?> login(@RequestBody LoginRequest req, HttpSession session) {
@@ -45,17 +35,37 @@ public class AuthController {
             case ADMIN -> "/admin/dashboard";
         };
         return ResponseEntity.ok(Map.of(
-    "success", true,
-    "id", user.getId(),
-    "name", user.getName(),
-    "role", user.getRole().name(),
-    "next", next,
-    "user", Map.of(
-        "id", user.getId(),
-        "name", user.getName(),
-        "role", user.getRole().name()
-    )
-));
+                "success", true,
+                "id", user.getId(),
+                "name", user.getName(),
+                "role", user.getRole().name(),
+                "next", next,
+                "user", Map.of(
+                        "id", user.getId(),
+                        "name", user.getName(),
+                        "role", user.getRole().name()
+                )
+        ));
+    }
+
+    @PostMapping("/api/auth/register")
+    @ResponseBody
+    public ResponseEntity<?> register(@RequestBody RegisterRequest req) {
+        if (userRepository.findByEmail(req.email()).isPresent()) {
+            return ResponseEntity.status(409).body(Map.of("success", false, "message", "이미 존재하는 이메일입니다"));
+        }
+        User user = new User();
+        user.setEmail(req.email());
+        user.setName(req.name());
+        user.setPassword(passwordEncoder.encode(req.password()));
+        user.setRole(UserRole.STUDENT);
+        userRepository.save(user);
+        return ResponseEntity.ok(Map.of(
+                "success", true,
+                "id", user.getId(),
+                "name", user.getName(),
+                "role", user.getRole().name()
+        ));
     }
 
     @PostMapping("/api/auth/logout")
@@ -66,4 +76,5 @@ public class AuthController {
     }
 
     public record LoginRequest(String email, String password) {}
+    public record RegisterRequest(String email, String password, String name) {}
 }

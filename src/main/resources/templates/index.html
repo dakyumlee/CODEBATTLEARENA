@@ -12,23 +12,23 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
+
         body {
             font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
             background: #f8fafc;
             min-height: 100vh;
         }
-        
+
         .header {
             background: white;
             padding: 20px 0;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 100;
         }
-        
+
         .header-content {
             max-width: 1200px;
             margin: 0 auto;
@@ -37,22 +37,99 @@
             align-items: center;
             padding: 0 20px;
         }
-        
+
         .logo {
             font-size: 2rem;
             font-weight: 800;
             color: #1a202c;
             letter-spacing: -0.02em;
         }
-        
+
+        .nav-info {
+            color: #718096;
+        }
+
+        .main-content {
+            margin-top: 80px;
+            padding: 60px 20px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+            display: flex;
+            align-items: center;
+            min-height: calc(100vh - 140px);
+            gap: 80px;
+        }
+
+        .left-content {
+            flex: 1;
+        }
+
+        .right-content {
+            flex: 0 0 320px;
+        }
+
+        .main-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }
+
+        .main-subtitle {
+            font-size: 1.3rem;
+            color: #4a5568;
+            margin-bottom: 40px;
+            line-height: 1.5;
+        }
+
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .feature {
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+        }
+
+        .feature-icon {
+            width: 50px;
+            height: 50px;
+            background: #ebf8ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+        }
+
+        .feature h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .feature p {
+            color: #718096;
+            line-height: 1.5;
+        }
+
         .login-card {
             background: white;
             padding: 30px;
             border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
             width: 320px;
         }
-        
+
         .login-title {
             font-size: 1.2rem;
             font-weight: 600;
@@ -60,11 +137,11 @@
             margin-bottom: 20px;
             text-align: center;
         }
-        
+
         .form-group {
             margin-bottom: 16px;
         }
-        
+
         .form-label {
             display: block;
             margin-bottom: 6px;
@@ -72,7 +149,7 @@
             color: #4a5568;
             font-size: 0.9rem;
         }
-        
+
         .form-input {
             width: 100%;
             padding: 12px 16px;
@@ -82,13 +159,13 @@
             transition: border-color 0.2s;
             background: #f7fafc;
         }
-        
+
         .form-input:focus {
             outline: none;
             border-color: #3182ce;
             background: white;
         }
-        
+
         .login-btn {
             width: 100%;
             padding: 12px;
@@ -101,96 +178,23 @@
             cursor: pointer;
             transition: background 0.2s;
         }
-        
+
         .login-btn:hover {
             background: #2c5282;
         }
-        
+
         .register-link {
             text-align: center;
             margin-top: 16px;
             color: #718096;
             font-size: 0.9rem;
         }
-        
+
         .register-link a {
             color: #3182ce;
             text-decoration: none;
         }
-        
-        .main-content {
-            margin-top: 80px;
-            padding: 60px 20px;
-            max-width: 1200px;
-            margin-left: auto;
-            margin-right: auto;
-            display: flex;
-            align-items: center;
-            min-height: calc(100vh - 140px);
-            gap: 80px;
-        }
-        
-        .left-content {
-            flex: 1;
-        }
-        
-        .right-content {
-            flex: 0 0 320px;
-        }
-        
-        .main-title {
-            font-size: 3.5rem;
-            font-weight: 800;
-            color: #1a202c;
-            margin-bottom: 20px;
-            line-height: 1.1;
-        }
-        
-        .main-subtitle {
-            font-size: 1.3rem;
-            color: #4a5568;
-            margin-bottom: 40px;
-            line-height: 1.5;
-        }
-        
-        .features {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 30px;
-            margin-top: 50px;
-        }
-        
-        .feature {
-            background: white;
-            padding: 30px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-        }
-        
-        .feature-icon {
-            width: 50px;
-            height: 50px;
-            background: #ebf8ff;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-        }
-        
-        .feature h3 {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 10px;
-        }
-        
-        .feature p {
-            color: #718096;
-            line-height: 1.5;
-        }
-        
+
         .mobile-login-toggle {
             display: none;
             position: fixed;
@@ -205,9 +209,9 @@
             height: 50px;
             font-size: 1.2rem;
             cursor: pointer;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         }
-        
+
         .mobile-login-modal {
             display: none;
             position: fixed;
@@ -215,13 +219,23 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0,0,0,0.8);
+            background: rgba(0, 0, 0, 0.8);
             z-index: 300;
             align-items: center;
             justify-content: center;
             padding: 20px;
         }
-        
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
@@ -229,19 +243,19 @@
                 text-align: center;
                 margin-top: 40px;
             }
-            
+
             .right-content {
                 display: none;
             }
-            
+
             .mobile-login-toggle {
                 display: block;
             }
-            
+
             .main-title {
                 font-size: 2.5rem;
             }
-            
+
             .left-content {
                 width: 100%;
             }
@@ -254,32 +268,27 @@
     <div class="mobile-login-modal" id="mobileLoginModal">
         <div class="login-card">
             <h2 class="login-title">로그인</h2>
-            
             <div class="form-group">
                 <label class="form-label">이메일</label>
                 <input type="email" class="form-input" id="mobileEmail" placeholder="이메일을 입력하세요">
             </div>
-            
             <div class="form-group">
                 <label class="form-label">비밀번호</label>
                 <input type="password" class="form-input" id="mobilePassword" placeholder="비밀번호를 입력하세요">
             </div>
-            
             <button class="login-btn" onclick="mobileLogin()">로그인</button>
-            
             <div class="register-link">
                 계정이 없으신가요? <a href="/register">회원가입</a>
             </div>
-            
-            <button onclick="hideMobileLogin()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+            <button class="modal-close" onclick="hideMobileLogin()">×</button>
         </div>
     </div>
 
     <div class="header">
         <div class="header-content">
             <div class="logo">CodeBattleArena</div>
-            <nav style="display: flex; gap: 30px;">
-                <span style="color: #718096;">코딩 플랫폼</span>
+            <nav>
+                <span class="nav-info">코딩 플랫폼</span>
             </nav>
         </div>
     </div>
@@ -291,26 +300,22 @@
                 스마트 코딩 학습 플랫폼<br>
                 AI와 함께하는 실시간 코딩 교육 시스템
             </p>
-            
             <div class="features">
                 <div class="feature">
                     <div class="feature-icon">🤖</div>
                     <h3>AI 맞춤 학습</h3>
                     <p>개인별 학습 수준에 맞는 문제를 AI가 자동 생성하여 효율적인 학습을 지원합니다.</p>
                 </div>
-                
                 <div class="feature">
                     <div class="feature-icon">⚔️</div>
                     <h3>실시간 코드배틀</h3>
                     <p>친구들과 실시간으로 코딩 문제를 풀어보며 재미있게 실력을 향상시킬 수 있습니다.</p>
                 </div>
-                
                 <div class="feature">
                     <div class="feature-icon">📊</div>
                     <h3>실시간 모니터링</h3>
                     <p>강사가 학생들의 학습 상황을 실시간으로 모니터링하고 맞춤 지도를 제공합니다.</p>
                 </div>
-                
                 <div class="feature">
                     <div class="feature-icon">📚</div>
                     <h3>통합 학습 관리</h3>
@@ -318,39 +323,36 @@
                 </div>
             </div>
         </div>
-        
         <div class="right-content">
             <div class="login-card">
                 <h2 class="login-title">로그인</h2>
-                
                 <div class="form-group">
                     <label class="form-label">이메일</label>
                     <input type="email" class="form-input" id="email" placeholder="이메일을 입력하세요">
                 </div>
-                
                 <div class="form-group">
                     <label class="form-label">비밀번호</label>
                     <input type="password" class="form-input" id="password" placeholder="비밀번호를 입력하세요">
                 </div>
-                
                 <button class="login-btn" onclick="login()">로그인</button>
-                
                 <div class="register-link">
                     계정이 없으신가요? <a href="/register">회원가입</a>
                 </div>
             </div>
         </div>
     </div>
-    <script src="/js/common/normalize-login.js?v=20250927-4"></script>
+
+    <script src="/js/common/normalize-login.js?v=20250927-7"></script>
+    <script src="/js/common/auth.js?v=20250927-7"></script>
     <script>
         function showMobileLogin() {
             document.getElementById('mobileLoginModal').style.display = 'flex';
         }
-        
+
         function hideMobileLogin() {
             document.getElementById('mobileLoginModal').style.display = 'none';
         }
-        
+
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -362,7 +364,7 @@
             
             await performLogin(email, password);
         }
-        
+
         async function mobileLogin() {
             const email = document.getElementById('mobileEmail').value;
             const password = document.getElementById('mobilePassword').value;
@@ -374,37 +376,40 @@
             
             await performLogin(email, password);
         }
-        
+
         async function performLogin(email, password) {
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password })
                 });
                 
                 const data = await response.json();
-                console.log('Login response:', data);
                 
                 if (data.success) {
-                    localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('userRole', data.user.role);
-                    localStorage.setItem('userName', data.user.name);
+                    const role = data.role || data.userRole || (data.user && data.user.role) || null;
+                    const next = (typeof data.next === 'string' && data.next.startsWith('/')) ? data.next : null;
+                    const byRole = { 
+                        STUDENT: '/student/today', 
+                        TEACHER: '/teacher/dashboard', 
+                        ADMIN: '/admin/dashboard' 
+                    };
                     
-                    document.cookie = `authToken=${data.token}; path=/; max-age=86400; SameSite=Lax`;
+                    let dest = next || byRole[role] || '/';
                     
-                    window.location.href = data.redirectUrl;
+                    if (!dest.startsWith('/')) dest = '/' + dest;
+                    if (dest === '/undefined' || dest === '/null' || dest === '/NaN') dest = '/';
+                    
+                    location.assign(dest);
                 } else {
                     alert(data.message || '로그인에 실패했습니다.');
                 }
             } catch (error) {
-                console.error('로그인 에러:', error);
                 alert('로그인 처리 중 오류가 발생했습니다.');
             }
         }
-        
+
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
                 const mobileModal = document.getElementById('mobileLoginModal');
@@ -415,12 +420,16 @@
                 }
             }
         });
-        
+
         document.getElementById('mobileLoginModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 hideMobileLogin();
             }
         });
+
+        if (location.pathname === '/undefined' || location.pathname === '/null') {
+            location.replace('/');
+        }
     </script>
 </body>
 </html>

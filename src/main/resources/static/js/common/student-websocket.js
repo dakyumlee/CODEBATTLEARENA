@@ -14,26 +14,24 @@ class StudentWebSocket {
         const socket = new SockJS('/ws');
         this.stompClient = Stomp.over(socket);
         
-        this.stompClient.connect({}, (frame) => {
-            console.log('Student WebSocket 연결됨: ' + frame);
-            this.connected = true;
-            
-            this.stompClient.subscribe('/topic/notifications', (message) => {
-                const notification = JSON.parse(message.body);
-                console.log('알림 수신:', notification);
-                this.showNotificationModal(notification);
-            });
-            
-        }, (error) => {
-            console.error('WebSocket 연결 실패:', error);
-            this.connected = false;
-            setTimeout(() => this.connectWebSocket(), 5000);
-        });
+        this.stompClient.connect({}, 
+            (frame) => {
+                this.connected = true;
+                this.stompClient.subscribe('/topic/notifications', (message) => {
+                    const notification = JSON.parse(message.body);
+                    this.showNotificationModal(notification);
+                });
+            }, 
+            () => {
+                this.connected = false;
+                setTimeout(() => this.connectWebSocket(), 5000);
+            }
+        );
     }
 
     createModal() {
         if (document.getElementById('globalNotificationModal')) return;
-
+        
         const modalHtml = `
             <div id="globalNotificationModal" class="global-notification-modal">
                 <div class="modal-content">
@@ -46,7 +44,7 @@ class StudentWebSocket {
                 </div>
             </div>
         `;
-
+        
         document.body.insertAdjacentHTML('beforeend', modalHtml);
         this.addModalStyles();
     }
@@ -63,13 +61,13 @@ class StudentWebSocket {
                 left: 0;
                 width: 100%;
                 height: 100%;
-                background: rgba(0,0,0,0.8);
+                background: rgba(0, 0, 0, 0.8);
                 display: none;
                 z-index: 10000;
                 align-items: center;
                 justify-content: center;
             }
-            
+
             .global-notification-modal .modal-content {
                 background: #2d3748;
                 padding: 2rem;
@@ -80,31 +78,37 @@ class StudentWebSocket {
                 border: 2px solid #4299e1;
                 animation: modalSlideIn 0.3s ease-out;
             }
-            
+
             @keyframes modalSlideIn {
-                from { transform: translateY(-50px); opacity: 0; }
-                to { transform: translateY(0); opacity: 1; }
+                from {
+                    transform: translateY(-50px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
             }
-            
+
             .global-notification-modal .modal-title {
                 color: #4299e1;
                 font-size: 1.5rem;
                 font-weight: 700;
                 margin-bottom: 1rem;
             }
-            
+
             .global-notification-modal .modal-message {
                 color: #e2e8f0;
                 margin-bottom: 2rem;
                 line-height: 1.5;
             }
-            
+
             .global-notification-modal .modal-buttons {
                 display: flex;
                 gap: 1rem;
                 justify-content: center;
             }
-            
+
             .global-notification-modal .btn-modal {
                 padding: 0.75rem 1.5rem;
                 border: none;
@@ -113,21 +117,22 @@ class StudentWebSocket {
                 cursor: pointer;
                 transition: all 0.2s;
             }
-            
+
             .global-notification-modal .btn-modal.primary {
                 background: #4299e1;
                 color: white;
             }
-            
+
             .global-notification-modal .btn-modal.secondary {
                 background: #4a5568;
                 color: #e2e8f0;
             }
-            
+
             .global-notification-modal .btn-modal:hover {
                 transform: translateY(-1px);
             }
         `;
+        
         document.head.appendChild(style);
     }
 
@@ -138,29 +143,25 @@ class StudentWebSocket {
         const acceptBtn = document.getElementById('globalModalAccept');
         const closeBtn = document.getElementById('globalModalClose');
 
-        if (!modal || !title || !message || !acceptBtn || !closeBtn) {
-            console.error('모달 요소를 찾을 수 없습니다');
-            return;
-        }
+        if (!modal || !title || !message || !acceptBtn || !closeBtn) return;
 
         title.textContent = notification.title || '새 알림';
         message.textContent = notification.message || '';
-        
         modal.style.display = 'flex';
 
-        // 기존 이벤트 리스너 제거
         const newAcceptBtn = acceptBtn.cloneNode(true);
         const newCloseBtn = closeBtn.cloneNode(true);
+        
         acceptBtn.parentNode.replaceChild(newAcceptBtn, acceptBtn);
         closeBtn.parentNode.replaceChild(newCloseBtn, closeBtn);
 
-        // 새 이벤트 리스너 추가
         newAcceptBtn.addEventListener('click', (e) => {
             e.preventDefault();
             e.stopPropagation();
             modal.style.display = 'none';
+            
             if (notification.type === 'NEW_PROBLEM') {
-                window.location.href = '/student/today';
+                location.assign('/student/today');
             }
         });
 
@@ -170,7 +171,6 @@ class StudentWebSocket {
             modal.style.display = 'none';
         });
 
-        // 모달 외부 클릭 방지
         modal.addEventListener('click', (e) => {
             if (e.target === modal) {
                 e.preventDefault();
@@ -181,5 +181,4 @@ class StudentWebSocket {
     }
 }
 
-// 전역으로 초기화
 window.studentWebSocket = new StudentWebSocket();

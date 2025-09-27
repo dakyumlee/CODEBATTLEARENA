@@ -1,39 +1,36 @@
 class PageGuard {
     static checkAccess(requiredRoles, currentPath) {
         if (!AuthManager.isLoggedIn()) {
-            window.location.href = '/';
+            location.replace('/');
             return false;
         }
-
         const userRole = AuthManager.getCurrentUserRole();
         if (!userRole) {
-            window.location.href = '/';
+            location.replace('/');
             return false;
         }
-
         if (Array.isArray(requiredRoles)) {
             if (!requiredRoles.includes(userRole)) {
                 this.redirectToDefaultPage(userRole);
                 return false;
             }
         }
-
         return true;
     }
 
     static redirectToDefaultPage(userRole) {
         switch (userRole) {
             case 'STUDENT':
-                window.location.href = '/student';
+                location.replace('/student/today');
                 break;
             case 'TEACHER':
-                window.location.href = '/teacher';
+                location.replace('/teacher/dashboard');
                 break;
             case 'ADMIN':
-                window.location.href = '/admin';
+                location.replace('/admin/dashboard');
                 break;
             default:
-                window.location.href = '/';
+                location.replace('/');
         }
     }
 
