@@ -4,7 +4,7 @@ import com.codebattlearena.model.User;
 import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,67 +20,57 @@ public class InitController {
     @Autowired
     private UserRepository userRepository;
 
-    @PostMapping("/reset-passwords")
-    public Map<String, String> resetPasswords() {
-        Map<String, String> result = new HashMap<>();
-        
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+
+    @PostMapping("/create-default-users")
+    public Map<String, Object> createDefaultUsers() {
         try {
-            // 모든 테스트 계정 삭제 후 재생성
-            userRepository.deleteByEmail("admin@test.com");
-            userRepository.deleteByEmail("teacher@test.com");  
-            userRepository.deleteByEmail("student@test.com");
-            userRepository.deleteByEmail("oicrcutie@gmail.com");
+            // 기존 사용자들 삭제
+            userRepository.findByEmail("admin@admin.com").ifPresent(userRepository::delete);
+            userRepository.findByEmail("teacher@test.com").ifPresent(userRepository::delete);
+            userRepository.findByEmail("student@test.com").ifPresent(userRepository::delete);
+            userRepository.findByEmail("student2@test.com").ifPresent(userRepository::delete);
 
-            // 새로 생성
-            createUser("관리자", "admin@test.com", "1234", UserRole.ADMIN);
-            createUser("김강사", "teacher@test.com", "1234", UserRole.TEACHER);
-            createUser("박학생", "student@test.com", "1234", UserRole.STUDENT);
-            createUser("원관리자", "oicrcutie@gmail.com", "aa667788!!", UserRole.ADMIN);
+            // 관리자 생성
+            User admin = new User();
+            admin.setName("관리자");
+            admin.setEmail("admin@admin.com");
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            admin.setRole(UserRole.ADMIN);
+            admin.setCreatedAt(LocalDateTime.now());
+            userRepository.save(admin);
 
-            result.put("status", "success");
-            result.put("message", "모든 테스트 계정이 재생성되었습니다.");
-            
+            // 강사 생성
+            User teacher = new User();
+            teacher.setName("김강사");
+            teacher.setEmail("teacher@test.com");
+            teacher.setPassword(passwordEncoder.encode("password123"));
+            teacher.setRole(UserRole.TEACHER);
+            teacher.setCreatedAt(LocalDateTime.now());
+            userRepository.save(teacher);
+
+            // 학생1 생성
+            User student1 = new User();
+            student1.setName("박학생");
+            student1.setEmail("student@test.com");
+            student1.setPassword(passwordEncoder.encode("password123"));
+            student1.setRole(UserRole.STUDENT);
+            student1.setCreatedAt(LocalDateTime.now());
+            userRepository.save(student1);
+
+            // 학생2 생성
+            User student2 = new User();
+            student2.setName("이학생");
+            student2.setEmail("student2@test.com");
+            student2.setPassword(passwordEncoder.encode("password123"));
+            student2.setRole(UserRole.STUDENT);
+            student2.setCreatedAt(LocalDateTime.now());
+            userRepository.save(student2);
+
+            return Map.of("success", true, "message", "기본 사용자들이 생성되었습니다.");
         } catch (Exception e) {
-            result.put("status", "error");
-            result.put("message", "오류: " + e.getMessage());
+            return Map.of("success", false, "message", "사용자 생성 실패: " + e.getMessage());
         }
-        
-        return result;
-    }
-
-    private void createUser(String name, String email, String password, UserRole role) {
-        User user = new User();
-        user.setName(name);
-        user.setEmail(email);
-        user.setPassword(password);
-        user.setRole(role);
-        user.setOnlineStatus(false);
-        user.setCreatedAt(LocalDateTime.now());
-        user.setLastActivity(LocalDateTime.now());
-        userRepository.save(user);
-        
-        System.out.println("생성된 사용자: " + name + " (" + email + ") - 비밀번호: " + password);
-    }
-
-    @GetMapping("/test-login")
-    public Map<String, Object> testLogin() {
-        Map<String, Object> result = new HashMap<>();
-        
-        try {
-            var admin = userRepository.findByEmail("admin@test.com");
-            var teacher = userRepository.findByEmail("teacher@test.com");
-            var student = userRepository.findByEmail("student@test.com");
-            var owner = userRepository.findByEmail("oicrcutie@gmail.com");
-            
-            result.put("admin", admin.isPresent() ? admin.get().getPassword() : "없음");
-            result.put("teacher", teacher.isPresent() ? teacher.get().getPassword() : "없음");
-            result.put("student", student.isPresent() ? student.get().getPassword() : "없음");
-            result.put("owner", owner.isPresent() ? owner.get().getPassword() : "없음");
-            
-        } catch (Exception e) {
-            result.put("error", e.getMessage());
-        }
-        
-        return result;
     }
 }
