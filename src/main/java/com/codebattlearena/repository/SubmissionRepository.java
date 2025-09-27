@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface SubmissionRepository extends JpaRepository<Submission, Long> {
@@ -18,6 +19,8 @@ public interface SubmissionRepository extends JpaRepository<Submission, Long> {
     List<Submission> findPendingSubmissionsByTeacher(@Param("teacherId") Long teacherId);
     
     boolean existsByUserIdAndProblemId(Long userId, Long problemId);
+    
+    Optional<Submission> findByUserIdAndProblemId(Long userId, Long problemId);
     
     @Query("SELECT s FROM Submission s JOIN Problem p ON s.problemId = p.id WHERE p.teacherId = :teacherId ORDER BY s.submittedAt DESC")
     List<Submission> findSubmissionsByTeacher(@Param("teacherId") Long teacherId);
