@@ -214,7 +214,7 @@
         <div class="header-content">
             <div class="logo">CodeBattleArena</div>
             <nav style="display: flex; gap: 30px;">
-                <span style="color: #718096;">국비학원 전용 코딩 플랫폼</span>
+                <span style="color: #718096;">코딩 플랫폼</span>
             </nav>
         </div>
     </div>
@@ -223,7 +223,7 @@
         <div class="left-content">
             <h1 class="main-title">CodeBattleArena</h1>
             <p class="main-subtitle">
-                국비학원을 위한 스마트 코딩 학습 플랫폼<br>
+                스마트 코딩 학습 플랫폼<br>
                 AI와 함께하는 실시간 코딩 교육 시스템
             </p>
             
@@ -297,25 +297,16 @@
                 });
                 
                 const data = await response.json();
+                console.log('Login response:', data);
                 
                 if (data.success) {
                     localStorage.setItem('authToken', data.token);
-                    localStorage.setItem('userRole', data.role);
-                    localStorage.setItem('userName', data.name);
+                    localStorage.setItem('userRole', data.user.role);
+                    localStorage.setItem('userName', data.user.name);
                     
-                    // 역할별 페이지 이동
-                    switch(data.role) {
-                        case 'ADMIN':
-                            window.location.href = '/admin';
-                            break;
-                        case 'TEACHER':
-                            window.location.href = '/teacher';
-                            break;
-                        case 'STUDENT':
-                        default:
-                            window.location.href = '/student';
-                            break;
-                    }
+                    document.cookie = `authToken=${data.token}; path=/; max-age=86400; SameSite=Lax`;
+                    
+                    window.location.href = data.redirectUrl;
                 } else {
                     alert(data.message || '로그인에 실패했습니다.');
                 }
