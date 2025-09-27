@@ -1,6 +1,9 @@
 spring:
+  application:
+    name: CodeBattleArena
+  
   datasource:
-    url: jdbc:postgresql://localhost:5433/codebattlearena
+    url: jdbc:postgresql://localhost:5432/codebattlearena
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
@@ -8,43 +11,16 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-    show-sql: true
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        format_sql: true
-    defer-datasource-initialization: true
-
-  sql:
-    init:
-      mode: always
-      data-locations: classpath:data.sql
-  
-  thymeleaf:
-    cache: false
-    prefix: classpath:/templates/
-    suffix: .html
-  
-  servlet:
-    multipart:
-      max-file-size: 10MB
-      max-request-size: 10MB
+    show-sql: false
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    
+  websocket:
+    allowed-origins: "*"
 
 server:
   port: 8080
 
-jwt:
-  secret: codebattlearena-secret-key-2025-very-long-and-secure-key
-  expiration: 86400000
-
-ai:
-  openai:
-    api-key: ${OPENAI_API_KEY:}
-
-upload:
-  path: ./uploads
-
 logging:
   level:
-    com.codebattlearena: DEBUG
-    org.springframework.security: DEBUG
+    org.springframework.messaging: DEBUG
+    org.springframework.web.socket: DEBUG
