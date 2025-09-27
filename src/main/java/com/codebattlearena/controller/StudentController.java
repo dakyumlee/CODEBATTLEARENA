@@ -53,6 +53,27 @@ public class StudentController {
         return response;
     }
 
+    @GetMapping("/teacher-problems")
+    public List<Map<String, Object>> getTeacherProblems(HttpServletRequest request) {
+        Long userId = getUserIdFromRequest(request);
+        if (userId == null) {
+            return new ArrayList<>();
+        }
+        
+        List<Map<String, Object>> problems = new ArrayList<>();
+        
+        Map<String, Object> problem = new HashMap<>();
+        problem.put("id", 1);
+        problem.put("title", "실시간 테스트 문제");
+        problem.put("description", "강사님이 방금 출제한 문제입니다");
+        problem.put("difficulty", "중");
+        problem.put("timeLimit", 30);
+        problem.put("createdAt", System.currentTimeMillis());
+        problems.add(problem);
+        
+        return problems;
+    }
+
     @GetMapping("/stats")
     public Map<String, Object> getStats(HttpServletRequest request) {
         Long userId = getUserIdFromRequest(request);
