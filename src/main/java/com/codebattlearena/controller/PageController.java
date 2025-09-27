@@ -25,4 +25,29 @@ public class PageController {
     public String adminDashboard() {
         return "admin/dashboard";
     }
+
+    @GetMapping("/student/ai-tutor")
+    public String studentAiTutor() {
+        return "student/ai-tutor";
+    }
+
+    @GetMapping("/student/practice")
+    public String studentPractice() {
+        return "student/practice";
+    }
+
+    @GetMapping("/student/notes")
+    public String studentNotes() {
+        return "student/notes";
+    }
+
+    @GetMapping("/teacher/class")
+    public String teacherClass() {
+        return "teacher/class";
+    }
+
+    @GetMapping("/teacher/grades")
+    public String teacherGrades() {
+        return "teacher/grades";
+    }
 }
