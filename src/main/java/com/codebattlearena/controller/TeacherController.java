@@ -272,13 +272,11 @@ public class TeacherController {
             problem.setCreatedAt(LocalDateTime.now());
 
             if ("QUIZ".equals(problemData.get("type"))) {
-                Map<String, Object> quizOptions = new HashMap<>();
-                quizOptions.put("optionA", problemData.get("optionA"));
-                quizOptions.put("optionB", problemData.get("optionB"));
-                quizOptions.put("optionC", problemData.get("optionC"));
-                quizOptions.put("optionD", problemData.get("optionD"));
-                quizOptions.put("correctAnswer", problemData.get("correctAnswer"));
-                problem.setTestCases(quizOptions.toString());
+                problem.setOptionA((String) problemData.get("optionA"));
+                problem.setOptionB((String) problemData.get("optionB"));
+                problem.setOptionC((String) problemData.get("optionC"));
+                problem.setOptionD((String) problemData.get("optionD"));
+                problem.setCorrectAnswer((String) problemData.get("correctAnswer"));
             }
 
             Problem savedProblem = problemRepository.save(problem);
