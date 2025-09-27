@@ -34,4 +34,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Long countByGroupIdInAndOnlineStatusTrue(List<Long> groupIds);
     
     List<User> findAllByOrderByCreatedAtDesc();
+
+    List<User> findByGroupIdIn(List<Long> groupIds);
 }

@@ -170,11 +170,24 @@
             padding: 20px;
         }
         
-        .group-name { font-weight: 600; color: #1976d2; margin-bottom: 8px; }
+        .group-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+        
+        .group-name { font-weight: 600; color: #1976d2; }
         .group-description { color: #666; margin-bottom: 12px; font-size: 0.9rem; }
         .group-stats { 
             color: #2196f3; font-size: 0.85rem; margin-bottom: 12px;
             display: flex; justify-content: space-between; align-items: center;
+        }
+        
+        .group-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
         }
         
         .modal {
@@ -372,10 +385,15 @@
                         <div class="groups-list">
                             ${data.groups.map(group => `
                                 <div class="group-card">
-                                    <div class="group-name">${group.name}</div>
+                                    <div class="group-header">
+                                        <div class="group-name">${group.name}</div>
+                                        <button class="btn btn-small btn-danger" onclick="deleteGroup(${group.id}, '${group.name}')">삭제</button>
+                                    </div>
                                     <div class="group-description">${group.description || '설명 없음'}</div>
                                     <div class="group-stats">
                                         <span>학생 수: ${group.studentCount}명</span>
+                                    </div>
+                                    <div class="group-actions">
                                         <button class="btn btn-small btn-primary" onclick="viewGroupStudents(${group.id}, '${group.name}')">학생 보기</button>
                                     </div>
                                 </div>
@@ -388,6 +406,31 @@
             } catch (error) {
                 console.error('그룹 로드 실패:', error);
                 document.getElementById('groupsContainer').innerHTML = '<div class="empty-state">그룹을 불러올 수 없습니다.</div>';
+            }
+        }
+
+        async function deleteGroup(groupId, groupName) {
+            if (!confirm(`"${groupName}" 그룹을 삭제하시겠습니까?\n\n그룹에 속한 학생들은 미배정 상태가 됩니다.`)) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/teacher/groups/${groupId}`, {
+                    method: 'DELETE'
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('그룹이 삭제되었습니다.');
+                    loadGroups();
+                    loadStudents();
+                    loadStatistics();
+                } else {
+                    alert('그룹 삭제 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
             }
         }
 

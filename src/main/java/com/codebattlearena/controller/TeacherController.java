@@ -219,6 +219,32 @@ public class TeacherController {
         }
     }
 
+    @DeleteMapping("/groups/{id}")
+    public Map<String, Object> deleteGroup(@PathVariable Long id, HttpSession session) {
+        try {
+            Long teacherId = getUserIdFromSession(session);
+            if (teacherId == null) {
+                return Map.of("success", false, "message", "인증이 필요합니다.");
+            }
+
+            Group group = groupRepository.findById(id).orElse(null);
+            if (group == null || !group.getTeacherId().equals(teacherId)) {
+                return Map.of("success", false, "message", "그룹을 찾을 수 없습니다.");
+            }
+
+            List<User> studentsInGroup = userRepository.findByGroupId(id);
+            for (User student : studentsInGroup) {
+                student.setGroupId(null);
+                userRepository.save(student);
+            }
+
+            groupRepository.delete(group);
+            return Map.of("success", true, "message", "그룹이 삭제되었습니다.");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "삭제 실패: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/students")
     public Map<String, Object> getMyStudents(HttpSession session) {
         try {
@@ -227,9 +253,19 @@ public class TeacherController {
                 return Map.of("error", "Unauthorized");
             }
 
-            List<User> allStudents = userRepository.findByRole(UserRole.STUDENT);
+            List<Group> myGroups = groupRepository.findByTeacherId(teacherId);
+            List<Long> groupIds = myGroups.stream().map(Group::getId).collect(Collectors.toList());
+            
+            List<User> myStudents;
+            if (groupIds.isEmpty()) {
+                myStudents = userRepository.findByRoleAndGroupIdIsNull(UserRole.STUDENT);
+            } else {
+                myStudents = userRepository.findByGroupIdIn(groupIds);
+                List<User> unassignedStudents = userRepository.findByRoleAndGroupIdIsNull(UserRole.STUDENT);
+                myStudents.addAll(unassignedStudents);
+            }
 
-            List<Map<String, Object>> studentData = allStudents.stream().map(student -> {
+            List<Map<String, Object>> studentData = myStudents.stream().map(student -> {
                 Map<String, Object> data = new HashMap<>();
                 data.put("id", student.getId());
                 data.put("name", student.getName());
