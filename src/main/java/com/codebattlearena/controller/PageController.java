@@ -201,7 +201,7 @@ public class PageController {
     private boolean isValidUser(HttpServletRequest request, UserRole requiredRole) {
         try {
             String token = getTokenFromRequest(request);
-            if (token == null) {
+            if (token == null || token.trim().isEmpty()) {
                 return false;
             }
 
@@ -210,32 +210,44 @@ public class PageController {
             }
 
             String email = jwtUtil.extractEmail(token);
+            if (email == null || email.trim().isEmpty()) {
+                return false;
+            }
+
             User user = userRepository.findByEmail(email).orElse(null);
-            
+
             return user != null && user.getRole() == requiredRole;
         } catch (Exception e) {
             System.err.println("인증 확인 오류: " + e.getMessage());
+            e.printStackTrace();
             return false;
         }
     }
 
     private String getTokenFromRequest(HttpServletRequest request) {
-        // Authorization 헤더에서 토큰 확인
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader != null && authHeader.startsWith("Bearer ")) {
-            return authHeader.substring(7);
-        }
-
-        // 쿠키에서 토큰 확인
-        Cookie[] cookies = request.getCookies();
-        if (cookies != null) {
-            for (Cookie cookie : cookies) {
-                if ("authToken".equals(cookie.getName())) {
-                    return cookie.getValue();
+        try {
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader != null && authHeader.startsWith("Bearer ") && authHeader.length() > 7) {
+                String token = authHeader.substring(7).trim();
+                if (!token.isEmpty()) {
+                    return token;
                 }
             }
-        }
 
-        return null;
+            Cookie[] cookies = request.getCookies();
+            if (cookies != null) {
+                for (Cookie cookie : cookies) {
+                    if ("authToken".equals(cookie.getName()) && cookie.getValue() != null
+                            && !cookie.getValue().trim().isEmpty()) {
+                        return cookie.getValue().trim();
+                    }
+                }
+            }
+
+            return null;
+        } catch (Exception e) {
+            System.err.println("토큰 추출 오류: " + e.getMessage());
+            return null;
+        }
     }
 }
