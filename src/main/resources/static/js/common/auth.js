@@ -39,6 +39,14 @@ class AuthManager {
         return !!this.getAuthToken();
     }
 
+    static isLoggedIn() {
+        return this.isAuthenticated();
+    }
+
+    static getCurrentUserRole() {
+        return this.getUserRole();
+    }
+
     static getAuthHeaders() {
         const token = this.getAuthToken();
         return token ? { 'Authorization': `Bearer ${token}` } : {};
