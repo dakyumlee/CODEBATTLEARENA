@@ -23,7 +23,7 @@ class AuthManager {
                 });
                 
                 setTimeout(() => {
-                    window.location.href = data.redirectUrl;
+                    this.redirectByRole();
                 }, 100);
                 
                 return data;
@@ -74,10 +74,18 @@ class AuthManager {
     static redirectByRole() {
         const role = this.getUserRole();
         switch(role) {
-            case 'STUDENT': window.location.href = '/student'; break;
-            case 'TEACHER': window.location.href = '/teacher'; break;
-            case 'ADMIN': window.location.href = '/admin'; break;
-            default: window.location.href = '/'; break;
+            case 'STUDENT': 
+                window.location.href = '/student/today'; 
+                break;
+            case 'TEACHER': 
+                window.location.href = '/teacher/dashboard'; 
+                break;
+            case 'ADMIN':
+                window.location.href = '/admin/dashboard'; 
+                break;
+            default: 
+                window.location.href = '/'; 
+                break;
         }
     }
 }
