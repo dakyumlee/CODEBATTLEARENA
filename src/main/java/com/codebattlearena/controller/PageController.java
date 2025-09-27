@@ -18,14 +18,59 @@ public class PageController {
         return "index";
     }
 
+    @GetMapping("/register")
+    public String register() {
+        return "register";
+    }
+
     @GetMapping("/student/today")
     public String studentToday() {
         return "student/today";
     }
 
+    @GetMapping("/student/ai-tutor")
+    public String studentAiTutor() {
+        return "student/ai-tutor";
+    }
+
+    @GetMapping("/student/practice")
+    public String studentPractice() {
+        return "student/practice";
+    }
+
+    @GetMapping("/student/notes")
+    public String studentNotes() {
+        return "student/notes";
+    }
+
+    @GetMapping("/student/battle")
+    public String studentBattle() {
+        return "student/battle";
+    }
+
+    @GetMapping("/student/dashboard")
+    public String studentDashboard() {
+        return "student/dashboard";
+    }
+
     @GetMapping("/teacher/dashboard")
     public String teacherDashboard() {
         return "teacher/dashboard";
+    }
+
+    @GetMapping("/teacher/class")
+    public String teacherClass() {
+        return "teacher/class";
+    }
+
+    @GetMapping("/teacher/grades")
+    public String teacherGrades() {
+        return "teacher/grades";
+    }
+
+    @GetMapping("/teacher/create-problem")
+    public String teacherCreateProblem() {
+        return "teacher/create-problem";
     }
 
     @GetMapping("/admin/dashboard")
