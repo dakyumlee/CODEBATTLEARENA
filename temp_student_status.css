@@ -1,0 +1,130 @@
+.problem-card {
+    background: white;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border-left: 4px solid #ddd;
+    transition: all 0.2s;
+}
+
+.problem-card.submitted {
+    border-left-color: #4caf50;
+    background: #f8fff8;
+}
+
+.problem-card.pending {
+    border-left-color: #ff9800;
+    background: #fffaf0;
+}
+
+.problem-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.problem-header h4 {
+    margin: 0 0 8px 0;
+    color: #1976d2;
+}
+
+.problem-status {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+}
+
+.status-indicator {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.status-indicator.status-submitted {
+    background: rgba(76, 175, 80, 0.2);
+    color: #4caf50;
+}
+
+.status-indicator.status-pending {
+    background: rgba(255, 152, 0, 0.2);
+    color: #ff9800;
+}
+
+.score-badge {
+    background: #4caf50;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+}
+
+.type-badge {
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.type-badge.type-problem {
+    background: rgba(33, 150, 243, 0.2);
+    color: #1976d2;
+}
+
+.type-badge.type-quiz {
+    background: rgba(255, 152, 0, 0.2);
+    color: #f57c00;
+}
+
+.type-badge.type-exam {
+    background: rgba(244, 67, 54, 0.2);
+    color: #d32f2f;
+}
+
+.problem-description {
+    color: #666;
+    margin-bottom: 15px;
+    line-height: 1.5;
+}
+
+.problem-actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.problem-info {
+    color: #999;
+    font-size: 0.85rem;
+}
+
+.feedback-section {
+    margin-top: 15px;
+    padding: 12px;
+    background: #e8f5e8;
+    border-radius: 8px;
+    border-left: 3px solid #4caf50;
+}
+
+.feedback-content {
+    margin-top: 8px;
+    color: #2e7d32;
+    font-style: italic;
+}
+
+@media (max-width: 768px) {
+    .problem-header {
+        flex-direction: column;
+        gap: 10px;
+    }
+    
+    .problem-actions {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+}

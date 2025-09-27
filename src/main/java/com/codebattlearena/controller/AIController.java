@@ -76,14 +76,14 @@ public class AIController {
             
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("model", "gpt-4o-mini");
-            requestBody.put("max_tokens", 1500);
-            requestBody.put("temperature", 0.7);
+            requestBody.put("max_tokens", 200);
+            requestBody.put("temperature", 0.3);
             
             List<Map<String, String>> messages = new ArrayList<>();
             messages.add(Map.of("role", "system", "content", 
-                "당신은 친근하고 전문적인 프로그래밍 튜터입니다. 한국어로 답변하며, " +
-                "학생들이 코딩을 쉽게 이해할 수 있도록 도와주세요. " +
-                "구체적인 예시 코드와 단계별 설명을 포함하여 답변해주세요."));
+                "당신은 간결한 프로그래밍 튜터입니다. " +
+                "한국어로 2-3문장 이내로 짧고 친근하게 답변하세요. " +
+                "불필요한 예시나 긴 설명은 피하고 핵심만 말하세요."));
             messages.add(Map.of("role", "user", "content", userMessage));
             
             requestBody.put("messages", messages);
@@ -119,14 +119,21 @@ public class AIController {
         String message = userMessage.toLowerCase();
         
         if (message.contains("안녕") || message.contains("hello")) {
-            return "안녕하세요! 프로그래밍 학습을 도와드릴게요. 어떤 것이 궁금하신가요?";
+            return "안녕하세요! 무엇을 도와드릴까요?";
         }
         
         if (message.contains("자바") || message.contains("java")) {
-            return "자바는 객체지향 프로그래밍 언어입니다. 클래스와 객체의 개념을 이해하는 것이 중요해요.";
+            if (message.contains("어려워") || message.contains("힘들어")) {
+                return "한 단계씩 꾸준히 하는게 중요해요! 화이팅!\n어떤 부분이 제일 어려우신가요?";
+            }
+            return "자바 관련해서 어떤 것이 궁금하신가요?";
         }
         
-        return "현재 AI 서비스 설정이 필요합니다. 기본적인 프로그래밍 질문에 대해서는 도움을 드릴 수 있습니다.";
+        if (message.contains("객체") || message.contains("클래스")) {
+            return "클래스는 설계도, 객체는 실제 만든 것이라고 생각하면 돼요.";
+        }
+        
+        return "구체적으로 어떤 부분이 궁금하신가요?";
     }
 
     public static class ChatRequest {

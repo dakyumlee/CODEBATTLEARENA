@@ -1,0 +1,19 @@
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">채점 관리</h2>
+                <div class="action-buttons">
+                    <button class="btn btn-primary" onclick="loadSubmissionsByType('PROBLEM')">문제</button>
+                    <button class="btn btn-warning" onclick="loadSubmissionsByType('QUIZ')">퀴즈</button>
+                    <button class="btn btn-danger" onclick="loadSubmissionsByType('EXAM')">시험</button>
+                    <button class="btn btn-success" onclick="loadAllSubmissions()">전체</button>
+                </div>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <span id="submissionTypeFilter" style="color: #666; font-weight: 600;">전체 제출물</span>
+            </div>
+            
+            <div id="submissionsContainer">
+                <div class="empty-state">제출된 답안이 없습니다.</div>
+            </div>
+        </div>

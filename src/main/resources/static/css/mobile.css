@@ -1,0 +1,185 @@
+@media (max-width: 768px) {
+    .header-content {
+        flex-direction: column;
+        gap: 15px;
+        padding: 15px;
+    }
+    
+    .nav-menu {
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .nav-item {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+    
+    .main-container {
+        padding: 15px;
+    }
+    
+    .page-title {
+        font-size: 2rem;
+        margin-bottom: 20px;
+    }
+    
+    .section-card {
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .section-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+    }
+    
+    .action-buttons {
+        width: 100%;
+        flex-direction: column;
+    }
+    
+    .btn {
+        width: 100%;
+        padding: 15px;
+        margin-bottom: 10px;
+    }
+    
+    .materials-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 10px;
+        max-height: 90vh;
+        padding: 20px;
+    }
+    
+    .form-control {
+        font-size: 16px;
+        padding: 15px;
+    }
+    
+    table {
+        font-size: 0.85rem;
+        overflow-x: auto;
+        display: block;
+        white-space: nowrap;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+    }
+    
+    .material-card, .submission-card {
+        padding: 15px;
+    }
+    
+    .chart-container {
+        height: 250px;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.5rem;
+    }
+    
+    .section-title {
+        font-size: 1.2rem;
+    }
+    
+    .btn-small {
+        font-size: 0.8rem;
+        padding: 10px;
+    }
+    
+    .modal-content {
+        padding: 15px;
+    }
+    
+    .form-control {
+        font-size: 16px;
+    }
+    
+    .header {
+        padding: 15px;
+    }
+    
+    .logo {
+        font-size: 1.2rem;
+    }
+}
+
+.mobile-login-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-login-toggle {
+        display: block;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #2196f3;
+        color: white;
+        border: none;
+        padding: 12px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        z-index: 1000;
+        font-weight: 600;
+    }
+    
+    .auth-container {
+        display: none;
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        left: 20px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        padding: 25px;
+        z-index: 999;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+    
+    .auth-container.mobile-show {
+        display: block;
+    }
+    
+    .hero-content {
+        text-align: center;
+        padding: 60px 20px 40px;
+    }
+    
+    .hero-content h1 {
+        font-size: 2rem;
+        margin-bottom: 15px;
+    }
+    
+    .hero-content p {
+        font-size: 1rem;
+        margin-bottom: 30px;
+    }
+    
+    .features {
+        padding: 40px 20px;
+    }
+    
+    .features-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+    }
+    
+    .feature-card {
+        padding: 20px;
+    }
+}

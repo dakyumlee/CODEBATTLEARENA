@@ -1,0 +1,58 @@
+    <div id="improvedGradeModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <h3 class="modal-title">답안 채점</h3>
+            <form id="improvedGradeForm">
+                <input type="hidden" id="improvedGradeSubmissionId">
+                
+                <div class="form-group">
+                    <label class="form-label">학생 정보</label>
+                    <div style="background: #f8fafe; padding: 15px; border-radius: 8px; margin-bottom: 15px;">
+                        <strong id="improvedGradeStudentName"></strong> | 
+                        <span id="improvedGradeProblemType" class="status-badge"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">문제 내용</label>
+                    <div style="background: #fff3e0; padding: 15px; border-radius: 8px; border-left: 4px solid #ff9800;">
+                        <h4 id="improvedGradeProblemTitle" style="margin-bottom: 10px; color: #f57c00;"></h4>
+                        <div id="improvedGradeProblemDescription" style="white-space: pre-wrap; margin-bottom: 15px;"></div>
+                        <div id="improvedGradeQuizOptions" style="display: none;">
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px;">
+                                <div><strong>A:</strong> <span id="optionA"></span></div>
+                                <div><strong>B:</strong> <span id="optionB"></span></div>
+                                <div><strong>C:</strong> <span id="optionC"></span></div>
+                                <div><strong>D:</strong> <span id="optionD"></span></div>
+                            </div>
+                            <div style="margin-top: 10px; color: #4caf50; font-weight: 600;">
+                                정답: <span id="correctAnswer"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">학생 답안</label>
+                    <div style="background: #e3f2fd; padding: 15px; border-radius: 8px; border-left: 4px solid #2196f3;">
+                        <div id="improvedGradeStudentAnswer" style="white-space: pre-wrap; font-family: 'Courier New', monospace; min-height: 100px;"></div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: 1fr 2fr; gap: 20px;">
+                    <div class="form-group">
+                        <label class="form-label">점수 (0-100)</label>
+                        <input type="number" name="score" class="form-control" min="0" max="100" required style="font-size: 1.2rem; text-align: center;">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">피드백</label>
+                        <textarea name="feedback" class="form-control" rows="4" placeholder="학생에게 줄 피드백을 작성하세요"></textarea>
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeImprovedGradeModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">채점 완료</button>
+                </div>
+            </form>
+        </div>
+    </div>

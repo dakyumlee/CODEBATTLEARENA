@@ -220,6 +220,8 @@
             .materials-grid { grid-template-columns: 1fr; }
         }
     </style>
+<link rel="stylesheet" href="/css/mobile.css">
+<script src="/js/mobile.js">
 </head>
 <body>
     <div class="header">
@@ -902,3 +904,107 @@ Id;
     </script>
 </body>
 </html>
+    <div id="createQuizModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">퀴즈 생성 (4지선다)</h3>
+            <form id="createQuizForm">
+                <div class="form-group">
+                    <label class="form-label">퀴즈 제목</label>
+                    <input type="text" name="title" class="form-control" placeholder="퀴즈 제목" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">문제</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="퀴즈 문제를 작성하세요" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 A</label>
+                    <input type="text" name="optionA" class="form-control" placeholder="첫 번째 선택지" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 B</label>
+                    <input type="text" name="optionB" class="form-control" placeholder="두 번째 선택지" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 C</label>
+                    <input type="text" name="optionC" class="form-control" placeholder="세 번째 선택지" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 D</label>
+                    <input type="text" name="optionD" class="form-control" placeholder="네 번째 선택지" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">정답</label>
+                    <select name="correctAnswer" class="form-control" required>
+                        <option value="">정답을 선택하세요</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">제한 시간 (분)</label>
+                    <input type="number" name="timeLimit" class="form-control" value="10" min="1">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">배점</label>
+                    <input type="number" name="points" class="form-control" value="100" min="1">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeCreateQuizModal()">취소</button>
+                    <button type="submit" class="btn btn-warning">퀴즈 생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+<script>
+function showCreateQuizModal() {
+    document.getElementById('createQuizModal').style.display = 'flex';
+}
+
+function closeCreateQuizModal() {
+    document.getElementById('createQuizModal').style.display = 'none';
+    document.getElementById('createQuizForm').reset();
+}
+
+document.getElementById('createQuizForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const quizData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        type: 'QUIZ',
+        optionA: formData.get('optionA'),
+        optionB: formData.get('optionB'),
+        optionC: formData.get('optionC'),
+        optionD: formData.get('optionD'),
+        correctAnswer: formData.get('correctAnswer'),
+        timeLimit: formData.get('timeLimit'),
+        points: formData.get('points')
+    };
+
+    try {
+        const response = await fetch('/api/teacher/problems', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+            },
+            body: JSON.stringify(quizData)
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('퀴즈가 성공적으로 생성되었습니다.');
+            closeCreateQuizModal();
+            loadProblems();
+        } else {
+            alert('퀴즈 생성 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    }
+});
+</script>
