@@ -5,9 +5,7 @@ import com.codebattlearena.model.UserRole;
 import com.codebattlearena.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -22,17 +20,15 @@ public class InitController {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    @PostMapping("/setup-admin")
+    @GetMapping("/setup-admin")
     public Map<String, Object> setupAdmin() {
         try {
-            // 기존 관리자들 모두 삭제
             userRepository.findAll().forEach(user -> {
                 if (user.getRole() == UserRole.ADMIN) {
                     userRepository.delete(user);
                 }
             });
 
-            // 지정된 관리자만 생성
             User admin = new User();
             admin.setName("관리자");
             admin.setEmail("oicrcutie@gmail.com");
