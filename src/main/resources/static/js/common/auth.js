@@ -8,23 +8,11 @@ class AuthManager {
         .then(response => response.json())
         .then(data => {
             console.log('전체 응답:', JSON.stringify(data, null, 2));
-            console.log('data.user:', data.user);
-            console.log('data.user.role:', data.user ? data.user.role : 'user 객체 없음');
             
             if (data.success) {
-                const role = data.user.role;
-                console.log('역할:', role);
-                
-                if (role === 'STUDENT') {
-                    window.location.href = '/student/today';
-                } else if (role === 'TEACHER') {
-                    window.location.href = '/teacher/dashboard';
-                } else if (role === 'ADMIN') {
-                    window.location.href = '/admin/dashboard';
-                } else {
-                    console.error('알 수 없는 역할:', role);
-                    window.location.href = '/student/today';
-                }
+                // 임시로 모든 사용자를 student로 처리
+                console.log('로그인 성공 - student 페이지로 이동');
+                window.location.href = '/student/today';
                 return data;
             }
             throw new Error(data.message);
