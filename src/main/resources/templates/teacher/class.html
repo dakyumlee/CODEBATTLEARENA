@@ -748,8 +748,8 @@
         }
 
         function previewMaterial(id, title, fileType) {
-            const downloadUrl = `/api/teacher/materials/${id}/download`;
-            showPreviewModal(title, downloadUrl, fileType);
+            const previewUrl = `/teacher/materials/${id}/preview`;
+            window.open(previewUrl, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
         }
 
         function showPreviewModal(title, filePath, fileType) {
@@ -1137,7 +1137,7 @@
         }
 
         function downloadMaterial(id) {
-            window.open(`/api/teacher/materials/${id}/download`, '_blank');
+            window.open(`/api/teacher/materials/${id}/download-fixed`, '_blank');
         }
 
         async function deleteMaterial(id) {

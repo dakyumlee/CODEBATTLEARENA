@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>이미지 미리보기 - CodeBattleArena</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif; background: #f5f5f5; }
+        .header { background: white; padding: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        .header h1 { color: #2196f3; font-size: 1.5rem; }
+        .file-info { color: #666; margin-top: 10px; }
+        .content { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .image-viewer { background: white; border-radius: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); padding: 20px; text-align: center; }
+        .preview-image { max-width: 100%; max-height: 70vh; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); }
+        .download-section { text-align: center; padding: 20px; background: white; margin-top: 20px; border-radius: 8px; }
+        .btn { padding: 12px 24px; background: #2196f3; color: white; border: none; border-radius: 6px; text-decoration: none; font-weight: 600; }
+        .btn:hover { background: #1976d2; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1 th:text="${material.title}">이미지 파일</h1>
+        <div class="file-info">
+            파일 크기: <span th:text="${#numbers.formatDecimal(material.fileSize / 1024.0, 1, 1)}">0</span> KB | 
+            업로드: <span th:text="${#temporals.format(material.createdAt, 'yyyy-MM-dd HH:mm')}">날짜</span>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="image-viewer">
+            <img class="preview-image" th:src="${material.filePath}" 
+                 th:alt="${material.title}" 
+                 onerror="this.style.display='none'; document.getElementById('error-msg').style.display='block';">
+            <div id="error-msg" style="display:none; color: #666; padding: 40px;">
+                이미지를 불러올 수 없습니다.
+            </div>
+        </div>
+        
+        <div class="download-section">
+            <a th:href="@{'/api/teacher/materials/' + ${material.id} + '/download-fixed'}" 
+               class="btn" target="_blank">파일 다운로드</a>
+            <a href="javascript:window.close()" 
+               class="btn" style="background: #666; margin-left: 10px;">창 닫기</a>
+        </div>
+    </div>
+</body>
+</html>

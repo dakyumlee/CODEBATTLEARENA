@@ -216,6 +216,29 @@
         }
         
         .empty-state { text-align: center; color: #666; padding: 40px; }
+
+        .download-progress {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e3f2fd;
+            border-radius: 8px;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #ddd;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #2196f3;
+            width: 0%;
+            transition: width 0.3s;
+        }
         
         @media (max-width: 768px) {
             .chart-container { grid-template-columns: 1fr; }
@@ -283,6 +306,13 @@
                 </div>
             </div>
             
+            <div class="download-progress" id="downloadProgress">
+                <div style="margin-bottom: 5px; font-size: 0.9rem; color: #1976d2;" id="progressText">파일을 생성하는 중...</div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+            
             <div id="gradesContainer">
                 <div class="empty-state">성적 데이터를 불러오는 중...</div>
             </div>
@@ -343,6 +373,7 @@
         let currentStudentId = null;
         let gradeDistributionChart = null;
         let monthlyScoreChart = null;
+        let currentGradesData = [];
 
         async function loadGradeStatistics() {
             try {
@@ -485,6 +516,8 @@
                         participation: ['A', 'B', 'C'][Math.floor(Math.random() * 3)]
                     }));
                     
+                    currentGradesData = grades;
+                    
                     container.innerHTML = `
                         <table class="grades-table">
                             <thead>
@@ -519,10 +552,12 @@
                     `;
                 } else {
                     container.innerHTML = '<div class="empty-state">성적 데이터가 없습니다.</div>';
+                    currentGradesData = [];
                 }
             } catch (error) {
                 console.error('성적 로드 실패:', error);
                 document.getElementById('gradesContainer').innerHTML = '<div class="empty-state">성적 데이터를 불러올 수 없습니다.</div>';
+                currentGradesData = [];
             }
         }
 
@@ -553,12 +588,143 @@
             currentStudentId = null;
         }
 
+        function showProgress(text) {
+            const progressContainer = document.getElementById('downloadProgress');
+            const progressText = document.getElementById('progressText');
+            const progressFill = document.getElementById('progressFill');
+            
+            progressText.textContent = text;
+            progressContainer.style.display = 'block';
+            progressFill.style.width = '0%';
+            
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += Math.random() * 30;
+                if (progress > 100) progress = 100;
+                progressFill.style.width = progress + '%';
+                
+                if (progress >= 100) {
+                    clearInterval(interval);
+                    setTimeout(() => {
+                        progressContainer.style.display = 'none';
+                    }, 500);
+                }
+            }, 200);
+        }
+
         function exportCSV() {
-            alert('CSV 내보내기 기능을 구현했습니다!');
+            if (currentGradesData.length === 0) {
+                alert('내보낼 성적 데이터가 없습니다.');
+                return;
+            }
+            
+            showProgress('CSV 파일을 생성하는 중...');
+            
+            setTimeout(() => {
+                const headers = ['학생명', '출석률', '과제점수', '시험점수', '종합점수', '등급', '참여도'];
+                let csvContent = '\uFEFF' + headers.join(',') + '\n';
+                
+                currentGradesData.forEach(grade => {
+                    const row = [
+                        grade.studentName,
+                        grade.attendanceRate + '%',
+                        grade.assignmentScore + '점',
+                        grade.avgScore + '점',
+                        grade.avgScore + '점',
+                        getGradeLabel(grade.avgScore),
+                        grade.participation
+                    ];
+                    csvContent += row.join(',') + '\n';
+                });
+                
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const link = document.createElement('a');
+                const url = URL.createObjectURL(blob);
+                link.setAttribute('href', url);
+                link.setAttribute('download', `성적표_${new Date().toISOString().slice(0, 10)}.csv`);
+                link.style.visibility = 'hidden';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                alert('CSV 파일이 다운로드되었습니다.');
+            }, 1500);
         }
 
         function exportPDF() {
-            alert('PDF 내보내기 기능을 구현했습니다!');
+            if (currentGradesData.length === 0) {
+                alert('내보낼 성적 데이터가 없습니다.');
+                return;
+            }
+            
+            showProgress('PDF 파일을 생성하는 중...');
+            
+            setTimeout(() => {
+                const printWindow = window.open('', '_blank');
+                const printContent = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <title>성적표</title>
+                        <meta charset="UTF-8">
+                        <style>
+                            body { font-family: Arial, sans-serif; margin: 20px; }
+                            h1 { color: #1976d2; text-align: center; margin-bottom: 30px; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                            th { background-color: #f5faff; color: #1976d2; font-weight: bold; }
+                            .grade-A { color: #4caf50; font-weight: bold; }
+                            .grade-B { color: #2196f3; font-weight: bold; }
+                            .grade-C { color: #ff9800; font-weight: bold; }
+                            .grade-D, .grade-F { color: #f44336; font-weight: bold; }
+                            .footer { margin-top: 30px; text-align: right; color: #666; }
+                        </style>
+                    </head>
+                    <body>
+                        <h1>CodeBattleArena 성적표</h1>
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>학생명</th>
+                                    <th>출석률</th>
+                                    <th>과제점수</th>
+                                    <th>시험점수</th>
+                                    <th>종합점수</th>
+                                    <th>등급</th>
+                                    <th>참여도</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${currentGradesData.map(grade => `
+                                    <tr>
+                                        <td>${grade.studentName}</td>
+                                        <td>${grade.attendanceRate}%</td>
+                                        <td>${grade.assignmentScore}점</td>
+                                        <td>${grade.avgScore}점</td>
+                                        <td>${grade.avgScore}점</td>
+                                        <td class="grade-${getGradeLabel(grade.avgScore)}">${getGradeLabel(grade.avgScore)}</td>
+                                        <td>${grade.participation}</td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                        <div class="footer">
+                            생성일: ${new Date().toLocaleDateString('ko-KR')} | CodeBattleArena 강사 시스템
+                        </div>
+                    </body>
+                    </html>
+                `;
+                
+                printWindow.document.write(printContent);
+                printWindow.document.close();
+                
+                setTimeout(() => {
+                    printWindow.print();
+                    setTimeout(() => printWindow.close(), 500);
+                }, 500);
+                
+                alert('PDF 인쇄 창이 열렸습니다.');
+            }, 1500);
         }
 
         function refreshGrades() {

@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -24,8 +26,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
-@RestController
-@RequestMapping("/api/teacher")
+@Controller
 public class TeacherController {
 
     @Autowired
@@ -73,7 +74,8 @@ public class TeacherController {
         return null;
     }
 
-    @GetMapping("/statistics")
+    @GetMapping("/api/teacher/statistics")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getStatistics(HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -107,7 +109,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/groups")
+    @GetMapping("/api/teacher/groups")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getGroups(HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -136,7 +139,8 @@ public class TeacherController {
         }
     }
 
-    @PostMapping("/groups")
+    @PostMapping("/api/teacher/groups")
+    @ResponseBody
     public Map<String, Object> createGroup(@RequestBody Map<String, String> groupData, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -158,7 +162,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/group/{groupId}/students")
+    @GetMapping("/api/teacher/group/{groupId}/students")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getGroupStudents(@PathVariable Long groupId, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -189,7 +194,8 @@ public class TeacherController {
         }
     }
 
-    @PostMapping("/assign-student")
+    @PostMapping("/api/teacher/assign-student")
+    @ResponseBody
     public Map<String, Object> assignStudentToGroup(@RequestBody Map<String, Object> assignData, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -219,7 +225,8 @@ public class TeacherController {
         }
     }
 
-    @DeleteMapping("/groups/{id}")
+    @DeleteMapping("/api/teacher/groups/{id}")
+    @ResponseBody
     public Map<String, Object> deleteGroup(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -245,7 +252,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/students")
+    @GetMapping("/api/teacher/students")
+    @ResponseBody
     public Map<String, Object> getMyStudents(HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -290,7 +298,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/materials")
+    @GetMapping("/api/teacher/materials")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getMaterials(HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -320,7 +329,8 @@ public class TeacherController {
         }
     }
 
-    @PostMapping("/materials")
+    @PostMapping("/api/teacher/materials")
+    @ResponseBody
     public Map<String, Object> uploadMaterial(
             @RequestParam("title") String title,
             @RequestParam(value = "description", required = false) String description,
@@ -372,7 +382,7 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/materials/{id}/download")
+    @GetMapping("/api/teacher/materials/{id}/download")
     public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -404,35 +414,37 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/materials/{id}/preview")
-    public ResponseEntity<Map<String, Object>> previewMaterial(@PathVariable Long id, HttpSession session) {
+    @GetMapping("/api/teacher/materials/{id}/preview")
+    public ResponseEntity<Resource> previewMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
-                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
             Material material = materialRepository.findById(id).orElse(null);
             if (material == null || !material.getTeacherId().equals(teacherId)) {
-                return ResponseEntity.status(404).body(Map.of("error", "Material not found"));
+                return ResponseEntity.notFound().build();
             }
 
-            Map<String, Object> previewData = new HashMap<>();
-            previewData.put("id", material.getId());
-            previewData.put("title", material.getTitle());
-            previewData.put("description", material.getDescription());
-            previewData.put("fileType", material.getFileType());
-            previewData.put("originalFilename", material.getOriginalFilename());
-            previewData.put("fileSize", material.getFileSize());
-            previewData.put("downloadUrl", "/api/teacher/materials/" + id + "/download");
+            Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
+            Resource resource = new UrlResource(filePath.toUri());
 
-            return ResponseEntity.ok(previewData);
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Preview failed: " + e.getMessage()));
+            if (resource.exists()) {
+                return ResponseEntity.ok()
+                        .contentType(MediaType.APPLICATION_PDF)
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + material.getOriginalFilename() + "\"")
+                        .body(resource);
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (MalformedURLException ex) {
+            return ResponseEntity.badRequest().build();
         }
     }
 
-    @DeleteMapping("/materials/{id}")
+    @DeleteMapping("/api/teacher/materials/{id}")
+    @ResponseBody
     public Map<String, Object> deleteMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -459,7 +471,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/problems")
+    @GetMapping("/api/teacher/problems")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getMyProblems(HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -474,7 +487,8 @@ public class TeacherController {
         }
     }
 
-    @PostMapping("/problems")
+    @PostMapping("/api/teacher/problems")
+    @ResponseBody
     public Map<String, Object> createProblem(@RequestBody Map<String, Object> problemData, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -521,7 +535,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/problems/{id}/detail")
+    @GetMapping("/api/teacher/problems/{id}/detail")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getProblemDetail(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -558,7 +573,8 @@ public class TeacherController {
         }
     }
 
-    @PutMapping("/problems/{id}")
+    @PutMapping("/api/teacher/problems/{id}")
+    @ResponseBody
     public Map<String, Object> updateProblem(@PathVariable Long id, @RequestBody Map<String, Object> problemData,
             HttpSession session) {
         try {
@@ -590,7 +606,8 @@ public class TeacherController {
         }
     }
 
-    @DeleteMapping("/problems/{id}")
+    @DeleteMapping("/api/teacher/problems/{id}")
+    @ResponseBody
     public Map<String, Object> deleteProblem(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -611,7 +628,8 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/submissions")
+    @GetMapping("/api/teacher/submissions")
+    @ResponseBody
     public ResponseEntity<Map<String, Object>> getSubmissions(HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -648,7 +666,8 @@ public class TeacherController {
         }
     }
 
-    @PostMapping("/grade-submission")
+    @PostMapping("/api/teacher/grade-submission")
+    @ResponseBody
     public Map<String, Object> gradeSubmission(@RequestBody Map<String, Object> gradeData, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
@@ -676,6 +695,35 @@ public class TeacherController {
             return Map.of("success", true, "message", "채점이 완료되었습니다.");
         } catch (Exception e) {
             return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/teacher/materials/{id}/preview")
+    public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
+        Object userId = session.getAttribute("userId");
+        Object userRole = session.getAttribute("userRole");
+        
+        if (userId == null || !"TEACHER".equals(userRole)) {
+            return "redirect:/";
+        }
+        
+        Long teacherId = (Long) userId;
+        Material material = materialRepository.findById(id).orElse(null);
+        
+        if (material == null || !material.getTeacherId().equals(teacherId)) {
+            model.addAttribute("error", "자료를 찾을 수 없습니다.");
+            return "teacher/preview-error";
+        }
+        
+        model.addAttribute("material", material);
+        
+        String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
+        if (fileType.equals("pdf")) {
+            return "teacher/preview-pdf";
+        } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
+            return "teacher/preview-image";
+        } else {
+            return "teacher/preview-general";
         }
     }
 
