@@ -80,14 +80,119 @@ public class TeacherController {
 
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
+                if (!jwtUtil.isTokenValid(token)) {
+                    return null;
+                }
                 String email = jwtUtil.extractEmail(token);
                 User user = userRepository.findByEmail(email).orElse(null);
-                return user != null ? user.getId() : null;
+                if (user != null && user.getRole() == UserRole.TEACHER) {
+                    return user.getId();
+                }
             }
         } catch (Exception e) {
             System.err.println("토큰 파싱 오류: " + e.getMessage());
         }
         return null;
+    }
+
+    @GetMapping("/auth-check")
+    public ResponseEntity<Map<String, Object>> checkAuth(HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return ResponseEntity.status(401).body(Map.of("authenticated", false));
+            }
+            
+            User teacher = userRepository.findById(teacherId).orElse(null);
+            if (teacher == null || teacher.getRole() != UserRole.TEACHER) {
+                return ResponseEntity.status(401).body(Map.of("authenticated", false));
+            }
+            
+            return ResponseEntity.ok(Map.of("authenticated", true, "teacherId", teacherId, "teacherName", teacher.getName()));
+        } catch (Exception e) {
+            return ResponseEntity.status(401).body(Map.of("authenticated", false));
+        }
+    }
+
+    @GetMapping("/materials")
+    public ResponseEntity<Map<String, Object>> getMaterials(HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            List<Material> materials = materialRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId);
+
+            List<Map<String, Object>> materialData = materials.stream().map(material -> {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", material.getId());
+                data.put("title", material.getTitle());
+                data.put("description", material.getDescription());
+                data.put("fileSize", material.getFileSize());
+                data.put("fileType", material.getFileType());
+                data.put("originalFilename", material.getOriginalFilename());
+                data.put("downloadCount", material.getDownloadCount());
+                data.put("createdAt", material.getCreatedAt());
+                return data;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of("materials", materialData));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "자료를 불러올 수 없습니다: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/problems")
+    public ResponseEntity<Map<String, Object>> getMyProblems(HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            List<Problem> problems = problemRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId);
+            return ResponseEntity.ok(Map.of("problems", problems));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to load problems: " + e.getMessage()));
+        }
+    }
+
+    @GetMapping("/submissions")
+    public ResponseEntity<Map<String, Object>> getSubmissions(HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            List<Submission> submissions = submissionRepository.findSubmissionsByTeacher(teacherId);
+
+            List<Map<String, Object>> submissionData = submissions.stream().map(submission -> {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", submission.getId());
+                data.put("userId", submission.getUserId());
+                data.put("problemId", submission.getProblemId());
+                data.put("answer", submission.getAnswer());
+                data.put("status", submission.getStatus());
+                data.put("score", submission.getScore());
+                data.put("feedback", submission.getFeedback());
+                data.put("submittedAt", submission.getSubmittedAt());
+
+                User student = userRepository.findById(submission.getUserId()).orElse(null);
+                data.put("studentName", student != null ? student.getName() : "Unknown");
+
+                Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
+                data.put("problemTitle", problem != null ? problem.getTitle() : "Unknown");
+                data.put("problemType", problem != null ? problem.getType() : "PROBLEM");
+
+                return data;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(Map.of("submissions", submissionData));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Failed to load submissions: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/materials")
@@ -201,35 +306,6 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/materials")
-    public Map<String, Object> getMaterials(HttpServletRequest request) {
-        try {
-            Long teacherId = getUserIdFromRequest(request);
-            if (teacherId == null) {
-                return Map.of("error", "Unauthorized");
-            }
-
-            List<Material> materials = materialRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId);
-
-            List<Map<String, Object>> materialData = materials.stream().map(material -> {
-                Map<String, Object> data = new HashMap<>();
-                data.put("id", material.getId());
-                data.put("title", material.getTitle());
-                data.put("description", material.getDescription());
-                data.put("fileSize", material.getFileSize());
-                data.put("fileType", material.getFileType());
-                data.put("originalFilename", material.getOriginalFilename());
-                data.put("downloadCount", material.getDownloadCount());
-                data.put("createdAt", material.getCreatedAt());
-                return data;
-            }).collect(Collectors.toList());
-
-            return Map.of("materials", materialData);
-        } catch (Exception e) {
-            return Map.of("error", "자료를 불러올 수 없습니다: " + e.getMessage());
-        }
-    }
-
     private String getFileExtension(String filename) {
         if (filename == null || filename.lastIndexOf('.') == -1) {
             return "";
@@ -281,14 +357,15 @@ public class TeacherController {
 
             Problem savedProblem = problemRepository.save(problem);
 
-            Map<String, Object> notification = new HashMap<>();
-            notification.put("type", "NEW_PROBLEM");
-            notification.put("title", "새로운 " + getTypeKorean((String) problemData.get("type")) + "가 출제되었습니다!");
-            notification.put("message", savedProblem.getTitle());
-            notification.put("problemId", savedProblem.getId());
-            notification.put("timestamp", LocalDateTime.now().toString());
-
-            messagingTemplate.convertAndSend("/topic/notifications", notification);
+            if (messagingTemplate != null) {
+                Map<String, Object> notification = new HashMap<>();
+                notification.put("type", "NEW_PROBLEM");
+                notification.put("title", "새로운 " + getTypeKorean((String) problemData.get("type")) + "가 출제되었습니다!");
+                notification.put("message", savedProblem.getTitle());
+                notification.put("problemId", savedProblem.getId());
+                notification.put("timestamp", LocalDateTime.now().toString());
+                messagingTemplate.convertAndSend("/topic/notifications", notification);
+            }
 
             return Map.of("success", true, "message", getTypeKorean((String) problemData.get("type")) + "가 성공적으로 출제되었습니다.", "problem", savedProblem);
         } catch (Exception e) {
@@ -354,58 +431,6 @@ public class TeacherController {
             return Map.of("success", true, "message", "문제가 삭제되었습니다.");
         } catch (Exception e) {
             return Map.of("success", false, "message", "삭제 실패: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/problems")
-    public Map<String, Object> getMyProblems(HttpServletRequest request) {
-        try {
-            Long teacherId = getUserIdFromRequest(request);
-            if (teacherId == null) {
-                return Map.of("error", "Unauthorized");
-            }
-
-            List<Problem> problems = problemRepository.findByTeacherIdOrderByCreatedAtDesc(teacherId);
-            return Map.of("problems", problems);
-        } catch (Exception e) {
-            return Map.of("error", "Failed to load problems: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/submissions")
-    public Map<String, Object> getSubmissions(HttpServletRequest request) {
-        try {
-            Long teacherId = getUserIdFromRequest(request);
-            if (teacherId == null) {
-                return Map.of("error", "Unauthorized");
-            }
-
-            List<Submission> submissions = submissionRepository.findSubmissionsByTeacher(teacherId);
-
-            List<Map<String, Object>> submissionData = submissions.stream().map(submission -> {
-                Map<String, Object> data = new HashMap<>();
-                data.put("id", submission.getId());
-                data.put("userId", submission.getUserId());
-                data.put("problemId", submission.getProblemId());
-                data.put("answer", submission.getAnswer());
-                data.put("status", submission.getStatus());
-                data.put("score", submission.getScore());
-                data.put("feedback", submission.getFeedback());
-                data.put("submittedAt", submission.getSubmittedAt());
-
-                User student = userRepository.findById(submission.getUserId()).orElse(null);
-                data.put("studentName", student != null ? student.getName() : "Unknown");
-
-                Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
-                data.put("problemTitle", problem != null ? problem.getTitle() : "Unknown");
-                data.put("problemType", problem != null ? problem.getType() : "PROBLEM");
-
-                return data;
-            }).collect(Collectors.toList());
-
-            return Map.of("submissions", submissionData);
-        } catch (Exception e) {
-            return Map.of("error", "Failed to load submissions: " + e.getMessage());
         }
     }
 
