@@ -47,6 +47,7 @@ public class TeacherController {
 
     @GetMapping("/materials")
     public List<Map<String, Object>> getMaterials() {
+        // TODO: Material 엔티티와 MaterialRepository 구현 후 실제 데이터 반환
         return new ArrayList<>();
     }
 
@@ -55,12 +56,18 @@ public class TeacherController {
         try {
             String title = (String) problemData.get("title");
             
+            // TODO: Problem 엔티티에 실제 저장
+            // Problem problem = new Problem();
+            // problem.setTitle(title);
+            // problem.setDescription((String) problemData.get("description"));
+            // problem.setDifficulty((String) problemData.get("difficulty"));
+            // problemRepository.save(problem);
+            
             webSocketController.sendProblemNotification(title, "코딩 문제");
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "문제가 생성되고 학생들에게 알림이 전송되었습니다");
-            response.put("problemId", System.currentTimeMillis());
             
             return response;
         } catch (Exception e) {
@@ -76,12 +83,13 @@ public class TeacherController {
         try {
             String title = (String) quizData.get("title");
             
+            // TODO: Quiz 엔티티에 실제 저장
+            
             webSocketController.sendProblemNotification(title, "퀴즈");
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "퀴즈가 생성되고 학생들에게 알림이 전송되었습니다");
-            response.put("quizId", System.currentTimeMillis());
             
             return response;
         } catch (Exception e) {
@@ -97,12 +105,13 @@ public class TeacherController {
         try {
             String title = (String) examData.get("title");
             
+            // TODO: Exam 엔티티에 실제 저장
+            
             webSocketController.sendProblemNotification(title, "시험");
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "시험이 생성되고 학생들에게 알림이 전송되었습니다");
-            response.put("examId", System.currentTimeMillis());
             
             return response;
         } catch (Exception e) {

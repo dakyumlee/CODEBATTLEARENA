@@ -38,15 +38,7 @@ public class StudentController {
         }
         
         Map<String, Object> response = new HashMap<>();
-        
-        Map<String, Object> aiProblem = new HashMap<>();
-        aiProblem.put("id", "ai_daily_" + userId);
-        aiProblem.put("title", "오늘의 AI 추천 문제");
-        aiProblem.put("description", "AI가 분석한 맞춤형 문제입니다");
-        aiProblem.put("difficulty", "중");
-        aiProblem.put("points", 20);
-        
-        response.put("aiProblem", aiProblem);
+        response.put("aiProblem", null);
         response.put("materials", new ArrayList<>());
         response.put("submissions", new ArrayList<>());
         
@@ -60,18 +52,9 @@ public class StudentController {
             return new ArrayList<>();
         }
         
-        List<Map<String, Object>> problems = new ArrayList<>();
-        
-        Map<String, Object> problem = new HashMap<>();
-        problem.put("id", 1);
-        problem.put("title", "실시간 테스트 문제");
-        problem.put("description", "강사님이 방금 출제한 문제입니다");
-        problem.put("difficulty", "중");
-        problem.put("timeLimit", 30);
-        problem.put("createdAt", System.currentTimeMillis());
-        problems.add(problem);
-        
-        return problems;
+        // 실제 데이터베이스에서 강사 출제 문제를 가져와야 함
+        // TODO: Problem 엔티티와 ProblemRepository 구현 후 실제 데이터 조회
+        return new ArrayList<>();
     }
 
     @GetMapping("/stats")
@@ -83,11 +66,12 @@ public class StudentController {
             return error;
         }
         
+        // 실제 통계는 데이터베이스에서 계산해야 함
         Map<String, Object> stats = new HashMap<>();
-        stats.put("solvedProblems", 23 + (userId.intValue() % 10));
-        stats.put("battleWins", 12 + (userId.intValue() % 5));
-        stats.put("accuracy", 76 + (userId.intValue() % 20));
-        stats.put("studyDays", 15 + (userId.intValue() % 30));
+        stats.put("solvedProblems", 0);
+        stats.put("battleWins", 0);
+        stats.put("accuracy", 0);
+        stats.put("studyDays", 0);
         return stats;
     }
 
@@ -101,9 +85,9 @@ public class StudentController {
         }
         
         Map<String, Object> stats = new HashMap<>();
-        stats.put("rating", 1250 + (userId.intValue() * 10));
-        stats.put("wins", 12 + (userId.intValue() % 8));
-        stats.put("losses", 8 + (userId.intValue() % 6));
+        stats.put("rating", 1000); // 기본 레이팅
+        stats.put("wins", 0);
+        stats.put("losses", 0);
         return stats;
     }
 
@@ -117,10 +101,10 @@ public class StudentController {
         }
         
         Map<String, Object> stats = new HashMap<>();
-        stats.put("totalAttempts", 45 + (userId.intValue() % 20));
-        stats.put("solvedCount", 23 + (userId.intValue() % 15));
-        stats.put("successRate", 51 + (userId.intValue() % 40));
-        stats.put("avgScore", 78 + (userId.intValue() % 20));
+        stats.put("totalAttempts", 0);
+        stats.put("solvedCount", 0);
+        stats.put("successRate", 0);
+        stats.put("avgScore", 0);
         return stats;
     }
 
