@@ -36,7 +36,15 @@ public class AuthController {
             
             User user = userOpt.get();
             
-            if (!request.getPassword().equals(user.getPassword())) {
+            boolean passwordMatch = false;
+            
+            if (user.getPassword().startsWith("$2a$")) {
+                passwordMatch = passwordEncoder.matches(request.getPassword(), user.getPassword());
+            } else {
+                passwordMatch = request.getPassword().equals(user.getPassword());
+            }
+            
+            if (!passwordMatch) {
                 return Map.of("success", false, "message", "비밀번호가 올바르지 않습니다.");
             }
             
