@@ -340,6 +340,24 @@
             color: #666;
         }
 
+        .simple-preview {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            border: 1px solid #ddd;
+            text-align: center;
+        }
+
+        .simple-preview h3 {
+            color: #1976d2;
+            margin-bottom: 15px;
+        }
+
+        .simple-preview p {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
         @media (max-width: 768px) {
             .header-content { flex-direction: column; gap: 15px; }
             .nav-menu { flex-wrap: wrap; }
@@ -744,10 +762,11 @@
                 container.innerHTML = `<img class="preview-image" src="${filePath}" alt="${title}">`;
             } else {
                 container.innerHTML = `
-                    <div class="preview-unsupported">
-                        <h3>미리보기 지원하지 않는 파일 형식</h3>
-                        <p>이 파일은 미리보기를 지원하지 않습니다.</p>
-                        <a href="${filePath}" class="btn btn-primary" target="_blank">파일 다운로드</a>
+                    <div class="simple-preview">
+                        <h3>📄 ${title}</h3>
+                        <p>이 파일은 미리보기를 지원하지 않는 형식입니다.</p>
+                        <p>파일 형식: ${fileType ? fileType.toUpperCase() : '알 수 없음'}</p>
+                        <a href="${filePath}" class="btn btn-primary" download>파일 다운로드</a>
                     </div>
                 `;
             }
