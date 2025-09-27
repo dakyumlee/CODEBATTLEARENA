@@ -11,24 +11,20 @@ import java.util.Optional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-    
     Optional<User> findByEmail(String email);
-    
-    boolean existsByEmail(String email);
-    
-    void deleteByEmail(String email);
-    
-    long countByRole(UserRole role);
-    
-    long countByOnlineStatus(boolean onlineStatus);
+    List<User> findByRole(UserRole role);
     
     @Query("SELECT u FROM User u WHERE u.role = 'STUDENT'")
     List<User> findAllStudents();
     
+    long countByRole(UserRole role);
+    long countByOnlineStatus(boolean onlineStatus);
+    void deleteByEmail(String email);
+}
+
     List<User> findByGroupId(Long groupId);
     
     List<User> findByGroupIdAndRole(Long groupId, String role);
     
     @Query("SELECT u FROM User u WHERE u.groupId = :groupId AND u.role = 'STUDENT'")
     List<User> findStudentsByGroupId(@Param("groupId") Long groupId);
-}

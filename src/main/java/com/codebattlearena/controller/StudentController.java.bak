@@ -4,7 +4,8 @@ import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.StudyNote;
 import com.codebattlearena.repository.StudyNoteRepository;
 import com.codebattlearena.repository.ProblemRepository;
-import com.codebattlearena.model.Problem;import org.springframework.beans.factory.annotation.Autowired;
+import com.codebattlearena.repository.GroupRepository;
+import com.codebattlearena.model.Group;import com.codebattlearena.model.Problem;import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -49,19 +50,43 @@ public class StudentController {
     }
 
     @GetMapping("/teacher-problems")
+    @GetMapping("/teacher-problems")
+    @GetMapping("/teacher-problems")
+    @GetMapping("/teacher-problems")
     public List<Map<String, Object>> getTeacherProblems(HttpServletRequest request) {
         Long userId = getUserIdFromRequest(request);
         if (userId == null) {
             return new ArrayList<>();
         }
         
-        // 실제 데이터베이스에서 강사 출제 문제를 가져와야 함
-        // TODO: Problem 엔티티와 ProblemRepository 구현 후 실제 데이터 조회
-        return new ArrayList<>();
-    }
-
-    @GetMapping("/stats")
-    public Map<String, Object> getStats(HttpServletRequest request) {
+        try {
+            // 현재 사용자의 그룹 ID 가져오기
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isEmpty() || userOpt.get().getGroupId() == null) {
+                return new ArrayList<>();
+            }
+            
+            Long groupId = userOpt.get().getGroupId();
+            List<Problem> problems = problemRepository.findTeacherProblemsByGroupId(groupId);
+            List<Map<String, Object>> problemList = new ArrayList<>();
+            
+            for (Problem problem : problems) {
+                Map<String, Object> problemMap = new HashMap<>();
+                problemMap.put("id", problem.getId());
+                problemMap.put("title", problem.getTitle());
+                problemMap.put("description", problem.getDescription());
+                problemMap.put("difficulty", problem.getDifficulty());
+                problemMap.put("timeLimit", problem.getTimeLimit());
+                problemMap.put("type", problem.getType());
+                problemMap.put("createdAt", problem.getCreatedAt().toString());
+                problemList.add(problemMap);
+            }
+            
+            return problemList;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }    public Map<String, Object> getStats(HttpServletRequest request) {
         Long userId = getUserIdFromRequest(request);
         if (userId == null) {
             Map<String, Object> error = new HashMap<>();

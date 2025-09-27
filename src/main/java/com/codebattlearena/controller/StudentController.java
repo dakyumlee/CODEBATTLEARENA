@@ -2,9 +2,12 @@ package com.codebattlearena.controller;
 
 import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.StudyNote;
+import com.codebattlearena.model.User;
+import com.codebattlearena.model.Problem;
 import com.codebattlearena.repository.StudyNoteRepository;
+import com.codebattlearena.repository.UserRepository;
 import com.codebattlearena.repository.ProblemRepository;
-import com.codebattlearena.model.Problem;import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
 import java.time.LocalDateTime;
@@ -18,10 +21,14 @@ public class StudentController {
     private StudyNoteRepository studyNoteRepository;
     
     @Autowired
-    private JwtUtil jwtUtil;
-
+    private UserRepository userRepository;
+    
     @Autowired
     private ProblemRepository problemRepository;
+    
+    @Autowired
+    private JwtUtil jwtUtil;
+
     private Long getUserIdFromRequest(HttpServletRequest request) {
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -49,7 +56,6 @@ public class StudentController {
     }
 
     @GetMapping("/teacher-problems")
-    @GetMapping("/teacher-problems")
     public List<Map<String, Object>> getTeacherProblems(HttpServletRequest request) {
         Long userId = getUserIdFromRequest(request);
         if (userId == null) {
@@ -57,7 +63,13 @@ public class StudentController {
         }
         
         try {
-            List<Problem> problems = problemRepository.findAllTeacherProblems();
+            Optional<User> userOpt = userRepository.findById(userId);
+            if (userOpt.isEmpty() || userOpt.get().getGroupId() == null) {
+                return new ArrayList<>();
+            }
+            
+            Long groupId = userOpt.get().getGroupId();
+            List<Problem> problems = problemRepository.findTeacherProblemsByGroupId(groupId);
             List<Map<String, Object>> problemList = new ArrayList<>();
             
             for (Problem problem : problems) {
@@ -77,6 +89,7 @@ public class StudentController {
             return new ArrayList<>();
         }
     }
+
     @GetMapping("/stats")
     public Map<String, Object> getStats(HttpServletRequest request) {
         Long userId = getUserIdFromRequest(request);
@@ -86,7 +99,6 @@ public class StudentController {
             return error;
         }
         
-        // 실제 통계는 데이터베이스에서 계산해야 함
         Map<String, Object> stats = new HashMap<>();
         stats.put("solvedProblems", 0);
         stats.put("battleWins", 0);
@@ -105,7 +117,7 @@ public class StudentController {
         }
         
         Map<String, Object> stats = new HashMap<>();
-        stats.put("rating", 1000); // 기본 레이팅
+        stats.put("rating", 1000);
         stats.put("wins", 0);
         stats.put("losses", 0);
         return stats;

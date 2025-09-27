@@ -3,8 +3,10 @@ package com.codebattlearena.controller;
 import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.User;
 import com.codebattlearena.model.Problem;
+import com.codebattlearena.model.Group;
 import com.codebattlearena.repository.UserRepository;
 import com.codebattlearena.repository.ProblemRepository;
+import com.codebattlearena.repository.GroupRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -19,6 +21,9 @@ public class TeacherController {
     
     @Autowired
     private ProblemRepository problemRepository;
+    
+    @Autowired
+    private GroupRepository groupRepository;
     
     @Autowired
     private JwtUtil jwtUtil;
@@ -36,18 +41,33 @@ public class TeacherController {
     }
 
     @GetMapping("/students")
-    public Map<String, Object> getStudents() {
+    public Map<String, Object> getStudents(HttpServletRequest request) {
         try {
-            List<User> students = userRepository.findAllStudents();
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("error", "Unauthorized");
+                return error;
+            }
+            
+            // 강사의 그룹 조회
+            List<Group> teacherGroups = groupRepository.findByTeacherId(teacherId);
+            List<User> allStudents = new ArrayList<>();
+            
+            for (Group group : teacherGroups) {
+                List<User> groupStudents = userRepository.findStudentsByGroupId(group.getId());
+                allStudents.addAll(groupStudents);
+            }
             
             Map<String, Object> response = new HashMap<>();
-            response.put("students", students.stream().map(student -> {
+            response.put("students", allStudents.stream().map(student -> {
                 Map<String, Object> studentData = new HashMap<>();
                 studentData.put("id", student.getId());
                 studentData.put("name", student.getName());
                 studentData.put("email", student.getEmail());
                 studentData.put("online", student.isOnlineStatus());
                 studentData.put("lastActivity", student.getLastActivity());
+                studentData.put("groupId", student.getGroupId());
                 return studentData;
             }).toList());
             
@@ -59,9 +79,33 @@ public class TeacherController {
         }
     }
 
-    @GetMapping("/materials")
-    public List<Map<String, Object>> getMaterials() {
-        return new ArrayList<>();
+    @GetMapping("/my-problems")
+    public List<Map<String, Object>> getMyProblems(HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return new ArrayList<>();
+            }
+            
+            List<Problem> problems = problemRepository.findByCreatorIdOrderByCreatedAtDesc(teacherId);
+            List<Map<String, Object>> problemList = new ArrayList<>();
+            
+            for (Problem problem : problems) {
+                Map<String, Object> problemMap = new HashMap<>();
+                problemMap.put("id", problem.getId());
+                problemMap.put("title", problem.getTitle());
+                problemMap.put("description", problem.getDescription());
+                problemMap.put("difficulty", problem.getDifficulty());
+                problemMap.put("timeLimit", problem.getTimeLimit());
+                problemMap.put("type", problem.getType());
+                problemMap.put("createdAt", problem.getCreatedAt().toString());
+                problemList.add(problemMap);
+            }
+            
+            return problemList;
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
     }
 
     @PostMapping("/problem")
@@ -75,8 +119,13 @@ public class TeacherController {
                 return error;
             }
             
+            // 강사의 기본 그룹 가져오기 (첫 번째 그룹)
+            List<Group> teacherGroups = groupRepository.findByTeacherId(teacherId);
+            Long groupId = teacherGroups.isEmpty() ? null : teacherGroups.get(0).getId();
+            
             Problem problem = new Problem();
             problem.setCreatorId(teacherId);
+            problem.setGroupId(groupId);
             problem.setCreatorType("TEACHER");
             problem.setTitle((String) problemData.get("title"));
             problem.setDescription((String) problemData.get("description"));
@@ -115,8 +164,12 @@ public class TeacherController {
                 return error;
             }
             
+            List<Group> teacherGroups = groupRepository.findByTeacherId(teacherId);
+            Long groupId = teacherGroups.isEmpty() ? null : teacherGroups.get(0).getId();
+            
             Problem quiz = new Problem();
             quiz.setCreatorId(teacherId);
+            quiz.setGroupId(groupId);
             quiz.setCreatorType("TEACHER");
             quiz.setTitle((String) quizData.get("title"));
             quiz.setDescription((String) quizData.get("question"));
@@ -152,8 +205,12 @@ public class TeacherController {
                 return error;
             }
             
+            List<Group> teacherGroups = groupRepository.findByTeacherId(teacherId);
+            Long groupId = teacherGroups.isEmpty() ? null : teacherGroups.get(0).getId();
+            
             Problem exam = new Problem();
             exam.setCreatorId(teacherId);
+            exam.setGroupId(groupId);
             exam.setCreatorType("TEACHER");
             exam.setTitle((String) examData.get("title"));
             exam.setDescription((String) examData.get("instructions"));
