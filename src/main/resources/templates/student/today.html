@@ -6,11 +6,7 @@
     <title>오늘의 학습 - CodeBattleArena</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         
         body {
             font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
@@ -24,214 +20,88 @@
             padding: 20px 30px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.3);
             position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
+            top: 0; left: 0; right: 0; z-index: 100;
         }
         
         .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
+            max-width: 1400px; margin: 0 auto;
+            display: flex; justify-content: space-between; align-items: center;
         }
         
-        .logo {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #4299e1;
-        }
+        .logo { font-size: 1.5rem; font-weight: 700; color: #4299e1; }
         
-        .nav-menu {
-            display: flex;
-            gap: 30px;
-        }
+        .nav-menu { display: flex; gap: 30px; }
         
         .nav-item {
-            color: #a0aec0;
-            text-decoration: none;
-            padding: 8px 16px;
-            border-radius: 6px;
-            transition: all 0.2s;
+            color: #a0aec0; text-decoration: none;
+            padding: 8px 16px; border-radius: 6px; transition: all 0.2s;
         }
         
-        .nav-item:hover, .nav-item.active {
-            background: #2d3748;
-            color: #4299e1;
-        }
+        .nav-item:hover, .nav-item.active { background: #2d3748; color: #4299e1; }
         
         .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: #cbd5e0;
+            display: flex; align-items: center; gap: 15px; color: #cbd5e0;
         }
         
         .main-container {
-            margin-top: 80px;
-            max-width: 1400px;
-            margin-left: auto;
-            margin-right: auto;
-            padding: 30px;
+            margin-top: 80px; max-width: 1400px;
+            margin-left: auto; margin-right: auto; padding: 30px;
         }
         
         .page-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #f7fafc;
-            margin-bottom: 30px;
-            text-align: center;
+            font-size: 2.5rem; font-weight: 700; color: #f7fafc;
+            margin-bottom: 30px; text-align: center;
         }
         
         .content-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 30px;
-            margin-bottom: 30px;
+            display: grid; grid-template-columns: 1fr 1fr;
+            gap: 30px; margin-bottom: 30px;
         }
         
         .section-card {
-            background: #2d3748;
-            border-radius: 12px;
-            padding: 30px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            background: #2d3748; border-radius: 12px;
+            padding: 30px; box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
         
         .section-title {
-            font-size: 1.4rem;
-            font-weight: 600;
-            color: #4299e1;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-size: 1.4rem; font-weight: 600; color: #4299e1;
+            margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
         }
         
-        .ai-problem-card {
-            background: #1a365d;
-            border: 1px solid #2b6cb0;
-            border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
-        }
-        
-        .problem-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            color: #90cdf4;
-            margin-bottom: 10px;
-        }
-        
-        .problem-description {
-            color: #cbd5e0;
-            margin-bottom: 15px;
-            line-height: 1.6;
-        }
-        
-        .problem-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
-        }
-        
-        .btn-primary {
-            padding: 12px 24px;
-            background: #4299e1;
-            color: white;
-            border: none;
-            border-radius: 8px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .btn-primary:hover {
-            background: #3182ce;
-            transform: translateY(-1px);
-        }
-        
-        .points {
-            color: #68d391;
-            font-weight: 600;
-        }
-        
-        .empty-state {
-            text-align: center;
-            color: #a0aec0;
-            padding: 40px;
-        }
-        
-        .full-width-section {
-            grid-column: 1 / -1;
-        }
+        .empty-state { text-align: center; color: #a0aec0; padding: 40px; }
+        .full-width-section { grid-column: 1 / -1; }
         
         .notification-modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0,0,0,0.8);
-            display: none;
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); display: none; z-index: 1000;
+            align-items: center; justify-content: center;
         }
         
         .modal-content {
-            background: #2d3748;
-            padding: 2rem;
-            border-radius: 1rem;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            border: 2px solid #4299e1;
+            background: #2d3748; padding: 2rem; border-radius: 1rem;
+            max-width: 400px; width: 90%; text-align: center; border: 2px solid #4299e1;
         }
         
         .modal-title {
-            color: #4299e1;
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1rem;
+            color: #4299e1; font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;
         }
         
         .modal-message {
-            color: #e2e8f0;
-            margin-bottom: 2rem;
-            line-height: 1.5;
+            color: #e2e8f0; margin-bottom: 2rem; line-height: 1.5;
         }
         
-        .modal-buttons {
-            display: flex;
-            gap: 1rem;
-            justify-content: center;
-        }
+        .modal-buttons { display: flex; gap: 1rem; justify-content: center; }
         
         .btn-modal {
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem;
+            font-weight: 600; cursor: pointer; transition: all 0.2s;
         }
         
-        .btn-modal.primary {
-            background: #4299e1;
-            color: white;
-        }
-        
-        .btn-modal.secondary {
-            background: #4a5568;
-            color: #e2e8f0;
-        }
+        .btn-modal.primary { background: #4299e1; color: white; }
+        .btn-modal.secondary { background: #4a5568; color: #e2e8f0; }
         
         @media (max-width: 768px) {
-            .content-grid {
-                grid-template-columns: 1fr;
-            }
+            .content-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -260,21 +130,14 @@
             <div class="section-card">
                 <h2 class="section-title">🤖 AI 추천 문제</h2>
                 <div id="aiProblemSection">
-                    <div class="ai-problem-card">
-                        <h3 class="problem-title">두 수의 합 구하기</h3>
-                        <p class="problem-description">두 정수 a, b를 입력받아 a+b를 출력하는 프로그램을 작성하시오.</p>
-                        <div class="problem-actions">
-                            <button class="btn-primary" onclick="solveAIProblem()">문제 풀기</button>
-                            <span class="points">+10점</span>
-                        </div>
-                    </div>
+                    <div class="empty-state">AI가 분석 중입니다...</div>
                 </div>
             </div>
             
             <div class="section-card">
                 <h2 class="section-title">📚 강사님 공유 자료</h2>
                 <div id="materialsSection">
-                    <div class="empty-state">공유된 자료를 확인하는 중...</div>
+                    <div class="empty-state">공유된 자료가 없습니다.</div>
                 </div>
             </div>
             
@@ -361,15 +224,7 @@
         }
         
         async function loadTodayContent() {
-            await Promise.all([
-                loadMaterials(),
-                loadSubmissions()
-            ]);
-        }
-        
-        async function loadMaterials() {
-            const section = document.getElementById('materialsSection');
-            section.innerHTML = '<div class="empty-state">공유된 자료가 없습니다.</div>';
+            await loadSubmissions();
         }
         
         async function loadSubmissions() {
@@ -404,18 +259,8 @@
             }
         }
         
-        function solveAIProblem() {
-            window.location.href = '/student/ai-problem';
-        }
-        
         function solveTeacherProblem(id, title, description, difficulty) {
-            const problemData = {
-                id: id,
-                title: title,
-                description: description,
-                difficulty: difficulty
-            };
-            
+            const problemData = { id, title, description, difficulty };
             localStorage.setItem("currentTeacherProblem", JSON.stringify(problemData));
             window.location.href = "/student/teacher-problem";
         }

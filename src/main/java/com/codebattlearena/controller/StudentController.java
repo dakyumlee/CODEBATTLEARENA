@@ -74,14 +74,7 @@ public class StudentController {
                 return Map.of("error", "Unauthorized");
             }
             
-            Map<String, Object> aiProblem = new HashMap<>();
-            aiProblem.put("id", "ai_001");
-            aiProblem.put("title", "두 수의 합 구하기");
-            aiProblem.put("description", "두 정수 a, b를 입력받아 a+b를 출력하는 프로그램을 작성하시오.");
-            aiProblem.put("difficulty", "하");
-            aiProblem.put("points", 10);
-            
-            return Map.of("aiProblem", aiProblem);
+            return Map.of();
         } catch (Exception e) {
             return Map.of("error", "Failed to load today data: " + e.getMessage());
         }

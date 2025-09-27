@@ -454,11 +454,11 @@ public class TeacherController {
                 Map<String, Object> grade = new HashMap<>();
                 grade.put("studentId", student.getId());
                 grade.put("studentName", student.getName());
-                grade.put("attendanceRate", 95);
-                grade.put("assignmentScore", 85);
-                grade.put("examScore", 78);
-                grade.put("totalScore", 82);
-                grade.put("participation", "B");
+                grade.put("attendanceRate", 0);
+                grade.put("assignmentScore", 0);
+                grade.put("examScore", 0);
+                grade.put("totalScore", 0);
+                grade.put("participation", "");
                 return grade;
             }).collect(Collectors.toList());
             
@@ -490,21 +490,28 @@ public class TeacherController {
                 return Map.of("error", "Unauthorized");
             }
             
+            List<Group> myGroups = groupRepository.findByTeacherId(teacherId);
+            List<User> myStudents = new ArrayList<>();
+            
+            for (Group group : myGroups) {
+                myStudents.addAll(userRepository.findStudentsByGroupId(group.getId()));
+            }
+            
             Map<String, Object> stats = new HashMap<>();
-            stats.put("avgScore", 82);
-            stats.put("excellentCount", 5);
-            stats.put("submissionRate", 85);
-            stats.put("improvementRate", 12);
+            stats.put("avgScore", 0);
+            stats.put("excellentCount", 0);
+            stats.put("submissionRate", 0);
+            stats.put("improvementRate", 0);
             
             Map<String, Object> gradeDistribution = new HashMap<>();
-            gradeDistribution.put("excellent", 15);
-            gradeDistribution.put("good", 25);
-            gradeDistribution.put("average", 35);
-            gradeDistribution.put("poor", 20);
-            gradeDistribution.put("fail", 5);
+            gradeDistribution.put("excellent", 0);
+            gradeDistribution.put("good", 0);
+            gradeDistribution.put("average", 0);
+            gradeDistribution.put("poor", 0);
+            gradeDistribution.put("fail", 0);
             stats.put("gradeDistribution", gradeDistribution);
             
-            stats.put("monthlyScores", Arrays.asList(75, 78, 82, 85, 88, 87));
+            stats.put("monthlyScores", Arrays.asList(0, 0, 0, 0, 0, 0));
             
             return Map.of("statistics", stats);
         } catch (Exception e) {
