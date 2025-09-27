@@ -10,8 +10,11 @@ public class Problem {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
-    private String creatorType;
+    @Column(name = "creator_id")
     private Long creatorId;
+    
+    @Column(name = "creator_type")
+    private String creatorType; // "TEACHER" or "AI"
     
     @Column(nullable = false)
     private String title;
@@ -21,43 +24,55 @@ public class Problem {
     
     private String difficulty;
     
-    @Column(columnDefinition = "TEXT")
-    private String testCases;
+    @Column(name = "time_limit")
+    private Integer timeLimit;
     
-    @Column(columnDefinition = "TEXT")
-    private String solution;
+    @Column(name = "example_input", columnDefinition = "TEXT")
+    private String exampleInput;
     
-    private Integer points = 100;
+    @Column(name = "example_output", columnDefinition = "TEXT")
+    private String exampleOutput;
     
-    private LocalDateTime createdAt = LocalDateTime.now();
-
+    private String type; // "CODING", "QUIZ", "EXAM"
+    
+    @Column(name = "created_at")
+    private LocalDateTime createdAt;
+    
+    public Problem() {
+        this.createdAt = LocalDateTime.now();
+    }
+    
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
-
-    public String getCreatorType() { return creatorType; }
-    public void setCreatorType(String creatorType) { this.creatorType = creatorType; }
-
+    
     public Long getCreatorId() { return creatorId; }
     public void setCreatorId(Long creatorId) { this.creatorId = creatorId; }
-
+    
+    public String getCreatorType() { return creatorType; }
+    public void setCreatorType(String creatorType) { this.creatorType = creatorType; }
+    
     public String getTitle() { return title; }
     public void setTitle(String title) { this.title = title; }
-
+    
     public String getDescription() { return description; }
     public void setDescription(String description) { this.description = description; }
-
+    
     public String getDifficulty() { return difficulty; }
     public void setDifficulty(String difficulty) { this.difficulty = difficulty; }
-
-    public String getTestCases() { return testCases; }
-    public void setTestCases(String testCases) { this.testCases = testCases; }
-
-    public String getSolution() { return solution; }
-    public void setSolution(String solution) { this.solution = solution; }
-
-    public Integer getPoints() { return points; }
-    public void setPoints(Integer points) { this.points = points; }
-
+    
+    public Integer getTimeLimit() { return timeLimit; }
+    public void setTimeLimit(Integer timeLimit) { this.timeLimit = timeLimit; }
+    
+    public String getExampleInput() { return exampleInput; }
+    public void setExampleInput(String exampleInput) { this.exampleInput = exampleInput; }
+    
+    public String getExampleOutput() { return exampleOutput; }
+    public void setExampleOutput(String exampleOutput) { this.exampleOutput = exampleOutput; }
+    
+    public String getType() { return type; }
+    public void setType(String type) { this.type = type; }
+    
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

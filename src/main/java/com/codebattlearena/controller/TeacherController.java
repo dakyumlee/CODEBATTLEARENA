@@ -2,7 +2,9 @@ package com.codebattlearena.controller;
 
 import com.codebattlearena.config.JwtUtil;
 import com.codebattlearena.model.User;
+import com.codebattlearena.model.Problem;
 import com.codebattlearena.repository.UserRepository;
+import com.codebattlearena.repository.ProblemRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,10 +18,22 @@ public class TeacherController {
     private UserRepository userRepository;
     
     @Autowired
+    private ProblemRepository problemRepository;
+    
+    @Autowired
     private JwtUtil jwtUtil;
     
     @Autowired
     private WebSocketController webSocketController;
+
+    private Long getUserIdFromRequest(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            String token = authHeader.substring(7);
+            return jwtUtil.extractUserId(token);
+        }
+        return null;
+    }
 
     @GetMapping("/students")
     public Map<String, Object> getStudents() {
@@ -47,27 +61,39 @@ public class TeacherController {
 
     @GetMapping("/materials")
     public List<Map<String, Object>> getMaterials() {
-        // TODO: Material 엔티티와 MaterialRepository 구현 후 실제 데이터 반환
         return new ArrayList<>();
     }
 
     @PostMapping("/problem")
-    public Map<String, Object> createProblem(@RequestBody Map<String, Object> problemData) {
+    public Map<String, Object> createProblem(@RequestBody Map<String, Object> problemData, HttpServletRequest request) {
         try {
-            String title = (String) problemData.get("title");
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Unauthorized");
+                return error;
+            }
             
-            // TODO: Problem 엔티티에 실제 저장
-            // Problem problem = new Problem();
-            // problem.setTitle(title);
-            // problem.setDescription((String) problemData.get("description"));
-            // problem.setDifficulty((String) problemData.get("difficulty"));
-            // problemRepository.save(problem);
+            Problem problem = new Problem();
+            problem.setCreatorId(teacherId);
+            problem.setCreatorType("TEACHER");
+            problem.setTitle((String) problemData.get("title"));
+            problem.setDescription((String) problemData.get("description"));
+            problem.setDifficulty((String) problemData.get("difficulty"));
+            problem.setTimeLimit((Integer) problemData.get("timeLimit"));
+            problem.setExampleInput((String) problemData.get("exampleInput"));
+            problem.setExampleOutput((String) problemData.get("exampleOutput"));
+            problem.setType("CODING");
             
-            webSocketController.sendProblemNotification(title, "코딩 문제");
+            Problem savedProblem = problemRepository.save(problem);
+            
+            webSocketController.sendProblemNotification(problem.getTitle(), "코딩 문제");
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "문제가 생성되고 학생들에게 알림이 전송되었습니다");
+            response.put("problemId", savedProblem.getId());
             
             return response;
         } catch (Exception e) {
@@ -79,17 +105,32 @@ public class TeacherController {
     }
 
     @PostMapping("/quiz")
-    public Map<String, Object> createQuiz(@RequestBody Map<String, Object> quizData) {
+    public Map<String, Object> createQuiz(@RequestBody Map<String, Object> quizData, HttpServletRequest request) {
         try {
-            String title = (String) quizData.get("title");
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Unauthorized");
+                return error;
+            }
             
-            // TODO: Quiz 엔티티에 실제 저장
+            Problem quiz = new Problem();
+            quiz.setCreatorId(teacherId);
+            quiz.setCreatorType("TEACHER");
+            quiz.setTitle((String) quizData.get("title"));
+            quiz.setDescription((String) quizData.get("question"));
+            quiz.setTimeLimit((Integer) quizData.get("timeLimit"));
+            quiz.setType("QUIZ");
             
-            webSocketController.sendProblemNotification(title, "퀴즈");
+            Problem savedQuiz = problemRepository.save(quiz);
+            
+            webSocketController.sendProblemNotification(quiz.getTitle(), "퀴즈");
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "퀴즈가 생성되고 학생들에게 알림이 전송되었습니다");
+            response.put("quizId", savedQuiz.getId());
             
             return response;
         } catch (Exception e) {
@@ -101,17 +142,32 @@ public class TeacherController {
     }
 
     @PostMapping("/exam")
-    public Map<String, Object> createExam(@RequestBody Map<String, Object> examData) {
+    public Map<String, Object> createExam(@RequestBody Map<String, Object> examData, HttpServletRequest request) {
         try {
-            String title = (String) examData.get("title");
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                Map<String, Object> error = new HashMap<>();
+                error.put("success", false);
+                error.put("message", "Unauthorized");
+                return error;
+            }
             
-            // TODO: Exam 엔티티에 실제 저장
+            Problem exam = new Problem();
+            exam.setCreatorId(teacherId);
+            exam.setCreatorType("TEACHER");
+            exam.setTitle((String) examData.get("title"));
+            exam.setDescription((String) examData.get("instructions"));
+            exam.setTimeLimit((Integer) examData.get("timeLimit"));
+            exam.setType("EXAM");
             
-            webSocketController.sendProblemNotification(title, "시험");
+            Problem savedExam = problemRepository.save(exam);
+            
+            webSocketController.sendProblemNotification(exam.getTitle(), "시험");
 
             Map<String, Object> response = new HashMap<>();
             response.put("success", true);
             response.put("message", "시험이 생성되고 학생들에게 알림이 전송되었습니다");
+            response.put("examId", savedExam.getId());
             
             return response;
         } catch (Exception e) {
