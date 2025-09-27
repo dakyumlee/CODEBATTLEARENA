@@ -24,6 +24,17 @@ public class AdminApiController {
     private Long getUserIdFromRequest(HttpServletRequest request) {
         try {
             String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                if (request.getCookies() != null) {
+                    for (var cookie : request.getCookies()) {
+                        if ("authToken".equals(cookie.getName())) {
+                            authHeader = "Bearer " + cookie.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+            
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 String email = jwtUtil.extractEmail(token);
@@ -39,6 +50,17 @@ public class AdminApiController {
     private boolean isAdmin(HttpServletRequest request) {
         try {
             String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                if (request.getCookies() != null) {
+                    for (var cookie : request.getCookies()) {
+                        if ("authToken".equals(cookie.getName())) {
+                            authHeader = "Bearer " + cookie.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+            
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 String email = jwtUtil.extractEmail(token);
@@ -81,13 +103,14 @@ public class AdminApiController {
             long studentCount = userRepository.countByRole(UserRole.STUDENT);
             long teacherCount = userRepository.countByRole(UserRole.TEACHER);
             long onlineUsers = userRepository.countByOnlineStatusTrue();
+            long adminCount = userRepository.countByRole(UserRole.ADMIN);
             
             Map<String, Object> stats = new HashMap<>();
             stats.put("totalUsers", totalUsers);
             stats.put("studentCount", studentCount);
             stats.put("teacherCount", teacherCount);
             stats.put("onlineUsers", onlineUsers);
-            stats.put("adminCount", totalUsers - studentCount - teacherCount);
+            stats.put("adminCount", adminCount);
             
             return Map.of("statistics", stats);
         } catch (Exception e) {

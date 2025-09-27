@@ -200,6 +200,7 @@ public class PageController {
     private boolean isValidUser(HttpServletRequest request, UserRole requiredRole) {
         try {
             String authHeader = request.getHeader("Authorization");
+            
             if (authHeader == null || !authHeader.startsWith("Bearer ")) {
                 if (request.getCookies() != null) {
                     for (var cookie : request.getCookies()) {
@@ -216,6 +217,11 @@ public class PageController {
             }
 
             String token = authHeader.substring(7);
+            
+            if (!jwtUtil.isTokenValid(token)) {
+                return false;
+            }
+            
             String email = jwtUtil.extractEmail(token);
             User user = userRepository.findByEmail(email).orElse(null);
             

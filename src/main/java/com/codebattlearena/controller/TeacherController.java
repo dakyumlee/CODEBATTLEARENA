@@ -54,6 +54,17 @@ public class TeacherController {
     private Long getUserIdFromRequest(HttpServletRequest request) {
         try {
             String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                if (request.getCookies() != null) {
+                    for (var cookie : request.getCookies()) {
+                        if ("authToken".equals(cookie.getName())) {
+                            authHeader = "Bearer " + cookie.getValue();
+                            break;
+                        }
+                    }
+                }
+            }
+            
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
                 String token = authHeader.substring(7);
                 String email = jwtUtil.extractEmail(token);
@@ -289,18 +300,7 @@ public class TeacherController {
                 return Map.of("error", "Unauthorized");
             }
             
-            List<Group> myGroups = groupRepository.findByTeacherId(teacherId);
-            List<User> allStudents = new ArrayList<>();
-            
-            for (Group group : myGroups) {
-                List<User> groupStudents = userRepository.findStudentsByGroupId(group.getId());
-                allStudents.addAll(groupStudents);
-            }
-            
-            if (allStudents.isEmpty()) {
-                List<User> unassignedStudents = userRepository.findByRoleAndGroupIdIsNull(UserRole.STUDENT);
-                allStudents.addAll(unassignedStudents);
-            }
+            List<User> allStudents = userRepository.findByRole(UserRole.STUDENT);
             
             List<Map<String, Object>> studentData = allStudents.stream().map(student -> {
                 Map<String, Object> data = new HashMap<>();
@@ -353,7 +353,7 @@ public class TeacherController {
         try {
             Long teacherId = getUserIdFromRequest(request);
             if (teacherId == null) {
-                return Map.of("success", false, "message", "Unauthorized");
+                return Map.of("success", false, "message", "인증이 필요합니다.");
             }
             
             Group group = new Group();
@@ -370,7 +370,7 @@ public class TeacherController {
                 "description", savedGroup.getDescription()
             ));
         } catch (Exception e) {
-            return Map.of("success", false, "message", "Error: " + e.getMessage());
+            return Map.of("success", false, "message", "그룹 생성 실패: " + e.getMessage());
         }
     }
 
@@ -379,28 +379,38 @@ public class TeacherController {
         try {
             Long teacherId = getUserIdFromRequest(request);
             if (teacherId == null) {
-                return Map.of("success", false, "message", "Unauthorized");
+                return Map.of("success", false, "message", "인증이 필요합니다.");
             }
             
             Long studentId = Long.parseLong(assignData.get("studentId").toString());
             Long groupId = Long.parseLong(assignData.get("groupId").toString());
             
             Group group = groupRepository.findById(groupId).orElse(null);
-            if (group == null || !group.getTeacherId().equals(teacherId)) {
-                return Map.of("success", false, "message", "잘못된 그룹입니다.");
+            if (group == null) {
+                return Map.of("success", false, "message", "그룹을 찾을 수 없습니다.");
+            }
+            
+            if (!group.getTeacherId().equals(teacherId)) {
+                return Map.of("success", false, "message", "자신의 그룹에만 학생을 배정할 수 있습니다.");
             }
             
             User student = userRepository.findById(studentId).orElse(null);
-            if (student == null || student.getRole() != UserRole.STUDENT) {
-                return Map.of("success", false, "message", "잘못된 학생입니다.");
+            if (student == null) {
+                return Map.of("success", false, "message", "학생을 찾을 수 없습니다.");
+            }
+            
+            if (student.getRole() != UserRole.STUDENT) {
+                return Map.of("success", false, "message", "학생 역할의 사용자만 배정할 수 있습니다.");
             }
             
             student.setGroupId(groupId);
             userRepository.save(student);
             
             return Map.of("success", true, "message", "학생이 그룹에 배정되었습니다.");
+        } catch (NumberFormatException e) {
+            return Map.of("success", false, "message", "잘못된 ID 형식입니다.");
         } catch (Exception e) {
-            return Map.of("success", false, "message", "Error: " + e.getMessage());
+            return Map.of("success", false, "message", "배정 실패: " + e.getMessage());
         }
     }
 
@@ -473,7 +483,7 @@ public class TeacherController {
         try {
             Long teacherId = getUserIdFromRequest(request);
             if (teacherId == null) {
-                return Map.of("success", false, "message", "Unauthorized");
+                return Map.of("success", false, "message", "인증이 필요합니다.");
             }
             
             return Map.of("success", true, "message", "학생 평가가 저장되었습니다.");
@@ -511,7 +521,7 @@ public class TeacherController {
             gradeDistribution.put("fail", 0);
             stats.put("gradeDistribution", gradeDistribution);
             
-            stats.put("monthlyScores", Arrays.asList(0, 0, 0, 0, 0, 0));
+            stats.put("monthlyScores", Arrays.asList(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0));
             
             return Map.of("statistics", stats);
         } catch (Exception e) {
