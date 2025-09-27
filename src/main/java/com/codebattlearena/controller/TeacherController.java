@@ -50,7 +50,6 @@ public class TeacherController {
                 return error;
             }
             
-            // 강사의 그룹 조회
             List<Group> teacherGroups = groupRepository.findByTeacherId(teacherId);
             List<User> allStudents = new ArrayList<>();
             
@@ -119,7 +118,6 @@ public class TeacherController {
                 return error;
             }
             
-            // 강사의 기본 그룹 가져오기 (첫 번째 그룹)
             List<Group> teacherGroups = groupRepository.findByTeacherId(teacherId);
             Long groupId = teacherGroups.isEmpty() ? null : teacherGroups.get(0).getId();
             
@@ -234,7 +232,6 @@ public class TeacherController {
             return error;
         }
     }
-}
 
     @GetMapping("/groups")
     public Map<String, Object> getMyGroups(HttpServletRequest request) {
@@ -256,7 +253,6 @@ public class TeacherController {
                 groupData.put("description", group.getDescription());
                 groupData.put("createdAt", group.getCreatedAt().toString());
                 
-                // 그룹의 학생 수 계산
                 long studentCount = userRepository.findStudentsByGroupId(group.getId()).size();
                 groupData.put("studentCount", studentCount);
                 
@@ -306,3 +302,4 @@ public class TeacherController {
             return error;
         }
     }
+}
