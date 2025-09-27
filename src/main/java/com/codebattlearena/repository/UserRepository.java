@@ -21,5 +21,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     long countByOnlineStatusTrue();
     List<User> findAllByOrderByCreatedAtDesc();
     List<User> findByRoleAndGroupIdIsNull(UserRole role);
-}
     void deleteByEmail(String email);
+}
