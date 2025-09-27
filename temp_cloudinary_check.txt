@@ -1,0 +1,6 @@
+pom.xml에 다음 의존성이 있는지 확인:
+<dependency>
+    <groupId>com.cloudinary</groupId>
+    <artifactId>cloudinary-http44</artifactId>
+    <version>1.32.2</version>
+</dependency>

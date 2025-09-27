@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>오늘의 학습 - CodeBattleArena</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -161,6 +162,39 @@
         .btn-modal.primary { background: #4299e1; color: white; }
         .btn-modal.secondary { background: #4a5568; color: #e2e8f0; }
         
+        .quiz-options {
+            display: grid;
+            gap: 10px;
+            margin: 15px 0;
+        }
+        
+        .quiz-option {
+            background: #1a202c;
+            border: 2px solid #4a5568;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #e2e8f0;
+        }
+        
+        .quiz-option:hover {
+            border-color: #4299e1;
+            background: #2d3748;
+        }
+        
+        .quiz-option.selected {
+            border-color: #4299e1;
+            background: #2d3748;
+            color: #4299e1;
+        }
+        
+        .quiz-option::before {
+            content: attr(data-option) '. ';
+            font-weight: 600;
+            color: #4299e1;
+        }
+        
         @media (max-width: 768px) {
             .content-grid { grid-template-columns: 1fr; }
         }
@@ -234,9 +268,13 @@
                     <label class="form-label">문제 설명</label>
                     <textarea id="problemDescription" class="form-control" rows="4" readonly></textarea>
                 </div>
+                <div id="quizOptionsContainer" class="form-group" style="display: none;">
+                    <label class="form-label">선택지</label>
+                    <div id="quizOptions" class="quiz-options"></div>
+                </div>
                 <div class="form-group">
                     <label class="form-label">답안 작성</label>
-                    <textarea name="answer" class="form-control" rows="8" placeholder="여기에 답안을 작성하세요..." required></textarea>
+                    <textarea name="answer" id="answerTextarea" class="form-control" rows="8" placeholder="여기에 답안을 작성하세요..." required></textarea>
                 </div>
                 <div class="modal-buttons">
                     <button type="button" class="btn-modal secondary" onclick="closeSubmitModal()">취소</button>
@@ -251,6 +289,8 @@
     <script>
         let stompClient = null;
         let currentProblemId = null;
+        let currentProblem = null;
+        let selectedAnswer = null;
         
         document.addEventListener('DOMContentLoaded', function() {
             loadUserInfo();
@@ -364,8 +404,7 @@
                             <p class="teacher-problem-desc">${problem.description}</p>
                             <div class="teacher-problem-actions">
                                 ${!problem.isSubmitted ? 
-                                    `<button class="btn" onclick="openSubmitModal(
-${problem.id}, '${problem.title}', '${problem.description}')">문제 풀기</button>` :
+                                    `<button class="btn" onclick="openSubmitModal(${JSON.stringify(problem).replace(/"/g, '&quot;')})">문제 풀기</button>` :
                                     `<button class="btn btn-success" disabled>제출 완료</button>`
                                 }
                                 <span style="color: #a0aec0;">난이도: ${problem.difficulty}</span>
@@ -390,26 +429,80 @@ ${problem.id}, '${problem.title}', '${problem.description}')">문제 풀기</but
             alert(`AI 문제 "${title}" 풀이 페이지로 이동합니다.`);
         }
         
-        function openSubmitModal(problemId, title, description) {
-            currentProblemId = problemId;
-            document.getElementById('problemTitle').value = title;
-            document.getElementById('problemDescription').value = description;
+        function openSubmitModal(problem) {
+            currentProblemId = problem.id;
+            currentProblem = problem;
+            selectedAnswer = null;
+            
+            document.getElementById('problemTitle').value = problem.title;
+            document.getElementById('problemDescription').value = problem.description;
+            
+            const quizContainer = document.getElementById('quizOptionsContainer');
+            const answerTextarea = document.getElementById('answerTextarea');
+            
+            if (problem.type === 'QUIZ' && problem.optionA && problem.optionB && problem.optionC && problem.optionD) {
+                quizContainer.style.display = 'block';
+                answerTextarea.style.display = 'none';
+                answerTextarea.required = false;
+                
+                const quizOptions = document.getElementById('quizOptions');
+                quizOptions.innerHTML = `
+                    <div class="quiz-option" data-option="A" onclick="selectQuizOption('A')">${problem.optionA}</div>
+                    <div class="quiz-option" data-option="B" onclick="selectQuizOption('B')">${problem.optionB}</div>
+                    <div class="quiz-option" data-option="C" onclick="selectQuizOption('C')">${problem.optionC}</div>
+                    <div class="quiz-option" data-option="D" onclick="selectQuizOption('D')">${problem.optionD}</div>
+                `;
+            } else {
+                quizContainer.style.display = 'none';
+                answerTextarea.style.display = 'block';
+                answerTextarea.required = true;
+            }
+            
             document.getElementById('submitAnswerModal').style.display = 'flex';
+        }
+        
+        function selectQuizOption(option) {
+            selectedAnswer = option;
+            
+            document.querySelectorAll('.quiz-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            
+            document.querySelector(`[data-option="${option}"]`).classList.add('selected');
         }
         
         function closeSubmitModal() {
             document.getElementById('submitAnswerModal').style.display = 'none';
             document.getElementById('submitAnswerForm').reset();
             currentProblemId = null;
+            currentProblem = null;
+            selectedAnswer = null;
         }
         
         document.getElementById('submitAnswerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const formData = new FormData(e.target);
+            let answer = '';
+            
+            if (currentProblem && currentProblem.type === 'QUIZ') {
+                if (!selectedAnswer) {
+                    alert('정답을 선택해주세요.');
+                    return;
+                }
+                answer = selectedAnswer;
+            } else {
+                const formData = new FormData(e.target);
+                answer = formData.get('answer');
+                
+                if (!answer || answer.trim() === '') {
+                    alert('답안을 입력해주세요.');
+                    return;
+                }
+            }
+
             const answerData = {
                 problemId: currentProblemId,
-                answer: formData.get('answer')
+                answer: answer
             };
 
             try {
@@ -427,7 +520,7 @@ ${problem.id}, '${problem.title}', '${problem.description}')">문제 풀기</but
                 if (result.success) {
                     alert('답안이 제출되었습니다!');
                     closeSubmitModal();
-                    loadSubmissions(); // 새로고침
+                    loadSubmissions();
                 } else {
                     alert('제출 실패: ' + result.message);
                 }
@@ -441,7 +534,6 @@ ${problem.id}, '${problem.title}', '${problem.description}')">문제 풀기</but
             window.location.href = '/';
         }
         
-        // 모달 외부 클릭시 닫기
         document.getElementById('notificationModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 this.style.display = 'none';

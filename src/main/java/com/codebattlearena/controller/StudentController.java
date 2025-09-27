@@ -151,8 +151,26 @@ public class StudentController {
                 problemData.put("points", problem.getPoints());
                 problemData.put("type", problem.getType());
                 
-                boolean isSubmitted = submissionRepository.existsByUserIdAndProblemId(userId, problem.getId());
+                if ("QUIZ".equals(problem.getType())) {
+                    problemData.put("optionA", problem.getOptionA());
+                    problemData.put("optionB", problem.getOptionB());
+                    problemData.put("optionC", problem.getOptionC());
+                    problemData.put("optionD", problem.getOptionD());
+                }
+                
+                Optional<Submission> submissionOpt = submissionRepository.findByUserIdAndProblemId(userId, problem.getId());
+                boolean isSubmitted = submissionOpt.isPresent();
+                boolean isGraded = submissionOpt.isPresent() && "GRADED".equals(submissionOpt.get().getStatus());
+                
                 problemData.put("isSubmitted", isSubmitted);
+                problemData.put("isGraded", isGraded);
+                
+                if (submissionOpt.isPresent()) {
+                    Submission submission = submissionOpt.get();
+                    problemData.put("score", submission.getScore());
+                    problemData.put("feedback", submission.getFeedback());
+                    problemData.put("submissionStatus", submission.getStatus());
+                }
                 
                 problemList.add(problemData);
             }
