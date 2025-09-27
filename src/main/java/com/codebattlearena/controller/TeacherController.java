@@ -44,6 +44,9 @@ public class TeacherController {
     private StudyNoteRepository studyNoteRepository;
     
     @Autowired
+    private SubmissionRepository submissionRepository;
+    
+    @Autowired
     private JwtUtil jwtUtil;
     
     @Autowired
@@ -277,6 +280,57 @@ public class TeacherController {
         }
     }
 
+    @PutMapping("/problems/{id}")
+    public Map<String, Object> updateProblem(@PathVariable Long id, @RequestBody Map<String, Object> problemData, HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return Map.of("success", false, "message", "인증이 필요합니다.");
+            }
+            
+            Problem problem = problemRepository.findById(id).orElse(null);
+            if (problem == null || !problem.getTeacherId().equals(teacherId)) {
+                return Map.of("success", false, "message", "문제를 찾을 수 없습니다.");
+            }
+            
+            problem.setTitle((String) problemData.get("title"));
+            problem.setDescription((String) problemData.get("description"));
+            problem.setDifficulty((String) problemData.get("difficulty"));
+            problem.setType((String) problemData.get("type"));
+            problem.setTimeLimit(problemData.get("timeLimit") != null ? 
+                Integer.parseInt(problemData.get("timeLimit").toString()) : 60);
+            problem.setPoints(problemData.get("points") != null ? 
+                Integer.parseInt(problemData.get("points").toString()) : 100);
+                
+            problemRepository.save(problem);
+            
+            return Map.of("success", true, "message", "문제가 수정되었습니다.");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "수정 실패: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/problems/{id}")
+    public Map<String, Object> deleteProblem(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return Map.of("success", false, "message", "인증이 필요합니다.");
+            }
+            
+            Problem problem = problemRepository.findById(id).orElse(null);
+            if (problem == null || !problem.getTeacherId().equals(teacherId)) {
+                return Map.of("success", false, "message", "문제를 찾을 수 없습니다.");
+            }
+            
+            problemRepository.delete(problem);
+            
+            return Map.of("success", true, "message", "문제가 삭제되었습니다.");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "삭제 실패: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/problems")
     public Map<String, Object> getMyProblems(HttpServletRequest request) {
         try {
@@ -289,6 +343,75 @@ public class TeacherController {
             return Map.of("problems", problems);
         } catch (Exception e) {
             return Map.of("error", "Failed to load problems: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/submissions")
+    public Map<String, Object> getSubmissions(HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            List<Submission> submissions = submissionRepository.findSubmissionsByTeacher(teacherId);
+            
+            List<Map<String, Object>> submissionData = submissions.stream().map(submission -> {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", submission.getId());
+                data.put("userId", submission.getUserId());
+                data.put("problemId", submission.getProblemId());
+                data.put("answer", submission.getAnswer());
+                data.put("status", submission.getStatus());
+                data.put("score", submission.getScore());
+                data.put("feedback", submission.getFeedback());
+                data.put("submittedAt", submission.getSubmittedAt());
+                
+                // 학생 이름 추가
+                User student = userRepository.findById(submission.getUserId()).orElse(null);
+                data.put("studentName", student != null ? student.getName() : "Unknown");
+                
+                // 문제 제목 추가
+                Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
+                data.put("problemTitle", problem != null ? problem.getTitle() : "Unknown");
+                
+                return data;
+            }).collect(Collectors.toList());
+            
+            return Map.of("submissions", submissionData);
+        } catch (Exception e) {
+            return Map.of("error", "Failed to load submissions: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/grade-submission")
+    public Map<String, Object> gradeSubmission(@RequestBody Map<String, Object> gradeData, HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return Map.of("success", false, "message", "인증이 필요합니다.");
+            }
+            
+            Long submissionId = Long.parseLong(gradeData.get("submissionId").toString());
+            Integer score = Integer.parseInt(gradeData.get("score").toString());
+            String feedback = (String) gradeData.get("feedback");
+            
+            Submission submission = submissionRepository.findById(submissionId).orElse(null);
+            if (submission == null) {
+                return Map.of("success", false, "message", "제출물을 찾을 수 없습니다.");
+            }
+            
+            submission.setScore(score);
+            submission.setFeedback(feedback);
+            submission.setGradedBy(teacherId);
+            submission.setGradedAt(LocalDateTime.now());
+            submission.setStatus("GRADED");
+            
+            submissionRepository.save(submission);
+            
+            return Map.of("success", true, "message", "채점이 완료되었습니다.");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
         }
     }
 
@@ -310,12 +433,52 @@ public class TeacherController {
                 data.put("online", student.isOnlineStatus());
                 data.put("lastActivity", student.getLastActivity());
                 data.put("groupId", student.getGroupId());
+                
+                // 그룹 이름 추가
+                if (student.getGroupId() != null) {
+                    Group group = groupRepository.findById(student.getGroupId()).orElse(null);
+                    data.put("groupName", group != null ? group.getName() : "Unknown");
+                } else {
+                    data.put("groupName", "미배정");
+                }
+                
                 return data;
             }).collect(Collectors.toList());
             
             return Map.of("students", studentData);
         } catch (Exception e) {
             return Map.of("error", "Failed to load students: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/group/{groupId}/students")
+    public Map<String, Object> getStudentsByGroup(@PathVariable Long groupId, HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            Group group = groupRepository.findById(groupId).orElse(null);
+            if (group == null || !group.getTeacherId().equals(teacherId)) {
+                return Map.of("error", "권한이 없습니다.");
+            }
+            
+            List<User> students = userRepository.findStudentsByGroupId(groupId);
+            
+            List<Map<String, Object>> studentData = students.stream().map(student -> {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", student.getId());
+                data.put("name", student.getName());
+                data.put("email", student.getEmail());
+                data.put("online", student.isOnlineStatus());
+                data.put("lastActivity", student.getLastActivity());
+                return data;
+            }).collect(Collectors.toList());
+            
+            return Map.of("students", studentData, "groupName", group.getName());
+        } catch (Exception e) {
+            return Map.of("error", "Failed to load group students: " + e.getMessage());
         }
     }
 

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
 
 @Controller
 public class PageController {
@@ -199,29 +200,15 @@ public class PageController {
 
     private boolean isValidUser(HttpServletRequest request, UserRole requiredRole) {
         try {
-            String authHeader = request.getHeader("Authorization");
-            
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-                if (request.getCookies() != null) {
-                    for (var cookie : request.getCookies()) {
-                        if ("authToken".equals(cookie.getName())) {
-                            authHeader = "Bearer " + cookie.getValue();
-                            break;
-                        }
-                    }
-                }
-            }
-
-            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            String token = getTokenFromRequest(request);
+            if (token == null) {
                 return false;
             }
 
-            String token = authHeader.substring(7);
-            
             if (!jwtUtil.isTokenValid(token)) {
                 return false;
             }
-            
+
             String email = jwtUtil.extractEmail(token);
             User user = userRepository.findByEmail(email).orElse(null);
             
@@ -230,5 +217,25 @@ public class PageController {
             System.err.println("인증 확인 오류: " + e.getMessage());
             return false;
         }
+    }
+
+    private String getTokenFromRequest(HttpServletRequest request) {
+        // Authorization 헤더에서 토큰 확인
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+
+        // 쿠키에서 토큰 확인
+        Cookie[] cookies = request.getCookies();
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("authToken".equals(cookie.getName())) {
+                    return cookie.getValue();
+                }
+            }
+        }
+
+        return null;
     }
 }

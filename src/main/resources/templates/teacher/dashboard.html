@@ -119,6 +119,7 @@
         .btn-warning:hover { background: #f57c00; }
         .btn-danger { background: #f44336; color: white; }
         .btn-danger:hover { background: #d32f2f; }
+        .btn-small { padding: 8px 16px; font-size: 0.9rem; }
         
         .action-buttons { display: flex; gap: 15px; flex-wrap: wrap; }
         
@@ -171,7 +172,10 @@
         
         .group-name { font-weight: 600; color: #1976d2; margin-bottom: 8px; }
         .group-description { color: #666; margin-bottom: 12px; font-size: 0.9rem; }
-        .group-stats { color: #2196f3; font-size: 0.85rem; }
+        .group-stats { 
+            color: #2196f3; font-size: 0.85rem; margin-bottom: 12px;
+            display: flex; justify-content: space-between; align-items: center;
+        }
         
         .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -321,6 +325,18 @@
         </div>
     </div>
 
+    <div id="groupStudentsModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title" id="groupStudentsTitle">그룹 학생 목록</h3>
+            <div id="groupStudentsContainer">
+                <div class="empty-state">로딩 중...</div>
+            </div>
+            <div class="modal-actions">
+                <button type="button" class="btn btn-primary" onclick="closeGroupStudentsModal()">닫기</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             loadStatistics();
@@ -366,7 +382,10 @@
                                 <div class="group-card">
                                     <div class="group-name">${group.name}</div>
                                     <div class="group-description">${group.description || '설명 없음'}</div>
-                                    <div class="group-stats">학생 수: ${group.studentCount}명</div>
+                                    <div class="group-stats">
+                                        <span>학생 수: ${group.studentCount}명</span>
+                                        <button class="btn btn-small btn-primary" onclick="viewGroupStudents(${group.id}, '${group.name}')">학생 보기</button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
@@ -378,6 +397,46 @@
                 console.error('그룹 로드 실패:', error);
                 document.getElementById('groupsContainer').innerHTML = '<div class="empty-state">그룹을 불러올 수 없습니다.</div>';
             }
+        }
+
+        async function viewGroupStudents(groupId, groupName) {
+            try {
+                const response = await fetch(`/api/teacher/group/${groupId}/students`, {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                const data = await response.json();
+                
+                document.getElementById('groupStudentsTitle').textContent = `${groupName} 학생 목록`;
+                const container = document.getElementById('groupStudentsContainer');
+                
+                if (data.students && data.students.length > 0) {
+                    container.innerHTML = `
+                        <div class="students-grid">
+                            ${data.students.map(student => `
+                                <div class="student-card">
+                                    <div class="student-status ${student.online ? 'status-online' : 'status-offline'}"></div>
+                                    <div class="student-name">${student.name}</div>
+                                    <div class="student-info">${student.email}</div>
+                                    <div class="student-info">${student.online ? '온라인' : '오프라인'}</div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="empty-state">이 그룹에 배정된 학생이 없습니다.</div>';
+                }
+                
+                document.getElementById('groupStudentsModal').style.display = 'flex';
+            } catch (error) {
+                console.error('그룹 학생 로드 실패:', error);
+                alert('그룹 학생 목록을 불러올 수 없습니다.');
+            }
+        }
+
+        function closeGroupStudentsModal() {
+            document.getElementById('groupStudentsModal').style.display = 'none';
         }
 
         async function loadStudents() {
@@ -399,7 +458,7 @@
                                     <div class="student-status ${student.online ? 'status-online' : 'status-offline'}"></div>
                                     <div class="student-name">${student.name}</div>
                                     <div class="student-info">${student.email}</div>
-                                    <div class="student-info">${student.groupId ? '그룹 배정됨' : '미배정'}</div>
+                                    <div class="student-info">${student.groupName || '미배정'}</div>
                                 </div>
                             `).join('')}
                         </div>
@@ -569,6 +628,7 @@
             }
         }
 
+        // 모달 외부 클릭시 닫기
         document.getElementById('createGroupModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeCreateGroupModal();
@@ -578,6 +638,12 @@
         document.getElementById('assignStudentModal').addEventListener('click', function(e) {
             if (e.target === this) {
                 closeAssignStudentModal();
+            }
+        });
+
+        document.getElementById('groupStudentsModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeGroupStudentsModal();
             }
         });
     </script>

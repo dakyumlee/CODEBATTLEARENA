@@ -71,7 +71,49 @@
         .empty-state { text-align: center; color: #a0aec0; padding: 40px; }
         .full-width-section { grid-column: 1 / -1; }
         
-        .notification-modal {
+        .ai-problem-card {
+            background: #1a365d; border: 1px solid #2b6cb0;
+            border-radius: 12px; padding: 20px; margin-bottom: 15px;
+        }
+        
+        .ai-problem-title { color: #90cdf4; font-weight: 600; margin-bottom: 10px; }
+        .ai-problem-desc { color: #cbd5e0; margin-bottom: 15px; line-height: 1.5; }
+        .ai-problem-meta { 
+            display: flex; gap: 15px; margin-bottom: 15px;
+            font-size: 0.9rem; color: #a0aec0;
+        }
+        
+        .btn {
+            padding: 12px 24px; background: #4299e1; color: white;
+            border: none; border-radius: 8px; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn:hover { background: #3182ce; transform: translateY(-1px); }
+        .btn-success { background: #38a169; }
+        .btn-success:hover { background: #2f855a; }
+        
+        .teacher-problem-card {
+            background: #1a365d; border: 1px solid #2b6cb0;
+            border-radius: 12px; padding: 25px; margin-bottom: 20px;
+        }
+        
+        .teacher-problem-title { color: #90cdf4; margin-bottom: 10px; font-weight: 600; }
+        .teacher-problem-desc { color: #cbd5e0; margin-bottom: 15px; }
+        .teacher-problem-actions {
+            display: flex; gap: 12px; align-items: center; flex-wrap: wrap;
+        }
+        
+        .submission-status {
+            padding: 4px 12px; border-radius: 20px; font-size: 0.85rem;
+            font-weight: 600; margin-left: auto;
+        }
+        
+        .status-submitted { background: rgba(56, 161, 105, 0.2); color: #68d391; }
+        .status-pending { background: rgba(237, 137, 54, 0.2); color: #f6ad55; }
+        
+        .modal {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); display: none; z-index: 1000;
             align-items: center; justify-content: center;
@@ -79,7 +121,8 @@
         
         .modal-content {
             background: #2d3748; padding: 2rem; border-radius: 1rem;
-            max-width: 400px; width: 90%; text-align: center; border: 2px solid #4299e1;
+            max-width: 600px; width: 90%; max-height: 80vh; overflow-y: auto;
+            border: 2px solid #4299e1;
         }
         
         .modal-title {
@@ -90,7 +133,25 @@
             color: #e2e8f0; margin-bottom: 2rem; line-height: 1.5;
         }
         
-        .modal-buttons { display: flex; gap: 1rem; justify-content: center; }
+        .form-group { margin-bottom: 20px; }
+        
+        .form-label {
+            display: block; margin-bottom: 8px;
+            font-weight: 500; color: #cbd5e0;
+        }
+        
+        .form-control {
+            width: 100%; padding: 12px; border: 1px solid #4a5568;
+            border-radius: 8px; font-size: 1rem; background: #1a202c;
+            color: #e2e8f0;
+        }
+        
+        .form-control:focus {
+            outline: none; border-color: #4299e1;
+            box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+        }
+        
+        .modal-buttons { display: flex; gap: 1rem; justify-content: flex-end; }
         
         .btn-modal {
             padding: 0.75rem 1.5rem; border: none; border-radius: 0.5rem;
@@ -130,7 +191,7 @@
             <div class="section-card">
                 <h2 class="section-title">🤖 AI 추천 문제</h2>
                 <div id="aiProblemSection">
-                    <div class="empty-state">AI가 분석 중입니다...</div>
+                    <div class="empty-state">AI 추천 문제를 불러오는 중...</div>
                 </div>
             </div>
             
@@ -150,7 +211,7 @@
         </div>
     </div>
 
-    <div id="notificationModal" class="notification-modal">
+    <div id="notificationModal" class="modal">
         <div class="modal-content">
             <h3 id="modalTitle" class="modal-title">새 알림</h3>
             <p id="modalMessage" class="modal-message"></p>
@@ -161,10 +222,35 @@
         </div>
     </div>
 
+    <div id="submitAnswerModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">답안 제출</h3>
+            <form id="submitAnswerForm">
+                <div class="form-group">
+                    <label class="form-label">문제 제목</label>
+                    <input type="text" id="problemTitle" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">문제 설명</label>
+                    <textarea id="problemDescription" class="form-control" rows="4" readonly></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">답안 작성</label>
+                    <textarea name="answer" class="form-control" rows="8" placeholder="여기에 답안을 작성하세요..." required></textarea>
+                </div>
+                <div class="modal-buttons">
+                    <button type="button" class="btn-modal secondary" onclick="closeSubmitModal()">취소</button>
+                    <button type="submit" class="btn-modal primary">제출</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1.6.1/dist/sockjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
     <script>
         let stompClient = null;
+        let currentProblemId = null;
         
         document.addEventListener('DOMContentLoaded', function() {
             loadUserInfo();
@@ -224,7 +310,40 @@
         }
         
         async function loadTodayContent() {
+            await loadAIProblems();
             await loadSubmissions();
+        }
+        
+        async function loadAIProblems() {
+            try {
+                const response = await fetch('/api/student/today', {
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    }
+                });
+                const data = await response.json();
+                
+                const section = document.getElementById('aiProblemSection');
+                
+                if (data.aiProblems && data.aiProblems.length > 0) {
+                    section.innerHTML = data.aiProblems.map(problem => `
+                        <div class="ai-problem-card">
+                            <div class="ai-problem-title">${problem.title}</div>
+                            <div class="ai-problem-desc">${problem.description}</div>
+                            <div class="ai-problem-meta">
+                                <span>난이도: ${problem.difficulty}</span>
+                                <span>분야: ${problem.category}</span>
+                            </div>
+                            <button class="btn" onclick="solveAIProblem('${problem.id}', '${problem.title}', '${problem.description}', '${problem.difficulty}')">문제 풀기</button>
+                        </div>
+                    `).join('');
+                } else {
+                    section.innerHTML = '<div class="empty-state">AI 추천 문제를 준비 중입니다.</div>';
+                }
+            } catch (error) {
+                console.error('AI 문제 로드 실패:', error);
+                document.getElementById('aiProblemSection').innerHTML = '<div class="empty-state">AI 문제를 불러올 수 없습니다.</div>';
+            }
         }
         
         async function loadSubmissions() {
@@ -240,13 +359,21 @@
                 
                 if (problems.length > 0) {
                     section.innerHTML = problems.map(problem => `
-                        <div style="background: #1a365d; border: 1px solid #2b6cb0; border-radius: 12px; padding: 25px; margin-bottom: 20px;">
-                            <h3 style="color: #90cdf4; margin-bottom: 10px;">${problem.title}</h3>
-                            <p style="color: #cbd5e0; margin-bottom: 15px;">${problem.description}</p>
-                            <div style="display: flex; gap: 12px; align-items: center;">
-                                <button onclick="solveTeacherProblem(${problem.id}, '${problem.title}', '${problem.description}', '${problem.difficulty}')" style="padding: 12px 24px; background: #4299e1; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer;">문제 풀기</button>
+                        <div class="teacher-problem-card">
+                            <h3 class="teacher-problem-title">${problem.title}</h3>
+                            <p class="teacher-problem-desc">${problem.description}</p>
+                            <div class="teacher-problem-actions">
+                                ${!problem.isSubmitted ? 
+                                    `<button class="btn" onclick="openSubmitModal(
+${problem.id}, '${problem.title}', '${problem.description}')">문제 풀기</button>` :
+                                    `<button class="btn btn-success" disabled>제출 완료</button>`
+                                }
                                 <span style="color: #a0aec0;">난이도: ${problem.difficulty}</span>
                                 <span style="color: #a0aec0;">제한시간: ${problem.timeLimit}분</span>
+                                ${problem.isSubmitted ? 
+                                    `<div class="submission-status status-submitted">제출됨</div>` : 
+                                    `<div class="submission-status status-pending">미제출</div>`
+                                }
                             </div>
                         </div>
                     `).join("");
@@ -259,16 +386,73 @@
             }
         }
         
-        function solveTeacherProblem(id, title, description, difficulty) {
-            const problemData = { id, title, description, difficulty };
-            localStorage.setItem("currentTeacherProblem", JSON.stringify(problemData));
-            window.location.href = "/student/teacher-problem";
+        function solveAIProblem(id, title, description, difficulty) {
+            alert(`AI 문제 "${title}" 풀이 페이지로 이동합니다.`);
         }
+        
+        function openSubmitModal(problemId, title, description) {
+            currentProblemId = problemId;
+            document.getElementById('problemTitle').value = title;
+            document.getElementById('problemDescription').value = description;
+            document.getElementById('submitAnswerModal').style.display = 'flex';
+        }
+        
+        function closeSubmitModal() {
+            document.getElementById('submitAnswerModal').style.display = 'none';
+            document.getElementById('submitAnswerForm').reset();
+            currentProblemId = null;
+        }
+        
+        document.getElementById('submitAnswerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const answerData = {
+                problemId: currentProblemId,
+                answer: formData.get('answer')
+            };
+
+            try {
+                const response = await fetch('/api/student/submit-answer', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: JSON.stringify(answerData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('답안이 제출되었습니다!');
+                    closeSubmitModal();
+                    loadSubmissions(); // 새로고침
+                } else {
+                    alert('제출 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
         
         function logout() {
             localStorage.clear();
             window.location.href = '/';
         }
+        
+        // 모달 외부 클릭시 닫기
+        document.getElementById('notificationModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+        
+        document.getElementById('submitAnswerModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeSubmitModal();
+            }
+        });
     </script>
 </body>
 </html>
