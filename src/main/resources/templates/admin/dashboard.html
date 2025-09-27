@@ -3,191 +3,570 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>관리자 대시보드 - 코드배틀아레나</title>
-    <link rel="stylesheet" href="/css/common.css">
-    <link rel="stylesheet" href="/css/admin.css">
+    <title>관리자 대시보드 - CodeBattleArena</title>
+    <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+            background: #1c1c1e;
+            color: #f2f2f7;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #2c2c2e;
+            padding: 20px 30px;
+            border-bottom: 1px solid #38383a;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.3);
+        }
+        
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #007aff;
+        }
+        
+        .nav-menu {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-item {
+            color: #8e8e93;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+        
+        .nav-item:hover, .nav-item.active {
+            background: #48484a;
+            color: #007aff;
+        }
+        
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 30px;
+        }
+        
+        .page-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #f2f2f7;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+        
+        .stat-card {
+            background: #2c2c2e;
+            border: 1px solid #38383a;
+            border-radius: 12px;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #007aff;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            color: #8e8e93;
+            font-size: 1rem;
+        }
+        
+        .section-card {
+            background: #2c2c2e;
+            border: 1px solid #38383a;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #f2f2f7;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .btn-primary {
+            background: #007aff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #0056b3;
+            transform: translateY(-1px);
+        }
+        
+        .btn-danger {
+            background: #ff3b30;
+            color: white;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-danger:hover {
+            background: #d70015;
+        }
+        
+        .btn-secondary {
+            background: #48484a;
+            color: #f2f2f7;
+            padding: 8px 16px;
+            font-size: 0.9rem;
+        }
+        
+        .btn-secondary:hover {
+            background: #636366;
+        }
+        
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .users-table th,
+        .users-table td {
+            padding: 15px;
+            text-align: left;
+            border-bottom: 1px solid #38383a;
+        }
+        
+        .users-table th {
+            background: #1c1c1e;
+            color: #8e8e93;
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .users-table td {
+            color: #f2f2f7;
+        }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .status-online {
+            background: rgba(52, 199, 89, 0.2);
+            color: #34c759;
+        }
+        
+        .status-offline {
+            background: rgba(142, 142, 147, 0.2);
+            color: #8e8e93;
+        }
+        
+        .role-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .role-student {
+            background: rgba(0, 122, 255, 0.2);
+            color: #007aff;
+        }
+        
+        .role-teacher {
+            background: rgba(255, 149, 0, 0.2);
+            color: #ff9500;
+        }
+        
+        .role-admin {
+            background: rgba(255, 59, 48, 0.2);
+            color: #ff3b30;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .modal-content {
+            background: #2c2c2e;
+            border: 1px solid #38383a;
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+        }
+        
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #f2f2f7;
+            margin-bottom: 20px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #f2f2f7;
+            font-weight: 500;
+        }
+        
+        .form-control {
+            width: 100%;
+            padding: 12px;
+            background: #1c1c1e;
+            border: 1px solid #38383a;
+            border-radius: 8px;
+            color: #f2f2f7;
+            font-size: 1rem;
+        }
+        
+        .form-control:focus {
+            outline: none;
+            border-color: #007aff;
+            box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 25px;
+        }
+        
+        .empty-state {
+            text-align: center;
+            color: #8e8e93;
+            padding: 40px;
+        }
+    </style>
 </head>
-<body class="admin-page">
+<body>
     <div class="header">
-        <div class="nav">
-            <a href="/" class="logo">코드배틀아레나</a>
-            <ul class="nav-links">
-                <li><a href="/admin">관리자</a></li>
-                <li><a href="/teacher">강사 체험</a></li>
-                <li><a href="/student">학생 체험</a></li>
-                <li><a href="#" onclick="AuthManager.logout()">로그아웃</a></li>
-            </ul>
+        <div class="header-content">
+            <div class="logo">CodeBattleArena Admin</div>
+            <nav class="nav-menu">
+                <a href="/admin" class="nav-item active">사용자 관리</a>
+                <a href="javascript:logout()" class="nav-item">로그아웃</a>
+            </nav>
         </div>
     </div>
 
-    <div class="admin-dashboard">
-        <div class="admin-header">
-            <h1 class="admin-title">시스템 관리</h1>
-            <p class="admin-subtitle">사용자 관리 및 시스템 통계</p>
-        </div>
-
-        <div class="admin-stats">
+    <div class="main-container">
+        <h1 class="page-title">시스템 관리</h1>
+        
+        <div class="stats-grid">
             <div class="stat-card">
-                <div class="stat-value" id="totalUsers">-</div>
+                <div class="stat-number" id="totalUsers">-</div>
                 <div class="stat-label">전체 사용자</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="studentCount">-</div>
+                <div class="stat-number" id="studentCount">-</div>
                 <div class="stat-label">학생</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="teacherCount">-</div>
+                <div class="stat-number" id="teacherCount">-</div>
                 <div class="stat-label">강사</div>
             </div>
             <div class="stat-card">
-                <div class="stat-value" id="onlineCount">-</div>
-                <div class="stat-label">현재 접속</div>
+                <div class="stat-number" id="onlineUsers">-</div>
+                <div class="stat-label">온라인</div>
             </div>
         </div>
-
-        <div class="card">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h3>사용자 관리</h3>
-                <button onclick="showAddUserModal()" class="btn">사용자 추가</button>
+        
+        <div class="section-card">
+            <div class="section-header">
+                <h2 class="section-title">사용자 관리</h2>
+                <button class="btn btn-primary" onclick="showCreateUserModal()">사용자 추가</button>
             </div>
-
-            <div id="usersTable">
-                <div style="text-align: center; padding: 2rem;">사용자 데이터를 불러오는 중...</div>
+            
+            <div id="usersTableContainer">
+                <div class="empty-state">사용자 목록을 불러오는 중...</div>
             </div>
         </div>
     </div>
 
-    <script src="/js/common/auth.js"></script>
-    <script>
-        async function loadUsers() {
-            try {
-                const response = await fetch('/api/admin/users', {
-                    headers: AuthManager.getAuthHeaders()
-                });
-                const users = await response.json();
-                displayUsers(users);
-            } catch (error) {
-                document.getElementById('usersTable').innerHTML = 
-                    '<div style="text-align: center; color: #ef4444; padding: 2rem;">사용자 데이터를 불러올 수 없습니다.</div>';
-            }
-        }
+    <!-- 사용자 추가 모달 -->
+    <div id="createUserModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">새 사용자 추가</h3>
+            <form id="createUserForm">
+                <div class="form-group">
+                    <label class="form-label">이름</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">이메일</label>
+                    <input type="email" name="email" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">역할</label>
+                    <select name="role" class="form-control" required>
+                        <option value="STUDENT">학생</option>
+                        <option value="TEACHER">강사</option>
+                        <option value="ADMIN">관리자</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateUserModal()">취소</button>
+                    <button type="submit" class="btn btn-primary">추가</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <script>
         async function loadStats() {
             try {
-                const response = await fetch('/api/admin/stats', {
-                    headers: AuthManager.getAuthHeaders()
-                });
+                const response = await fetch('/api/admin/stats');
                 const stats = await response.json();
                 
                 document.getElementById('totalUsers').textContent = stats.totalUsers || 0;
                 document.getElementById('studentCount').textContent = stats.studentCount || 0;
                 document.getElementById('teacherCount').textContent = stats.teacherCount || 0;
-                document.getElementById('onlineCount').textContent = stats.onlineCount || 0;
+                document.getElementById('onlineUsers').textContent = stats.onlineUsers || 0;
             } catch (error) {
                 console.error('통계 로드 실패:', error);
             }
         }
 
-        function displayUsers(users) {
-            const tableDiv = document.getElementById('usersTable');
-            
-            if (users.length === 0) {
-                tableDiv.innerHTML = '<div style="text-align: center; color: #64748b; padding: 2rem;">등록된 사용자가 없습니다.</div>';
-                return;
-            }
-
-            const table = `
-                <table style="width: 100%; border-collapse: collapse;">
-                    <thead>
-                        <tr style="background: #f1f5f9; border-bottom: 2px solid #e2e8f0;">
-                            <th style="padding: 1rem; text-align: left;">이름</th>
-                            <th style="padding: 1rem; text-align: left;">이메일</th>
-                            <th style="padding: 1rem; text-align: center;">역할</th>
-                            <th style="padding: 1rem; text-align: center;">가입일</th>
-                            <th style="padding: 1rem; text-align: center;">상태</th>
-                            <th style="padding: 1rem; text-align: center;">관리</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${users.map(user => `
-                            <tr style="border-bottom: 1px solid #e2e8f0;">
-                                <td style="padding: 1rem; font-weight: 600;">${user.name}</td>
-                                <td style="padding: 1rem;">${user.email}</td>
-                                <td style="padding: 1rem; text-align: center;">
-                                    <span style="background: ${getRoleColor(user.role)}; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.8rem;">
-                                        ${getRoleText(user.role)}
-                                    </span>
-                                </td>
-                                <td style="padding: 1rem; text-align: center;">${new Date(user.createdAt).toLocaleDateString('ko-KR')}</td>
-                                <td style="padding: 1rem; text-align: center;">
-                                    <span style="color: ${user.onlineStatus ? '#10b981' : '#6b7280'};">
-                                        ${user.onlineStatus ? '온라인' : '오프라인'}
-                                    </span>
-                                </td>
-                                <td style="padding: 1rem; text-align: center;">
-                                    <button onclick="deleteUser(${user.id}, '${user.name}')" class="btn btn-danger" style="padding: 0.25rem 0.5rem; font-size: 0.8rem;">삭제</button>
-                                </td>
-                            </tr>
-                        `).join('')}
-                    </tbody>
-                </table>
-            `;
-            
-            tableDiv.innerHTML = table;
-        }
-
-        function getRoleColor(role) {
-            switch(role) {
-                case 'ADMIN': return '#ef4444';
-                case 'TEACHER': return '#3b82f6';
-                case 'STUDENT': return '#10b981';
-                default: return '#6b7280';
+        async function loadUsers() {
+            try {
+                const response = await fetch('/api/admin/users');
+                const data = await response.json();
+                
+                const container = document.getElementById('usersTableContainer');
+                
+                if (data.users && data.users.length > 0) {
+                    container.innerHTML = `
+                        <table class="users-table">
+                            <thead>
+                                <tr>
+                                    <th>이름</th>
+                                    <th>이메일</th>
+                                    <th>역할</th>
+                                    <th>상태</th>
+                                    <th>관리</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${data.users.map(user => `
+                                    <tr>
+                                        <td>${user.name}</td>
+                                        <td>${user.email}</td>
+                                        <td><span class="role-badge role-${user.role.toLowerCase()}">${getRoleText(user.role)}</span></td>
+                                        <td><span class="status-badge status-${user.online ? 'online' : 'offline'}">${user.online ? '온라인' : '오프라인'}</span></td>
+                                        <td>
+                                            <div class="actions">
+                                                ${user.role !== 'ADMIN' ? `
+                                                    <button class="btn btn-secondary" onclick="changeRole(${user.id}, '${user.role}')">역할변경</button>
+                                                    <button class="btn btn-danger" onclick="deleteUser(${user.id}, '${user.name}')">삭제</button>
+                                                ` : '<span style="color: #8e8e93;">관리자</span>'}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                `).join('')}
+                            </tbody>
+                        </table>
+                    `;
+                } else {
+                    container.innerHTML = '<div class="empty-state">등록된 사용자가 없습니다.</div>';
+                }
+            } catch (error) {
+                console.error('사용자 로드 실패:', error);
+                document.getElementById('usersTableContainer').innerHTML = '<div class="empty-state">사용자 목록을 불러올 수 없습니다.</div>';
             }
         }
 
         function getRoleText(role) {
-            switch(role) {
-                case 'ADMIN': return '관리자';
-                case 'TEACHER': return '강사';
-                case 'STUDENT': return '학생';
-                default: return role;
-            }
+            const roleMap = {
+                'STUDENT': '학생',
+                'TEACHER': '강사',
+                'ADMIN': '관리자'
+            };
+            return roleMap[role] || role;
         }
 
-        function showAddUserModal() {
-            const name = prompt('사용자 이름을 입력하세요:');
-            if (!name) return;
-            
-            const email = prompt('이메일을 입력하세요:');
-            if (!email) return;
-            
-            const role = prompt('역할을 입력하세요 (STUDENT/TEACHER/ADMIN):');
-            if (!role) return;
-            
-            alert(`사용자 추가 완료!\n이름: ${name}\n이메일: ${email}\n역할: ${role}`);
+        function showCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'flex';
         }
+
+        function closeCreateUserModal() {
+            document.getElementById('createUserModal').style.display = 'none';
+            document.getElementById('createUserForm').reset();
+        }
+
+        document.getElementById('createUserForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                role: formData.get('role')
+            };
+
+            try {
+                const response = await fetch('/api/admin/users', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(userData)
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('사용자가 성공적으로 추가되었습니다.');
+                    closeCreateUserModal();
+                    loadUsers();
+                    loadStats();
+                } else {
+                    alert('사용자 추가 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
 
         async function deleteUser(id, name) {
-            if (!confirm(`정말 ${name} 사용자를 삭제하시겠습니까?`)) {
+            if (!confirm(`'${name}' 사용자를 정말 삭제하시겠습니까?`)) {
                 return;
             }
-            
+
             try {
-                await fetch(`/api/admin/users/${id}`, {
-                    method: 'DELETE',
-                    headers: AuthManager.getAuthHeaders()
+                const response = await fetch(`/api/admin/users/${id}`, {
+                    method: 'DELETE'
                 });
+
+                const result = await response.json();
                 
-                alert('사용자가 삭제되었습니다.');
-                loadUsers();
-                loadStats();
+                if (result.success) {
+                    alert('사용자가 삭제되었습니다.');
+                    loadUsers();
+                    loadStats();
+                } else {
+                    alert('삭제 실패: ' + result.message);
+                }
             } catch (error) {
-                alert('삭제에 실패했습니다.');
+                alert('오류가 발생했습니다: ' + error.message);
             }
         }
 
-        loadUsers();
-        loadStats();
+        async function changeRole(id, currentRole) {
+            const roles = ['STUDENT', 'TEACHER', 'ADMIN'];
+            const roleNames = ['학생', '강사', '관리자'];
+            
+            let options = roles.map((role, index) => 
+                `${index + 1}. ${roleNames[index]} ${role === currentRole ? '(현재)' : ''}`
+            ).join('\n');
+            
+            const choice = prompt(`새로운 역할을 선택하세요:\n${options}\n\n번호를 입력하세요 (1-3):`);
+            
+            if (choice && choice >= 1 && choice <= 3) {
+                const newRole = roles[choice - 1];
+                
+                try {
+                    const response = await fetch(`/api/admin/users/${id}/role`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ role: newRole })
+                    });
+
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('역할이 변경되었습니다.');
+                        loadUsers();
+                        loadStats();
+                    } else {
+                        alert('역할 변경 실패: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('오류가 발생했습니다: ' + error.message);
+                }
+            }
+        }
+
+        function logout() {
+            if (confirm('로그아웃 하시겠습니까?')) {
+                localStorage.clear();
+                window.location.href = '/';
+            }
+        }
+
+        // 페이지 로드시 데이터 로드
+        document.addEventListener('DOMContentLoaded', function() {
+            loadStats();
+            loadUsers();
+        });
+
+        // 모달 외부 클릭시 닫기
+        document.getElementById('createUserModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCreateUserModal();
+            }
+        });
     </script>
 </body>
 </html>
