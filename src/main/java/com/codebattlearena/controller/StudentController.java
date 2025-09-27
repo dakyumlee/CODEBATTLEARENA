@@ -80,6 +80,25 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/auth-check")
+    public Map<String, Object> checkAuth(HttpServletRequest request) {
+        try {
+            Long userId = getUserIdFromRequest(request);
+            if (userId == null) {
+                return Map.of("authenticated", false);
+            }
+            
+            User user = userRepository.findById(userId).orElse(null);
+            if (user == null || user.getRole() != UserRole.STUDENT) {
+                return Map.of("authenticated", false);
+            }
+            
+            return Map.of("authenticated", true, "userId", userId, "userName", user.getName());
+        } catch (Exception e) {
+            return Map.of("authenticated", false);
+        }
+    }
+
     @GetMapping("/today")
     public Map<String, Object> getTodayData(HttpServletRequest request) {
         try {
@@ -88,7 +107,6 @@ public class StudentController {
                 return Map.of("error", "Unauthorized");
             }
             
-            // AI 추천 문제 (간단한 예시)
             List<Map<String, Object>> aiProblems = Arrays.asList(
                 Map.of(
                     "id", "ai-1",
@@ -131,8 +149,8 @@ public class StudentController {
                 problemData.put("difficulty", problem.getDifficulty());
                 problemData.put("timeLimit", problem.getTimeLimit());
                 problemData.put("points", problem.getPoints());
+                problemData.put("type", problem.getType());
                 
-                // 제출 여부 확인
                 boolean isSubmitted = submissionRepository.existsByUserIdAndProblemId(userId, problem.getId());
                 problemData.put("isSubmitted", isSubmitted);
                 
@@ -160,7 +178,6 @@ public class StudentController {
                 return Map.of("success", false, "message", "답안을 입력해주세요.");
             }
             
-            // 이미 제출했는지 확인
             if (submissionRepository.existsByUserIdAndProblemId(userId, problemId)) {
                 return Map.of("success", false, "message", "이미 제출한 문제입니다.");
             }

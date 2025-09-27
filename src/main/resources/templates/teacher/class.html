@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>수업 관리 - CodeBattleArena</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         
@@ -215,10 +216,43 @@
         .status-pending { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
         .status-graded { background: rgba(76, 175, 80, 0.2); color: #4caf50; }
         
-        @media (max-width: 768px) {
-            .action-buttons { flex-direction: column; }
-            .materials-grid { grid-template-columns: 1fr; }
+        .category-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e3f2fd;
         }
+        
+        .category-tab {
+            padding: 10px 20px;
+            background: none;
+            border: none;
+            border-bottom: 3px solid transparent;
+            color: #666;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+        
+        .category-tab.active {
+            color: #1976d2;
+            border-bottom-color: #1976d2;
+        }
+        
+        .category-tab:hover {
+            color: #1976d2;
+        }
+        
+        .type-badge {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .type-problem { background: rgba(33, 150, 243, 0.2); color: #1976d2; }
+        .type-quiz { background: rgba(255, 152, 0, 0.2); color: #f57c00; }
+        .type-exam { background: rgba(244, 67, 54, 0.2); color: #d32f2f; }
     </style>
 </head>
 <body>
@@ -257,7 +291,7 @@
                 <div class="action-buttons">
                     <button class="btn btn-primary" onclick="showCreateProblemModal()">문제 출제</button>
                     <button class="btn btn-warning" onclick="showCreateQuizModal()">퀴즈 생성</button>
-                    <button class="btn btn-danger" onclick="showCreateExamModal()">시험 생성</button>
+                    <button class="btn btn-danger" onclick="showCreateExamModal()">시험지 업로드</button>
                 </div>
             </div>
             
@@ -268,8 +302,15 @@
         
         <div class="section-card">
             <div class="section-header">
-                <h2 class="section-title">채점 대기</h2>
+                <h2 class="section-title">채점 관리</h2>
                 <button class="btn btn-success" onclick="refreshSubmissions()">새로고침</button>
+            </div>
+            
+            <div class="category-tabs">
+                <button class="category-tab active" onclick="filterSubmissions('ALL')">전체</button>
+                <button class="category-tab" onclick="filterSubmissions('PROBLEM')">문제</button>
+                <button class="category-tab" onclick="filterSubmissions('QUIZ')">퀴즈</button>
+                <button class="category-tab" onclick="filterSubmissions('EXAM')">시험</button>
             </div>
             
             <div id="submissionsContainer">
@@ -278,7 +319,6 @@
         </div>
     </div>
 
-    <!-- 모달들 -->
     <div id="uploadModal" class="modal">
         <div class="modal-content">
             <h3 class="modal-title">자료 업로드</h3>
@@ -328,15 +368,6 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">문제 유형</label>
-                    <select name="type" class="form-control" required>
-                        <option value="">선택하세요</option>
-                        <option value="PROBLEM">일반 문제</option>
-                        <option value="QUIZ">퀴즈</option>
-                        <option value="EXAM">시험</option>
-                    </select>
-                </div>
-                <div class="form-group">
                     <label class="form-label">제한 시간 (분)</label>
                     <input type="number" name="timeLimit" class="form-control" value="60" min="1">
                 </div>
@@ -352,46 +383,90 @@
         </div>
     </div>
 
-    <div id="editProblemModal" class="modal">
+    <div id="createQuizModal" class="modal">
         <div class="modal-content">
-            <h3 class="modal-title">문제 수정</h3>
-            <form id="editProblemForm">
-                <input type="hidden" id="editProblemId">
+            <h3 class="modal-title">퀴즈 생성 (4지선다)</h3>
+            <form id="createQuizForm">
                 <div class="form-group">
-                    <label class="form-label">문제 제목</label>
-                    <input type="text" name="title" class="form-control" required>
+                    <label class="form-label">퀴즈 제목</label>
+                    <input type="text" name="title" class="form-control" placeholder="퀴즈 제목" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">문제 설명</label>
-                    <textarea name="description" class="form-control" rows="6" required></textarea>
+                    <label class="form-label">문제</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="퀴즈 문제를 작성하세요" required></textarea>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">난이도</label>
-                    <select name="difficulty" class="form-control" required>
-                        <option value="하">하</option>
-                        <option value="중">중</option>
-                        <option value="상">상</option>
-                    </select>
+                    <label class="form-label">선택지 A</label>
+                    <input type="text" name="optionA" class="form-control" placeholder="첫 번째 선택지" required>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">문제 유형</label>
-                    <select name="type" class="form-control" required>
-                        <option value="PROBLEM">일반 문제</option>
-                        <option value="QUIZ">퀴즈</option>
-                        <option value="EXAM">시험</option>
+                    <label class="form-label">선택지 B</label>
+                    <input type="text" name="optionB" class="form-control" placeholder="두 번째 선택지" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 C</label>
+                    <input type="text" name="optionC" class="form-control" placeholder="세 번째 선택지" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">선택지 D</label>
+                    <input type="text" name="optionD" class="form-control" placeholder="네 번째 선택지" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">정답</label>
+                    <select name="correctAnswer" class="form-control" required>
+                        <option value="">정답을 선택하세요</option>
+                        <option value="A">A</option>
+                        <option value="B">B</option>
+                        <option value="C">C</option>
+                        <option value="D">D</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="form-label">제한 시간 (분)</label>
-                    <input type="number" name="timeLimit" class="form-control" min="1">
+                    <input type="number" name="timeLimit" class="form-control" value="10" min="1">
                 </div>
                 <div class="form-group">
                     <label class="form-label">배점</label>
-                    <input type="number" name="points" class="form-control" min="1">
+                    <input type="number" name="points" class="form-control" value="100" min="1">
                 </div>
                 <div class="modal-actions">
-                    <button type="button" class="btn" onclick="closeEditProblemModal()">취소</button>
-                    <button type="submit" class="btn btn-primary">수정</button>
+                    <button type="button" class="btn" onclick="closeCreateQuizModal()">취소</button>
+                    <button type="submit" class="btn btn-warning">퀴즈 생성</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="createExamModal" class="modal">
+        <div class="modal-content">
+            <h3 class="modal-title">시험지 업로드</h3>
+            <form id="createExamForm" enctype="multipart/form-data">
+                <div class="form-group">
+                    <label class="form-label">시험 제목</label>
+                    <input type="text" name="title" class="form-control" placeholder="시험 제목" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">시험 설명</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="시험에 대한 설명"></textarea>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">시험지 파일</label>
+                    <div class="upload-area" id="examUploadArea">
+                        <p>시험지 파일을 업로드하세요 (PDF, DOC, HWP 등)</p>
+                        <input type="file" name="examFile" id="examFileInput" style="display: none;" accept=".pdf,.doc,.docx,.hwp,.ppt,.pptx">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">시험 기간 (일)</label>
+                    <input type="number" name="duration" class="form-control" value="7" min="1" max="30">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">배점</label>
+                    <input type="number" name="points" class="form-control" value="100" min="1">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn" onclick="closeCreateExamModal()">취소</button>
+                    <button type="submit" class="btn btn-danger">시험 생성</button>
                 </div>
             </form>
         </div>
@@ -409,6 +484,10 @@
                 <div class="form-group">
                     <label class="form-label">문제</label>
                     <input type="text" id="gradeProblemTitle" class="form-control" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">유형</label>
+                    <input type="text" id="gradeProblemType" class="form-control" readonly>
                 </div>
                 <div class="form-group">
                     <label class="form-label">학생 답안</label>
@@ -431,6 +510,9 @@
     </div>
 
     <script>
+        let allSubmissions = [];
+        let currentFilter = 'ALL';
+
         async function loadMaterials() {
             try {
                 const response = await fetch('/api/teacher/materials', {
@@ -499,7 +581,7 @@
                                 ${data.problems.map(problem => `
                                     <tr>
                                         <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.title}</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.type || 'PROBLEM'}</td>
+                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;"><span class="type-badge type-${(problem.type || 'PROBLEM').toLowerCase()}">${getTypeKorean(problem.type || 'PROBLEM')}</span></td>
                                         <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;"><span class="difficulty-badge difficulty-${getDifficultyClass(problem.difficulty)}">${problem.difficulty}</span></td>
                                         <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.timeLimit}분</td>
                                         <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.points}점</td>
@@ -531,34 +613,61 @@
                 });
                 const data = await response.json();
                 
-                const container = document.getElementById('submissionsContainer');
+                allSubmissions = data.submissions || [];
+                filterSubmissions(currentFilter);
                 
-                if (data.submissions && data.submissions.length > 0) {
-                    container.innerHTML = data.submissions.map(submission => `
-                        <div class="submission-card">
-                            <div class="submission-header">
-                                <div>
-                                    <strong>${submission.studentName}</strong> - ${submission.problemTitle}
-                                    <div class="submission-info">제출일: ${new Date(submission.submittedAt).toLocaleString()}</div>
-                                </div>
-                                <div style="display: flex; gap: 10px; align-items: center;">
-                                    <span class="status-badge status-${submission.status.toLowerCase()}">${submission.status === 'PENDING' ? '채점 대기' : '채점 완료'}</span>
-                                    ${submission.status === 'PENDING' ? 
-                                        `<button class="btn btn-primary btn-small" onclick="openGradeModal(${submission.id}, '${submission.studentName}', '${submission.problemTitle}', '${submission.answer}')">채점하기</button>` : 
-                                        `<span style="color: #4caf50; font-weight: 600;">${submission.score}점</span>`
-                                    }
-                                </div>
-                            </div>
-                            <div class="submission-answer">${submission.answer}</div>
-                            ${submission.feedback ? `<div style="background: #e8f5e8; padding: 10px; border-radius: 6px; margin-top: 10px;"><strong>피드백:</strong> ${submission.feedback}</div>` : ''}
-                        </div>
-                    `).join('');
-                } else {
-                    container.innerHTML = '<div class="empty-state">제출된 답안이 없습니다.</div>';
-                }
             } catch (error) {
                 console.error('제출물 로드 실패:', error);
                 document.getElementById('submissionsContainer').innerHTML = '<div class="empty-state">제출물을 불러올 수 없습니다.</div>';
+            }
+        }function filterSubmissions(type) {
+            currentFilter = type;
+            
+            // 탭 활성화
+            document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+            event?.target?.classList.add('active') || document.querySelector(`[onclick="filterSubmissions('${type}')"]`).classList.add('active');
+            
+            let filteredSubmissions = allSubmissions;
+            if (type !== 'ALL') {
+                filteredSubmissions = allSubmissions.filter(submission => 
+                    (submission.problemType || 'PROBLEM') === type
+                );
+            }
+            
+            const container = document.getElementById('submissionsContainer');
+            
+            if (filteredSubmissions && filteredSubmissions.length > 0) {
+                container.innerHTML = filteredSubmissions.map(submission => `
+                    <div class="submission-card">
+                        <div class="submission-header">
+                            <div>
+                                <strong>${submission.studentName}</strong> - ${submission.problemTitle}
+                                <span class="type-badge type-${(submission.problemType || 'problem').toLowerCase()}">${getTypeKorean(submission.problemType || 'PROBLEM')}</span>
+                                <div class="submission-info">제출일: ${new Date(submission.submittedAt).toLocaleString()}</div>
+                            </div>
+                            <div style="display: flex; gap: 10px; align-items: center;">
+                                <span class="status-badge status-${submission.status.toLowerCase()}">${submission.status === 'PENDING' ? '채점 대기' : '채점 완료'}</span>
+                                ${submission.status === 'PENDING' ? 
+                                    `<button class="btn btn-primary btn-small" onclick="openGradeModal(${submission.id}, '${submission.studentName}', '${submission.problemTitle}', '${submission.problemType || 'PROBLEM'}', \`${submission.answer.replace(/`/g, '\\`')}\`)">채점하기</button>` : 
+                                    `<span style="color: #4caf50; font-weight: 600;">${submission.score}점</span>`
+                                }
+                            </div>
+                        </div>
+                        <div class="submission-answer">${submission.answer}</div>
+                        ${submission.feedback ? `<div style="background: #e8f5e8; padding: 10px; border-radius: 6px; margin-top: 10px;"><strong>피드백:</strong> ${submission.feedback}</div>` : ''}
+                    </div>
+                `).join('');
+            } else {
+                container.innerHTML = `<div class="empty-state">${type === 'ALL' ? '제출된 답안이 없습니다.' : getTypeKorean(type) + ' 제출물이 없습니다.'}</div>`;
+            }
+        }
+
+        function getTypeKorean(type) {
+            switch(type) {
+                case 'QUIZ': return '퀴즈';
+                case 'EXAM': return '시험';
+                case 'PROBLEM':
+                default: return '문제';
             }
         }
 
@@ -598,77 +707,28 @@
         }
 
         function showCreateQuizModal() {
-            document.getElementById('createProblemModal').style.display = 'flex';
-            document.querySelector('select[name="type"]').value = 'QUIZ';
+            document.getElementById('createQuizModal').style.display = 'flex';
+        }
+
+        function closeCreateQuizModal() {
+            document.getElementById('createQuizModal').style.display = 'none';
+            document.getElementById('createQuizForm').reset();
         }
 
         function showCreateExamModal() {
-            document.getElementById('createProblemModal').style.display = 'flex';
-            document.querySelector('select[name="type"]').value = 'EXAM';
+            document.getElementById('createExamModal').style.display = 'flex';
         }
 
-        async function editProblem(id) {
-            try {
-                const response = await fetch('/api/teacher/problems', {
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                    }
-                });
-                const data = await response.json();
-                
-                const problem = data.problems.find(p => p.id === id);
-                if (!problem) {
-                    alert('문제를 찾을 수 없습니다.');
-                    return;
-                }
-                
-                document.getElementById('editProblemId').value = id;
-                document.querySelector('#editProblemForm input[name="title"]').value = problem.title;
-                document.querySelector('#editProblemForm textarea[name="description"]').value = problem.description;
-                document.querySelector('#editProblemForm select[name="difficulty"]').value = problem.difficulty;
-                document.querySelector('#editProblemForm select[name="type"]').value = problem.type || 'PROBLEM';
-                document.querySelector('#editProblemForm input[name="timeLimit"]').value = problem.timeLimit;
-                document.querySelector('#editProblemForm input[name="points"]').value = problem.points;
-                
-                document.getElementById('editProblemModal').style.display = 'flex';
-            } catch (error) {
-                alert('문제 정보를 불러올 수 없습니다.');
-            }
+        function closeCreateExamModal() {
+            document.getElementById('createExamModal').style.display = 'none';
+            document.getElementById('createExamForm').reset();
         }
 
-        function closeEditProblemModal() {
-            document.getElementById('editProblemModal').style.display = 'none';
-            document.getElementById('editProblemForm').reset();
-        }
-
-        async function deleteProblem(id) {
-            if (confirm('정말 이 문제를 삭제하시겠습니까?')) {
-                try {
-                    const response = await fetch(`/api/teacher/problems/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-                        }
-                    });
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        alert('문제가 삭제되었습니다.');
-                        loadProblems();
-                    } else {
-                        alert('삭제 실패: ' + result.message);
-                    }
-                } catch (error) {
-                    alert('오류가 발생했습니다: ' + error.message);
-                }
-            }
-        }
-
-        function openGradeModal(submissionId, studentName, problemTitle, answer) {
-            document.getElementById('gradeSubmissionId').value = submissionId
-Id;
+        function openGradeModal(submissionId, studentName, problemTitle, problemType, answer) {
+            document.getElementById('gradeSubmissionId').value = submissionId;
             document.getElementById('gradeStudentName').value = studentName;
             document.getElementById('gradeProblemTitle').value = problemTitle;
+            document.getElementById('gradeProblemType').value = getTypeKorean(problemType);
             document.getElementById('gradeStudentAnswer').value = answer;
             document.getElementById('gradeModal').style.display = 'flex';
         }
@@ -713,8 +773,36 @@ Id;
             }
         }
 
+        async function deleteProblem(id) {
+            if (confirm('정말 이 문제를 삭제하시겠습니까?')) {
+                try {
+                    const response = await fetch(`/api/teacher/problems/${id}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                        }
+                    });
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        alert('문제가 삭제되었습니다.');
+                        loadProblems();
+                    } else {
+                        alert('삭제 실패: ' + result.message);
+                    }
+                } catch (error) {
+                    alert('오류가 발생했습니다: ' + error.message);
+                }
+            }
+        }
+
+        // 파일 업로드 이벤트
         document.getElementById('uploadArea').addEventListener('click', function() {
             document.getElementById('fileInput').click();
+        });
+
+        document.getElementById('examUploadArea').addEventListener('click', function() {
+            document.getElementById('examFileInput').click();
         });
 
         document.getElementById('fileInput').addEventListener('change', function(e) {
@@ -724,6 +812,14 @@ Id;
             }
         });
 
+        document.getElementById('examFileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                document.getElementById('examUploadArea').innerHTML = `<p>선택된 파일: ${file.name}</p>`;
+            }
+        });
+
+        // 폼 제출 이벤트
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -760,7 +856,7 @@ Id;
                 title: formData.get('title'),
                 description: formData.get('description'),
                 difficulty: formData.get('difficulty'),
-                type: formData.get('type'),
+                type: 'PROBLEM',
                 timeLimit: formData.get('timeLimit'),
                 points: formData.get('points')
             };
@@ -789,38 +885,70 @@ Id;
             }
         });
 
-        document.getElementById('editProblemForm').addEventListener('submit', async (e) => {
+        document.getElementById('createQuizForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
             const formData = new FormData(e.target);
-            const problemId = document.getElementById('editProblemId').value;
-            const problemData = {
+            const quizData = {
                 title: formData.get('title'),
                 description: formData.get('description'),
-                difficulty: formData.get('difficulty'),
-                type: formData.get('type'),
+                type: 'QUIZ',
+                optionA: formData.get('optionA'),
+                optionB: formData.get('optionB'),
+                optionC: formData.get('optionC'),
+                optionD: formData.get('optionD'),
+                correctAnswer: formData.get('correctAnswer'),
                 timeLimit: formData.get('timeLimit'),
                 points: formData.get('points')
             };
 
             try {
-                const response = await fetch(`/api/teacher/problems/${problemId}`, {
-                    method: 'PUT',
+                const response = await fetch('/api/teacher/problems', {
+                    method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'Authorization': 'Bearer ' + localStorage.getItem('authToken')
                     },
-                    body: JSON.stringify(problemData)
+                    body: JSON.stringify(quizData)
                 });
 
                 const result = await response.json();
                 
                 if (result.success) {
-                    alert('문제가 수정되었습니다.');
-                    closeEditProblemModal();
+                    alert('퀴즈가 성공적으로 생성되었습니다.');
+                    closeCreateQuizModal();
                     loadProblems();
                 } else {
-                    alert('문제 수정 실패: ' + result.message);
+                    alert('퀴즈 생성 실패: ' + result.message);
+                }
+            } catch (error) {
+                alert('오류가 발생했습니다: ' + error.message);
+            }
+        });
+
+        document.getElementById('createExamForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            
+            // 시험지는 자료로 업로드
+            try {
+                const response = await fetch('/api/teacher/materials', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                    },
+                    body: formData
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                    alert('시험지가 성공적으로 업로드되었습니다.');
+                    closeCreateExamModal();
+                    loadMaterials();
+                } else {
+                    alert('시험지 업로드 실패: ' + result.message);
                 }
             } catch (error) {
                 alert('오류가 발생했습니다: ' + error.message);
@@ -870,28 +998,12 @@ Id;
         }
 
         // 모달 외부 클릭시 닫기
-        document.getElementById('uploadModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeUploadModal();
-            }
-        });
-
-        document.getElementById('createProblemModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeCreateProblemModal();
-            }
-        });
-
-        document.getElementById('editProblemModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeEditProblemModal();
-            }
-        });
-
-        document.getElementById('gradeModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closeGradeModal();
-            }
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
         });
 
         document.addEventListener('DOMContentLoaded', function() {
@@ -902,107 +1014,3 @@ Id;
     </script>
 </body>
 </html>
-    <div id="createQuizModal" class="modal">
-        <div class="modal-content">
-            <h3 class="modal-title">퀴즈 생성 (4지선다)</h3>
-            <form id="createQuizForm">
-                <div class="form-group">
-                    <label class="form-label">퀴즈 제목</label>
-                    <input type="text" name="title" class="form-control" placeholder="퀴즈 제목" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">문제</label>
-                    <textarea name="description" class="form-control" rows="4" placeholder="퀴즈 문제를 작성하세요" required></textarea>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">선택지 A</label>
-                    <input type="text" name="optionA" class="form-control" placeholder="첫 번째 선택지" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">선택지 B</label>
-                    <input type="text" name="optionB" class="form-control" placeholder="두 번째 선택지" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">선택지 C</label>
-                    <input type="text" name="optionC" class="form-control" placeholder="세 번째 선택지" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">선택지 D</label>
-                    <input type="text" name="optionD" class="form-control" placeholder="네 번째 선택지" required>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">정답</label>
-                    <select name="correctAnswer" class="form-control" required>
-                        <option value="">정답을 선택하세요</option>
-                        <option value="A">A</option>
-                        <option value="B">B</option>
-                        <option value="C">C</option>
-                        <option value="D">D</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">제한 시간 (분)</label>
-                    <input type="number" name="timeLimit" class="form-control" value="10" min="1">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">배점</label>
-                    <input type="number" name="points" class="form-control" value="100" min="1">
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn" onclick="closeCreateQuizModal()">취소</button>
-                    <button type="submit" class="btn btn-warning">퀴즈 생성</button>
-                </div>
-            </form>
-        </div>
-    </div>
-<script>
-function showCreateQuizModal() {
-    document.getElementById('createQuizModal').style.display = 'flex';
-}
-
-function closeCreateQuizModal() {
-    document.getElementById('createQuizModal').style.display = 'none';
-    document.getElementById('createQuizForm').reset();
-}
-
-document.getElementById('createQuizForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    
-    const formData = new FormData(e.target);
-    const quizData = {
-        title: formData.get('title'),
-        description: formData.get('description'),
-        type: 'QUIZ',
-        optionA: formData.get('optionA'),
-        optionB: formData.get('optionB'),
-        optionC: formData.get('optionC'),
-        optionD: formData.get('optionD'),
-        correctAnswer: formData.get('correctAnswer'),
-        timeLimit: formData.get('timeLimit'),
-        points: formData.get('points')
-    };
-
-    try {
-        const response = await fetch('/api/teacher/problems', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + localStorage.getItem('authToken')
-            },
-            body: JSON.stringify(quizData)
-        });
-
-        const result = await response.json();
-        
-        if (result.success) {
-            alert('퀴즈가 성공적으로 생성되었습니다.');
-            closeCreateQuizModal();
-            loadProblems();
-        } else {
-            alert('퀴즈 생성 실패: ' + result.message);
-        }
-    } catch (error) {
-        alert('오류가 발생했습니다: ' + error.message);
-    }
-});
-</script>

@@ -52,9 +52,15 @@ public class TeacherController {
 
     @PostConstruct
     public void init() {
-        String cloudinaryUrl = env.getProperty("CLOUDINARY_URL");
-        if (cloudinaryUrl != null) {
-            cloudinary = new com.cloudinary.Cloudinary(cloudinaryUrl);
+        try {
+            cloudinary = new com.cloudinary.Cloudinary();
+            cloudinary.config.cloudName = "dgtxjgdit";
+            cloudinary.config.apiKey = "838357254369448";
+            cloudinary.config.apiSecret = "c5xRZ7AD5wTd6l0KBqTnaBYpWSU";
+            cloudinary.config.secure = true;
+            System.out.println("Cloudinary initialized successfully");
+        } catch (Exception e) {
+            System.err.println("Cloudinary initialization failed: " + e.getMessage());
         }
     }
 
@@ -137,6 +143,8 @@ public class TeacherController {
             return Map.of("success", true, "message", "자료가 업로드되었습니다.");
 
         } catch (Exception e) {
+            System.err.println("Upload error: " + e.getMessage());
+            e.printStackTrace();
             return Map.of("success", false, "message", "업로드 실패: " + e.getMessage());
         }
     }
@@ -263,20 +271,38 @@ public class TeacherController {
                     problemData.get("points") != null ? Integer.parseInt(problemData.get("points").toString()) : 100);
             problem.setCreatedAt(LocalDateTime.now());
 
+            if ("QUIZ".equals(problemData.get("type"))) {
+                Map<String, Object> quizOptions = new HashMap<>();
+                quizOptions.put("optionA", problemData.get("optionA"));
+                quizOptions.put("optionB", problemData.get("optionB"));
+                quizOptions.put("optionC", problemData.get("optionC"));
+                quizOptions.put("optionD", problemData.get("optionD"));
+                quizOptions.put("correctAnswer", problemData.get("correctAnswer"));
+                problem.setTestCases(quizOptions.toString());
+            }
+
             Problem savedProblem = problemRepository.save(problem);
 
             Map<String, Object> notification = new HashMap<>();
             notification.put("type", "NEW_PROBLEM");
-            notification.put("title", "새로운 문제가 출제되었습니다!");
+            notification.put("title", "새로운 " + getTypeKorean((String) problemData.get("type")) + "가 출제되었습니다!");
             notification.put("message", savedProblem.getTitle());
             notification.put("problemId", savedProblem.getId());
             notification.put("timestamp", LocalDateTime.now().toString());
 
             messagingTemplate.convertAndSend("/topic/notifications", notification);
 
-            return Map.of("success", true, "message", "문제가 성공적으로 출제되었습니다.", "problem", savedProblem);
+            return Map.of("success", true, "message", getTypeKorean((String) problemData.get("type")) + "가 성공적으로 출제되었습니다.", "problem", savedProblem);
         } catch (Exception e) {
             return Map.of("success", false, "message", "오류: " + e.getMessage());
+        }
+    }
+
+    private String getTypeKorean(String type) {
+        switch (type) {
+            case "QUIZ": return "퀴즈";
+            case "EXAM": return "시험";
+            default: return "문제";
         }
     }
 
@@ -374,6 +400,7 @@ public class TeacherController {
 
                 Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
                 data.put("problemTitle", problem != null ? problem.getTitle() : "Unknown");
+                data.put("problemType", problem != null ? problem.getType() : "PROBLEM");
 
                 return data;
             }).collect(Collectors.toList());
