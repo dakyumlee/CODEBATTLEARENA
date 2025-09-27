@@ -96,30 +96,30 @@ public class TeacherController {
     }
 
     @GetMapping("/materials/{id}/preview")
-public ResponseEntity<Map<String, Object>> previewMaterial(@PathVariable Long id, HttpServletRequest request) {
-    try {
-        Long teacherId = getUserIdFromRequest(request);
-        if (teacherId == null) {
-            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+    public ResponseEntity<Map<String, Object>> previewMaterial(@PathVariable Long id, HttpServletRequest request) {
+        try {
+            Long teacherId = getUserIdFromRequest(request);
+            if (teacherId == null) {
+                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
+            }
+
+            Material material = materialRepository.findById(id).orElse(null);
+            if (material == null || !material.getTeacherId().equals(teacherId)) {
+                return ResponseEntity.status(404).body(Map.of("error", "Material not found"));
+            }
+
+            Map<String, Object> previewData = new HashMap<>();
+            previewData.put("id", material.getId());
+            previewData.put("title", material.getTitle());
+            previewData.put("filePath", material.getFilePath());
+            previewData.put("fileType", material.getFileType());
+            previewData.put("originalFilename", material.getOriginalFilename());
+
+            return ResponseEntity.ok(previewData);
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of("error", "Preview failed: " + e.getMessage()));
         }
-
-        Material material = materialRepository.findById(id).orElse(null);
-        if (material == null || !material.getTeacherId().equals(teacherId)) {
-            return ResponseEntity.status(404).body(Map.of("error", "Material not found"));
-        }
-
-        Map<String, Object> previewData = new HashMap<>();
-        previewData.put("id", material.getId());
-        previewData.put("title", material.getTitle());
-        previewData.put("filePath", material.getFilePath());
-        previewData.put("fileType", material.getFileType());
-        previewData.put("originalFilename", material.getOriginalFilename());
-
-        return ResponseEntity.ok(previewData);
-    } catch (Exception e) {
-        return ResponseEntity.status(500).body(Map.of("error", "Preview failed: " + e.getMessage()));
     }
-}
 
     @GetMapping("/problems/{id}/detail")
     public ResponseEntity<Map<String, Object>> getProblemDetail(@PathVariable Long id, HttpServletRequest request) {
