@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CodeBattleArena</title>
     <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/mobile.css">
     <style>
         * {
             margin: 0;
@@ -190,26 +191,90 @@
             line-height: 1.5;
         }
         
+        .mobile-login-toggle {
+            display: none;
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 200;
+            background: #3182ce;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            font-size: 1.2rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .mobile-login-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 300;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
         @media (max-width: 768px) {
             .main-content {
                 flex-direction: column;
                 gap: 40px;
                 text-align: center;
+                margin-top: 40px;
             }
             
             .right-content {
-                flex: none;
-                width: 100%;
-                max-width: 400px;
+                display: none;
+            }
+            
+            .mobile-login-toggle {
+                display: block;
             }
             
             .main-title {
                 font-size: 2.5rem;
             }
+            
+            .left-content {
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
+    <button class="mobile-login-toggle" onclick="showMobileLogin()">📧</button>
+    
+    <div class="mobile-login-modal" id="mobileLoginModal">
+        <div class="login-card">
+            <h2 class="login-title">로그인</h2>
+            
+            <div class="form-group">
+                <label class="form-label">이메일</label>
+                <input type="email" class="form-input" id="mobileEmail" placeholder="이메일을 입력하세요">
+            </div>
+            
+            <div class="form-group">
+                <label class="form-label">비밀번호</label>
+                <input type="password" class="form-input" id="mobilePassword" placeholder="비밀번호를 입력하세요">
+            </div>
+            
+            <button class="login-btn" onclick="mobileLogin()">로그인</button>
+            
+            <div class="register-link">
+                계정이 없으신가요? <a href="/register">회원가입</a>
+            </div>
+            
+            <button onclick="hideMobileLogin()" style="position: absolute; top: 10px; right: 15px; background: none; border: none; font-size: 1.5rem; cursor: pointer;">×</button>
+        </div>
+    </div>
+
     <div class="header">
         <div class="header-content">
             <div class="logo">CodeBattleArena</div>
@@ -278,6 +343,14 @@
     </div>
 
     <script>
+        function showMobileLogin() {
+            document.getElementById('mobileLoginModal').style.display = 'flex';
+        }
+        
+        function hideMobileLogin() {
+            document.getElementById('mobileLoginModal').style.display = 'none';
+        }
+        
         async function login() {
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
@@ -287,6 +360,22 @@
                 return;
             }
             
+            await performLogin(email, password);
+        }
+        
+        async function mobileLogin() {
+            const email = document.getElementById('mobileEmail').value;
+            const password = document.getElementById('mobilePassword').value;
+            
+            if (!email || !password) {
+                alert('이메일과 비밀번호를 모두 입력해주세요.');
+                return;
+            }
+            
+            await performLogin(email, password);
+        }
+        
+        async function performLogin(email, password) {
             try {
                 const response = await fetch('/api/auth/login', {
                     method: 'POST',
@@ -318,7 +407,18 @@
         
         document.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') {
-                login();
+                const mobileModal = document.getElementById('mobileLoginModal');
+                if (mobileModal.style.display === 'flex') {
+                    mobileLogin();
+                } else {
+                    login();
+                }
+            }
+        });
+        
+        document.getElementById('mobileLoginModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                hideMobileLogin();
             }
         });
     </script>
