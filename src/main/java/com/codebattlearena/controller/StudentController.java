@@ -348,51 +348,71 @@ public class StudentController {
 
     @PostMapping("/submit-answer")
     public Map<String, Object> submitAnswer(
-            @RequestParam("problemId") Long problemId,
-            @RequestParam("answer") String answer,
-            HttpSession session) {
-        
-        try {
-            Long userId = getUserIdFromSession(session);
-            if (userId == null) {
-                return Map.of("success", false, "message", "인증이 필요합니다.");
-            }
-            
-            if (answer == null || answer.trim().isEmpty()) {
-                return Map.of("success", false, "message", "답안을 작성해주세요.");
-            }
-            
-            if (submissionRepository.existsByUserIdAndProblemId(userId, problemId)) {
-                return Map.of("success", false, "message", "이미 제출한 문제입니다.");
-            }
-            
-            Problem problem = problemRepository.findById(problemId).orElse(null);
-            if (problem == null) {
-                return Map.of("success", false, "message", "문제를 찾을 수 없습니다.");
-            }
-            
-            Submission submission = new Submission();
-            submission.setUserId(userId);
-            submission.setProblemId(problemId);
-            submission.setAnswer(answer);
-            submission.setSubmittedAt(LocalDateTime.now());
-            submission.setStatus("PENDING");
-            
-            if ("QUIZ".equals(problem.getType()) && problem.getCorrectAnswer() != null) {
-                boolean isCorrect = problem.getCorrectAnswer().equalsIgnoreCase(answer.trim());
-                submission.setScore(isCorrect ? problem.getPoints() : 0);
-                submission.setStatus("GRADED");
-                submission.setFeedback(isCorrect ? "정답입니다!" : "오답입니다. 정답: " + problem.getCorrectAnswer());
-                submission.setGradedAt(LocalDateTime.now());
-            }
-            
-            submissionRepository.save(submission);
-            
-            return Map.of("success", true, "message", "답안이 제출되었습니다.");
-        } catch (Exception e) {
-            return Map.of("success", false, "message", "제출 실패: " + e.getMessage());
+        @RequestParam("problemId") Long problemId,
+        @RequestParam("answer") String answer,
+        @RequestParam(value = "timeSpent", required = false) Integer timeSpent,
+        @RequestParam(value = "autoSubmit", required = false) Boolean autoSubmit,
+        HttpSession session) {
+    
+    try {
+        Long userId = getUserIdFromSession(session);
+        if (userId == null) {
+            return Map.of("success", false, "message", "인증이 필요합니다.");
         }
+        
+        if (answer == null || answer.trim().isEmpty()) {
+            return Map.of("success", false, "message", "답안을 작성해주세요.");
+        }
+        
+        if (submissionRepository.existsByUserIdAndProblemId(userId, problemId)) {
+            return Map.of("success", false, "message", "이미 제출한 문제입니다.");
+        }
+        
+        Problem problem = problemRepository.findById(problemId).orElse(null);
+        if (problem == null) {
+            return Map.of("success", false, "message", "문제를 찾을 수 없습니다.");
+        }
+        
+        Submission submission = new Submission();
+        submission.setUserId(userId);
+        submission.setProblemId(problemId);
+        submission.setAnswer(answer);
+        submission.setSubmittedAt(LocalDateTime.now());
+        submission.setStatus("PENDING");
+        
+        if (timeSpent != null) {
+            submission.setTimeSpent(timeSpent);
+        }
+        
+        if (Boolean.TRUE.equals(autoSubmit)) {
+            submission.setAutoSubmitted(true);
+            submission.setFeedback("시간 초과로 자동 제출됨");
+        }
+        
+        if ("QUIZ".equals(problem.getType()) && problem.getCorrectAnswer() != null) {
+            boolean isCorrect = problem.getCorrectAnswer().equalsIgnoreCase(answer.trim());
+            submission.setScore(isCorrect ? problem.getPoints() : 0);
+            submission.setStatus("GRADED");
+            
+            String feedback = isCorrect ? "정답입니다!" : "오답입니다. 정답: " + problem.getCorrectAnswer();
+            if (Boolean.TRUE.equals(autoSubmit)) {
+                feedback = "시간 초과로 자동 제출됨 - " + feedback;
+            }
+            submission.setFeedback(feedback);
+            submission.setGradedAt(LocalDateTime.now());
+        }
+        
+        submissionRepository.save(submission);
+        
+        String message = Boolean.TRUE.equals(autoSubmit) ? 
+            "시간이 만료되어 자동으로 제출되었습니다." : 
+            "답안이 제출되었습니다.";
+            
+        return Map.of("success", true, "message", message);
+    } catch (Exception e) {
+        return Map.of("success", false, "message", "제출 실패: " + e.getMessage());
     }
+}
 
     @GetMapping("/notes")
     public List<StudyNote> getNotes(HttpSession session) {

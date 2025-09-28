@@ -213,6 +213,91 @@
             font-style: italic;
         }
 
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: rgba(15, 20, 25, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            max-width: 900px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .quiz-options {
+            margin-bottom: 20px;
+        }
+
+        .quiz-option {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .quiz-option:hover {
+            background: rgba(79, 195, 247, 0.1);
+            border-color: rgba(79, 195, 247, 0.3);
+        }
+
+        .quiz-option.selected {
+            background: rgba(79, 195, 247, 0.2);
+            border-color: rgba(79, 195, 247, 0.5);
+            color: #4fc3f7;
+        }
+
+        .answer-textarea {
+            width: 100%;
+            min-height: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            color: #e8eaed;
+            font-family: 'Courier New', monospace;
+            resize: vertical;
+        }
+
+        .modal-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+        }
+
+        .timer-warning {
+            background: rgba(255, 152, 0, 0.2) !important;
+            color: #ffb74d !important;
+        }
+
+        .timer-danger {
+            background: rgba(244, 67, 54, 0.3) !important;
+            color: #e57373 !important;
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
         @media (max-width: 768px) {
             .header-content { flex-direction: column; gap: 15px; }
             .nav-menu { flex-wrap: wrap; }
@@ -265,9 +350,39 @@
         </div>
     </div>
 
+    <div id="problemModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <h3 id="modalTitle" class="modal-title">문제 제목</h3>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                <div id="modalSubtitle" style="color: #b0bec5; font-size: 0.9rem;">문제 정보</div>
+                <div id="timerDisplay" style="background: rgba(244, 67, 54, 0.2); color: #e57373; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 1.1rem;">
+                    ⏰ 00:00
+                </div>
+            </div>
+            
+            <div id="modalDescription" style="background: rgba(255, 255, 255, 0.05); padding: 20px; border-radius: 12px; margin-bottom: 20px; line-height: 1.6; white-space: pre-wrap;">
+                문제 설명
+            </div>
+            
+            <div id="quizOptionsContainer"></div>
+            
+            <div id="answerContainer">
+                <textarea class="answer-textarea" id="answerInput" placeholder="답안을 작성해주세요..."></textarea>
+            </div>
+            
+            <div class="modal-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeModal()">취소</button>
+                <button type="button" id="submitBtn" class="btn btn-primary" onclick="submitAnswer()">제출</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         let currentProblem = null;
         let selectedAnswer = null;
+        let problemTimer = null;
+        let timeRemaining = 0;
+        let problemStartTime = null;
 
         async function loadProfile() {
             try {
@@ -284,11 +399,27 @@
 
         async function loadAiProblem() {
             try {
-                const response = await fetch('/api/student/ai-problems/today');
+                const response = await fetch('/api/ai/generate-problem', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        difficulty: '중',
+                        topic: '기본'
+                    })
+                });
                 const data = await response.json();
                 
-                if (data.problem) {
-                    displayAiProblem(data.problem);
+                if (data && data.title) {
+                    displayAiProblem({
+                        id: 'ai-today',
+                        title: data.title,
+                        description: data.description,
+                        difficulty: data.difficulty || '중',
+                        timeLimit: 30,
+                        points: data.points || 100
+                    });
                 } else {
                     document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">오늘의 AI 문제를 불러올 수 없습니다.</div>';
                 }
@@ -424,7 +555,7 @@
                 title: title,
                 description: description,
                 difficulty: difficulty,
-                timeLimit: timeLimit,
+                timeLimit: parseInt(timeLimit),
                 points: points,
                 type: 'AI'
             };
@@ -438,7 +569,9 @@
                 <textarea class="answer-textarea" id="answerInput" placeholder="답안을 작성해주세요..."></textarea>
             `;
             
-            document.getElementById('problemModal').style.display = 'block';
+            startProblemTimer(parseInt(timeLimit));
+            
+            document.getElementById('problemModal').style.display = 'flex';
         }
 
         async function openProblemModal(problemId) {
@@ -467,11 +600,13 @@
                     const submitBtn = document.getElementById('submitBtn');
                     if (problem.submitted) {
                         submitBtn.style.display = 'none';
+                        document.getElementById('timerDisplay').style.display = 'none';
                     } else {
                         submitBtn.style.display = 'inline-block';
+                        startProblemTimer(problem.timeLimit);
                     }
                     
-                    document.getElementById('problemModal').style.display = 'block';
+                    document.getElementById('problemModal').style.display = 'flex';
                 } else {
                     alert('문제를 불러올 수 없습니다.');
                 }
@@ -499,6 +634,83 @@
             selectedAnswer = option;
         }
 
+        function startProblemTimer(timeLimitMinutes) {
+            if (problemTimer) {
+                clearInterval(problemTimer);
+            }
+            
+            timeRemaining = timeLimitMinutes * 60;
+            problemStartTime = Date.now();
+            
+            updateTimerDisplay();
+            
+            problemTimer = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(problemTimer);
+                    autoSubmitAnswer();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const timerDisplay = document.getElementById('timerDisplay');
+            if (!timerDisplay) return;
+            
+            const minutes = Math.floor(timeRemaining / 60);
+            const seconds = timeRemaining % 60;
+            const timeText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            
+            timerDisplay.textContent = `⏰ ${timeText}`;
+            
+            timerDisplay.className = '';
+            if (timeRemaining <= 60) {
+                timerDisplay.classList.add('timer-danger');
+            } else if (timeRemaining <= 300) {
+                timerDisplay.classList.add('timer-warning');
+            }
+        }
+
+        async function autoSubmitAnswer() {
+            if (!currentProblem) return;
+            
+            let answer = '';
+            if (currentProblem.type === 'QUIZ') {
+                answer = selectedAnswer || '';
+            } else {
+                const answerInput = document.getElementById('answerInput');
+                answer = answerInput ? answerInput.value.trim() : '';
+            }
+            
+            if (!answer) {
+                answer = '시간 초과로 자동 제출됨 (답안 없음)';
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('problemId', currentProblem.id);
+                formData.append('answer', answer);
+                formData.append('timeSpent', Math.floor((Date.now() - problemStartTime) / 1000));
+                formData.append('autoSubmit', 'true');
+                
+                const response = await fetch('/api/student/submit-answer', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                alert('시간이 만료되어 자동으로 제출되었습니다.\n' + (result.message || ''));
+                closeModal();
+                loadTeacherProblems();
+            } catch (error) {
+                console.error('자동 제출 실패:', error);
+                alert('시간이 만료되었지만 제출에 실패했습니다.');
+            }
+        }
+
         async function submitAnswer() {
             if (!currentProblem) return;
             
@@ -521,6 +733,7 @@
                 const formData = new FormData();
                 formData.append('problemId', currentProblem.id);
                 formData.append('answer', answer);
+                formData.append('timeSpent', Math.floor((Date.now() - problemStartTime) / 1000));
                 
                 const response = await fetch('/api/student/submit-answer', {
                     method: 'POST',
@@ -543,9 +756,16 @@
         }
 
         function closeModal() {
+            if (problemTimer) {
+                clearInterval(problemTimer);
+                problemTimer = null;
+            }
+            
             document.getElementById('problemModal').style.display = 'none';
             currentProblem = null;
             selectedAnswer = null;
+            timeRemaining = 0;
+            problemStartTime = null;
         }
 
         function downloadMaterial(materialId) {
@@ -573,6 +793,12 @@
             };
             document.getElementById('currentDate').textContent = now.toLocaleDateString('ko-KR', options);
         }
+
+        window.addEventListener('beforeunload', function() {
+            if (problemTimer) {
+                clearInterval(problemTimer);
+            }
+        });
 
         document.addEventListener('DOMContentLoaded', function() {
             updateCurrentDate();

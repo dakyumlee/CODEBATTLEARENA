@@ -35,7 +35,19 @@ public class Submission {
     private LocalDateTime gradedAt;
     
     @Column(name = "status")
-    private String status = "PENDING"; // PENDING, GRADED
+    private String status = "PENDING";
+
+    @Column(name = "time_spent")
+    private Integer timeSpent;
+
+    @Column(name = "auto_submitted")
+    private Boolean autoSubmitted = false;
+
+    public Integer getTimeSpent() { return timeSpent; }
+    public void setTimeSpent(Integer timeSpent) { this.timeSpent = timeSpent; }
+
+    public Boolean getAutoSubmitted() { return autoSubmitted; }
+    public void setAutoSubmitted(Boolean autoSubmitted) { this.autoSubmitted = autoSubmitted; }
     
     public Submission() {}
     

@@ -28,6 +28,9 @@ public class Problem {
     @Column(name = "time_limit")
     private Integer timeLimit = 60;
 
+    public Integer getTimeLimit() { return timeLimit; }
+    public void setTimeLimit(Integer timeLimit) { this.timeLimit = timeLimit; }
+
     private Integer points = 100;
 
     @Column(name = "created_at")
