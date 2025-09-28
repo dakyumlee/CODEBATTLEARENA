@@ -15,16 +15,35 @@ function loadTodayContent() {
     });
 }
 
-async function loadAIProblem() {
+async function loadAiProblem() {
     try {
-        const response = await fetch('/api/student/today');
+        const response = await fetch('/api/ai/generate-problem', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                difficulty: '중',
+                topic: '기본'
+            })
+        });
         const data = await response.json();
         
-        if (data.aiProblem) {
-            updateAIProblemSection(data.aiProblem);
+        if (data && data.title) {
+            displayAiProblem({
+                id: 'ai-today',
+                title: data.title,
+                description: data.description,
+                difficulty: data.difficulty || '중',
+                timeLimit: 30,
+                points: data.points || 100
+            });
+        } else {
+            document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">오늘의 AI 문제를 불러올 수 없습니다.</div>';
         }
     } catch (error) {
         console.error('AI 문제 로드 실패:', error);
+        document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">AI 문제를 불러올 수 없습니다.</div>';
     }
 }
 

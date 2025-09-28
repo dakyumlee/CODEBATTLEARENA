@@ -2,6 +2,7 @@ package com.codebattlearena.controller;
 
 import com.codebattlearena.model.User;
 import com.codebattlearena.repository.UserRepository;
+import com.codebattlearena.service.AiProblemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -18,7 +19,10 @@ public class AIController {
     @Autowired
     private UserRepository userRepository;
     
-    @Value("${openai.api.key:}")
+    @Autowired
+    private AiProblemService aiProblemService;
+    
+    @Value("${OPENAI_API_KEY:}")
     private String openaiApiKey;
 
     private Long getUserIdFromSession(HttpSession session) {
@@ -30,29 +34,49 @@ public class AIController {
         }
     }
 
+    @PostMapping("/generate-problem")
+    public Map<String, Object> generateProblem(@RequestBody Map<String, String> request) {
+        try {
+            String difficulty = request.getOrDefault("difficulty", "중");
+            String topic = request.getOrDefault("topic", "기본");
+            
+            Map<String, Object> problem = aiProblemService.generateProblem(difficulty, topic);
+            return problem;
+        } catch (Exception e) {
+            System.err.println("AI 문제 생성 오류: " + e.getMessage());
+            return Map.of(
+                "title", "두 수의 합 (기본 문제)",
+                "description", "두 정수 A와 B를 입력받아 A+B를 출력하는 프로그램을 작성하시오.",
+                "difficulty", request.getOrDefault("difficulty", "중"),
+                "points", 100,
+                "timeLimit", 30
+            );
+        }
+    }
+
     @PostMapping("/chat")
     public Map<String, Object> chat(@RequestBody ChatRequest request, HttpSession session) {
         try {
             Long userId = getUserIdFromSession(session);
             if (userId == null) {
-                return Map.of("error", "Unauthorized");
+                return Map.of("success", false, "error", "Unauthorized");
             }
 
             String userMessage = request.getMessage();
             if (userMessage == null || userMessage.trim().isEmpty()) {
-                return Map.of("error", "메시지가 비어있습니다.");
+                return Map.of("success", false, "error", "메시지가 비어있습니다.");
             }
 
             if (openaiApiKey == null || openaiApiKey.trim().isEmpty()) {
-                return Map.of("response", generateFallbackResponse(userMessage));
+                return Map.of("success", true, "response", generateFallbackResponse(userMessage));
             }
 
             String aiResponse = callOpenAI(userMessage);
-            return Map.of("response", aiResponse);
+            return Map.of("success", true, "response", aiResponse);
             
         } catch (Exception e) {
             System.err.println("AI 서비스 오류: " + e.getMessage());
-            return Map.of("response", generateFallbackResponse(request.getMessage()));
+            return Map.of("success", true, "response", generateFallbackResponse(request.getMessage()));
         }
     }
 

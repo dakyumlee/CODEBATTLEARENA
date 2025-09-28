@@ -336,30 +336,35 @@ public class TeacherController {
             @RequestParam(value = "description", required = false) String description,
             @RequestParam("file") MultipartFile file,
             HttpSession session) {
-
+    
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
                 return Map.of("success", false, "message", "인증이 필요합니다.");
             }
-
+    
             if (file.isEmpty()) {
                 return Map.of("success", false, "message", "파일을 선택해주세요.");
             }
-
+    
             String originalFilename = file.getOriginalFilename();
+            if (originalFilename == null) {
+                return Map.of("success", false, "message", "파일명이 올바르지 않습니다.");
+            }
+    
             String fileExtension = getFileExtension(originalFilename);
-
+    
             if (!isAllowedFileType(fileExtension)) {
                 return Map.of("success", false, "message", "지원하지 않는 파일 형식입니다.");
             }
-
-            String fileName = System.currentTimeMillis() + "_" + originalFilename;
+    
+            String fileName = System.currentTimeMillis() + "_" + 
+                    java.util.UUID.randomUUID().toString() + "." + fileExtension;
             Path targetLocation = this.fileStorageLocation.resolve(fileName);
             
             Files.createDirectories(targetLocation.getParent());
             Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
+    
             Material material = new Material();
             material.setTeacherId(teacherId);
             material.setTitle(title);
@@ -369,13 +374,13 @@ public class TeacherController {
             material.setOriginalFilename(originalFilename);
             material.setLocalFilePath(fileName);
             material.setCreatedAt(LocalDateTime.now());
-
+    
             Material savedMaterial = materialRepository.save(material);
             savedMaterial.setFilePath("/api/teacher/materials/" + savedMaterial.getId() + "/download-fixed");
             materialRepository.save(savedMaterial);
-
+    
             return Map.of("success", true, "message", "자료가 업로드되었습니다.");
-
+    
         } catch (Exception e) {
             System.err.println("Upload error: " + e.getMessage());
             e.printStackTrace();

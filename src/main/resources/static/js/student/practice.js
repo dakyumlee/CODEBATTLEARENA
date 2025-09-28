@@ -1,167 +1,167 @@
-class PracticeManager {
-    constructor() {
-        this.problems = [];
-        this.currentCategory = 'all';
-        this.userStats = {
-            totalAttempts: 0,
-            solvedCount: 0,
-            successRate: 0,
-            avgScore: 0
-        };
-        this.init();
-    }
+let currentProblemId = null;
 
-    async init() {
-        await this.loadProblems();
-        await this.loadStats();
-        this.setupEventListeners();
-        this.renderProblems();
-        this.renderStats();
+const codeTemplates = {
+    java: `public class Solution {
+    public static void main(String[] args) {
+        // 여기에 코드를 작성하세요
+        
     }
+}`,
+    python: `def solve():
+    # 여기에 코드를 작성하세요
+    pass`,
+    javascript: `function solve() {
+    // 여기에 코드를 작성하세요
+    
+}`,
+    cpp: `#include <iostream>
+using namespace std;
 
-    async loadProblems() {
-        try {
-            const response = await ApiClient.get('/api/problems?category=' + this.currentCategory);
-            this.problems = response.length > 0 ? response : this.getDefaultProblems();
-        } catch (error) {
-            console.error('문제 로딩 오류:', error);
-            this.problems = this.getDefaultProblems();
+int main() {
+    // 여기에 코드를 작성하세요
+    
+    return 0;
+}`
+};
+
+async function loadProblems() {
+    try {
+        const response = await fetch('/api/practice/problems');
+        const data = await response.json();
+        
+        if (data.problems && data.problems.length > 0) {
+            displayProblems(data.problems);
+        } else {
+            document.getElementById('problemsContainer').innerHTML = '<div class="empty-state">문제가 없습니다.</div>';
         }
-    }
-
-    getDefaultProblems() {
-        return [
-            { id: 1, title: '두 수의 합', difficulty: '하', category: 'basic', solved: false, attempts: 0, score: 0 },
-            { id: 2, title: '배열에서 최댓값 찾기', difficulty: '하', category: 'array', solved: true, attempts: 3, score: 85 },
-            { id: 3, title: '문자열 뒤집기', difficulty: '중', category: 'string', solved: false, attempts: 1, score: 0 },
-            { id: 4, title: '팩토리얼 계산', difficulty: '중', category: 'math', solved: true, attempts: 2, score: 92 },
-            { id: 5, title: '이진 검색', difficulty: '상', category: 'algorithm', solved: false, attempts: 0, score: 0 },
-            { id: 6, title: '정렬 알고리즘 구현', difficulty: '상', category: 'algorithm', solved: false, attempts: 2, score: 45 },
-            { id: 7, title: '해시맵 활용', difficulty: '중', category: 'data-structure', solved: true, attempts: 1, score: 88 },
-            { id: 8, title: '재귀함수 활용', difficulty: '상', category: 'recursion', solved: false, attempts: 1, score: 0 }
-        ];
-    }
-
-    async loadStats() {
-        try {
-            const response = await ApiClient.get('/api/student/practice-stats');
-            this.userStats = response;
-        } catch (error) {
-            console.error('통계 로딩 오류:', error);
-            this.calculateStatsFromProblems();
-        }
-    }
-
-    calculateStatsFromProblems() {
-        const totalAttempts = this.problems.reduce((sum, p) => sum + p.attempts, 0);
-        const solvedCount = this.problems.filter(p => p.solved).length;
-        const totalScore = this.problems.filter(p => p.solved).reduce((sum, p) => sum + p.score, 0);
-
-        this.userStats = {
-            totalAttempts,
-            solvedCount,
-            successRate: totalAttempts > 0 ? Math.round((solvedCount / this.problems.length) * 100) : 0,
-            avgScore: solvedCount > 0 ? Math.round(totalScore / solvedCount) : 0
-        };
-    }
-
-    renderStats() {
-        const statsContainer = document.getElementById('practiceStats');
-        if (!statsContainer) return;
-
-        statsContainer.innerHTML = `
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value">${this.userStats.totalAttempts}</div>
-                    <div class="stat-label">총 시도</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${this.userStats.solvedCount}</div>
-                    <div class="stat-label">해결 문제</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${this.userStats.successRate}%</div>
-                    <div class="stat-label">정답률</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value">${this.userStats.avgScore}점</div>
-                    <div class="stat-label">평균 점수</div>
-                </div>
-            </div>
-        `;
-    }
-
-    renderProblems() {
-        const container = document.getElementById('problemsContainer');
-        if (!container) return;
-
-        const filteredProblems = this.currentCategory === 'all' 
-            ? this.problems 
-            : this.problems.filter(p => p.category === this.currentCategory);
-
-        container.innerHTML = `
-            <div class="category-tabs">
-                <button class="tab ${this.currentCategory === 'all' ? 'active' : ''}" onclick="practiceManager.setCategory('all')">전체</button>
-                <button class="tab ${this.currentCategory === 'basic' ? 'active' : ''}" onclick="practiceManager.setCategory('basic')">기초</button>
-                <button class="tab ${this.currentCategory === 'array' ? 'active' : ''}" onclick="practiceManager.setCategory('array')">배열</button>
-                <button class="tab ${this.currentCategory === 'string' ? 'active' : ''}" onclick="practiceManager.setCategory('string')">문자열</button>
-                <button class="tab ${this.currentCategory === 'algorithm' ? 'active' : ''}" onclick="practiceManager.setCategory('algorithm')">알고리즘</button>
-                <button class="tab ${this.currentCategory === 'data-structure' ? 'active' : ''}" onclick="practiceManager.setCategory('data-structure')">자료구조</button>
-            </div>
-            <div class="problems-list">
-                ${filteredProblems.map(problem => `
-                    <div class="problem-card ${problem.solved ? 'solved' : ''}">
-                        <div class="problem-info">
-                            <h3>${problem.title}</h3>
-                            <span class="difficulty ${problem.difficulty}">${problem.difficulty}</span>
-                        </div>
-                        <div class="problem-stats">
-                            <span>시도: ${problem.attempts}회</span>
-                            ${problem.solved ? `<span class="score">점수: ${problem.score}점</span>` : ''}
-                        </div>
-                        <button onclick="practiceManager.solveProblem(${problem.id})" class="btn btn-primary">
-                            ${problem.solved ? '다시 풀기' : '문제 풀기'}
-                        </button>
-                    </div>
-                `).join('')}
-            </div>
-        `;
-    }
-
-    setCategory(category) {
-        this.currentCategory = category;
-        this.renderProblems();
-    }
-
-    setupEventListeners() {
-        // 카테고리 변경 이벤트는 renderProblems에서 직접 처리
-    }
-
-    async solveProblem(problemId) {
-        const problem = this.problems.find(p => p.id === problemId);
-        if (!problem) return;
-
-        // 문제 풀이 모달이나 별도 페이지로 이동하는 로직
-        // 현재는 시뮬레이션
-        const score = Math.floor(Math.random() * 100);
-        const solved = score >= 60;
-
-        problem.attempts++;
-        if (solved && !problem.solved) {
-            problem.solved = true;
-            problem.score = score;
-        } else if (solved && problem.solved) {
-            problem.score = Math.max(problem.score, score);
-        }
-
-        this.calculateStatsFromProblems();
-        this.renderStats();
-        this.renderProblems();
-
-        if (window.studentActivityTracker) {
-            window.studentActivityTracker.updateActivity('문제 풀이');
-        }
+    } catch (error) {
+        console.error('문제 로드 실패:', error);
+        document.getElementById('problemsContainer').innerHTML = '<div class="empty-state">문제를 불러올 수 없습니다.</div>';
     }
 }
 
-window.practiceManager = new PracticeManager();
+function displayProblems(problems) {
+    const container = document.getElementById('problemsContainer');
+    
+    container.innerHTML = problems.map(problem => `
+        <div class="problem-card" data-difficulty="${problem.difficulty}">
+            <div class="problem-title">${problem.title}</div>
+            <div class="problem-description">${problem.description.substring(0, 100)}...</div>
+            <div class="problem-info">
+                <span class="problem-badge badge-difficulty-${problem.difficulty}">${problem.difficulty}</span>
+                <span class="problem-badge">난이도</span>
+            </div>
+            <div class="problem-status">
+                <button class="btn btn-primary" onclick="startProblem('${problem.id}', '${problem.title}', \`${problem.description}\`)">도전하기</button>
+                ${problem.solved ? '<span class="btn btn-success">해결완료</span>' : ''}
+            </div>
+        </div>
+    `).join('');
+}
+
+function startProblem(problemId, title, description) {
+    currentProblemId = problemId;
+    
+    document.getElementById('selectedProblemTitle').textContent = title;
+    document.getElementById('selectedProblemDescription').textContent = description;
+    
+    const container = document.getElementById('codeEditorContainer');
+    container.classList.add('active');
+    
+    loadTemplate();
+    
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function closeProblem() {
+    currentProblemId = null;
+    const container = document.getElementById('codeEditorContainer');
+    container.classList.remove('active');
+    
+    document.getElementById('selectedProblemTitle').textContent = '문제를 선택하세요';
+    document.getElementById('selectedProblemDescription').textContent = '위에서 문제를 선택하면 여기에 문제 설명이 나타납니다.';
+    document.getElementById('codeEditor').value = '';
+    document.getElementById('outputContainer').innerHTML = '<span class="output-info">코드를 실행하려면 위의 \'실행\' 버튼을 클릭하세요.</span>';
+}
+
+function filterByDifficulty(difficulty) {
+    document.querySelectorAll('.difficulty-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    const cards = document.querySelectorAll('.problem-card');
+    cards.forEach(card => {
+        const cardDifficulty = card.getAttribute('data-difficulty');
+        if (difficulty === 'all' || cardDifficulty === difficulty) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+}
+
+function loadTemplate() {
+    const language = document.getElementById('languageSelect').value;
+    document.getElementById('codeEditor').value = codeTemplates[language];
+}
+
+function clearCode() {
+    document.getElementById('codeEditor').value = '';
+    document.getElementById('outputContainer').innerHTML = '<span class="output-info">코드를 실행하려면 위의 \'실행\' 버튼을 클릭하세요.</span>';
+}
+
+async function runCode() {
+    const code = document.getElementById('codeEditor').value;
+    const output = document.getElementById('outputContainer');
+    
+    if (!code.trim()) {
+        output.innerHTML = '<span class="output-error">코드를 입력해주세요.</span>';
+        return;
+    }
+    
+    if (!currentProblemId) {
+        output.innerHTML = '<span class="output-error">문제를 먼저 선택해주세요.</span>';
+        return;
+    }
+    
+    output.innerHTML = '<span class="output-info">코드를 실행 중...</span>';
+    
+    try {
+        const response = await fetch('/api/practice/submit', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                problemId: currentProblemId,
+                code: code
+            })
+        });
+        
+        const result = await response.json();
+        
+        if (result.correct) {
+            output.innerHTML = `<span class="output-success">정답입니다! 🎉\n\n점수: ${result.score}점\n실행시간: ${result.executionTime}\n\n피드백: ${result.feedback}</span>`;
+        } else {
+            output.innerHTML = `<span class="output-error">틀렸습니다.\n\n점수: ${result.score}점\n\n피드백: ${result.feedback}</span>`;
+        }
+    } catch (error) {
+        output.innerHTML = '<span class="output-error">코드 실행 중 오류가 발생했습니다.</span>';
+    }
+}
+
+function logout() {
+    if (confirm('로그아웃 하시겠습니까?')) {
+        localStorage.clear();
+        window.location.href = '/';
+    }
+}
+
+document.getElementById('languageSelect').addEventListener('change', function() {
+    if (currentProblemId && confirm('언어를 변경하면 현재 코드가 초기화됩니다. 계속하시겠습니까?')) {
+        loadTemplate();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadProblems();
+});
