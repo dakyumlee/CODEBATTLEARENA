@@ -48,6 +48,17 @@ public class Submission {
     @Column(name = "auto_submitted")
     private Boolean autoSubmitted = false;
 
+    @Column(name = "status")
+    private String status = "PENDING";
+
+    public String getStatus() { 
+        return status; 
+    }
+
+    public void setStatus(String status) { 
+        this.status = status; 
+    }
+
     public Submission() {
         this.submittedAt = LocalDateTime.now();
     }
