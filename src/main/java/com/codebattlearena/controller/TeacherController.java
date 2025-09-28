@@ -366,63 +366,72 @@ public class TeacherController {
     }
 
     @GetMapping("/api/teacher/materials/{id}/download")
-    public ResponseEntity<String> downloadMaterial(@PathVariable Long id, HttpSession session) {
-        try {
-            Long teacherId = getUserIdFromSession(session);
-            if (teacherId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-            }
-
-            Material material = materialRepository.findById(id).orElse(null);
-            if (material == null || !material.getTeacherId().equals(teacherId)) {
-                return ResponseEntity.notFound().build();
-            }
-
-            if (material.getFilePath() == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            material.setDownloadCount(material.getDownloadCount() + 1);
-            materialRepository.save(material);
-
-            return ResponseEntity.ok()
-                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
-                    .header("X-Download-URL", material.getFilePath())
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body("{\"downloadUrl\":\"" + material.getFilePath() + "\",\"filename\":\"" + material.getOriginalFilename() + "\"}");
-                    
-        } catch (Exception ex) {
-            System.err.println("Download error: " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Download failed");
+@ResponseBody
+public ResponseEntity<Map<String, Object>> downloadMaterial(@PathVariable Long id, HttpSession session) {
+    try {
+        Long teacherId = getUserIdFromSession(session);
+        if (teacherId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
         }
-    }
 
-    @GetMapping("/api/teacher/materials/{id}/preview")
-    public ResponseEntity<String> previewMaterial(@PathVariable Long id, HttpSession session) {
-        try {
-            Long teacherId = getUserIdFromSession(session);
-            if (teacherId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
-            }
-
-            Material material = materialRepository.findById(id).orElse(null);
-            if (material == null || !material.getTeacherId().equals(teacherId)) {
-                return ResponseEntity.notFound().build();
-            }
-
-            if (material.getFilePath() == null) {
-                return ResponseEntity.notFound().build();
-            }
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.APPLICATION_JSON)
-                    .body("{\"previewUrl\":\"" + material.getFilePath() + "\",\"filename\":\"" + material.getOriginalFilename() + "\",\"fileType\":\"" + material.getFileType() + "\"}");
-                    
-        } catch (Exception ex) {
-            System.err.println("Preview error: " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Preview failed");
+        Material material = materialRepository.findById(id).orElse(null);
+        if (material == null || !material.getTeacherId().equals(teacherId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Material not found"));
         }
+
+        if (material.getFilePath() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "File path not found"));
+        }
+
+        material.setDownloadCount(material.getDownloadCount() + 1);
+        materialRepository.save(material);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("downloadUrl", material.getFilePath());
+        response.put("filename", material.getOriginalFilename());
+        
+        return ResponseEntity.ok(response);
+                
+    } catch (Exception ex) {
+        System.err.println("Download error: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Download failed", "success", false));
     }
+}
+
+@GetMapping("/api/teacher/materials/{id}/preview")
+@ResponseBody
+public ResponseEntity<Map<String, Object>> previewMaterial(@PathVariable Long id, HttpSession session) {
+    try {
+        Long teacherId = getUserIdFromSession(session);
+        if (teacherId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(Map.of("error", "Unauthorized"));
+        }
+
+        Material material = materialRepository.findById(id).orElse(null);
+        if (material == null || !material.getTeacherId().equals(teacherId)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "Material not found"));
+        }
+
+        if (material.getFilePath() == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(Map.of("error", "File path not found"));
+        }
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("success", true);
+        response.put("previewUrl", material.getFilePath());
+        response.put("filename", material.getOriginalFilename());
+        response.put("fileType", material.getFileType());
+        
+        return ResponseEntity.ok(response);
+                
+    } catch (Exception ex) {
+        System.err.println("Preview error: " + ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(Map.of("error", "Preview failed", "success", false));
+    }
+}
 
     @GetMapping("/teacher/materials/{id}/preview")
     public String previewMaterialPage(@PathVariable Long id, Model model, HttpSession session) {

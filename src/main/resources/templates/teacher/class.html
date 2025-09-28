@@ -748,25 +748,78 @@ async function loadMaterials() {
 }
 
 function previewMaterial(id, title, fileType) {
-    fetch(`/api/teacher/materials/${id}/preview`)
-        .then(response => {
-            if (response.status === 401) {
-                window.location.href = '/';
-                return;
+    fetch(`/api/teacher/materials/${id}/preview`, {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.status === 401) {
+            alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+            window.location.href = '/';
+            return null;
+        }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.success && data.previewUrl) {
+            openPreviewModal(data.previewUrl, title, data.fileType);
+        } else if (data && data.error) {
+            alert('미리보기 실패: ' + data.error);
+        } else {
+            alert('미리보기를 할 수 없습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('미리보기 오류:', error);
+        alert('미리보기 중 오류가 발생했습니다: ' + error.message);
+    });
+}
+
+function downloadMaterial(id) {
+    fetch(`/api/teacher/materials/${id}/download`, {
+        method: 'GET',
+        credentials: 'same-origin'
+    })
+    .then(response => {
+        if (response.status === 401) {
+            alert('세션이 만료되었습니다. 다시 로그인해주세요.');
+            window.location.href = '/';
+            return null;
+        }
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.success && data.downloadUrl) {
+            const link = document.createElement('a');
+            link.href = data.downloadUrl;
+            if (data.filename) {
+                link.download = data.filename;
             }
-            return response.json();
-        })
-        .then(data => {
-            if (data && data.previewUrl) {
-                openPreviewModal(data.previewUrl, title, data.fileType);
-            } else {
-                alert('미리보기를 할 수 없습니다.');
-            }
-        })
-        .catch(error => {
-            console.error('미리보기 오류:', error);
-            alert('미리보기 중 오류가 발생했습니다.');
-        });
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            
+            document.body.appendChild(link);
+            link.click();
+            
+            setTimeout(() => {
+                document.body.removeChild(link);
+            }, 100);
+        } else if (data && data.error) {
+            alert('다운로드 실패: ' + data.error);
+        } else {
+            alert('다운로드할 수 없습니다.');
+        }
+    })
+    .catch(error => {
+        console.error('다운로드 오류:', error);
+        alert('다운로드 중 오류가 발생했습니다: ' + error.message);
+    });
 }
 
 function openPreviewModal(url, title, fileType) {
@@ -785,7 +838,7 @@ function openPreviewModal(url, title, fileType) {
     } else if (fileType && ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileType.toLowerCase())) {
         container.innerHTML = `
             <img src="${url}" class="preview-image" alt="${title}" 
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
             <div class="preview-unsupported" style="display:none;">
                 이미지를 불러올 수 없습니다.
             </div>
