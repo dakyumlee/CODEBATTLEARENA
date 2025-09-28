@@ -366,50 +366,65 @@ private void saveDailyProblemRecord(Long userId, String problemId, String answer
     }
 
     @GetMapping("/materials/{id}/download")
-    public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id, HttpSession session) {
-        try {
-            Long userId = getUserIdFromSession(session);
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpSession session) {
+    try {
+        Long userId = getUserIdFromSession(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-            Material material = materialRepository.findById(id).orElse(null);
-            if (material == null) {
-                return ResponseEntity.notFound().build();
-            }
+        Material material = materialRepository.findById(id).orElse(null);
+        if (material == null) {
+            return ResponseEntity.notFound().build();
+        }
 
+        material.setDownloadCount(material.getDownloadCount() + 1);
+        materialRepository.save(material);
+
+        if (material.getFilePath() != null && material.getFilePath().startsWith("http")) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(java.net.URI.create(material.getFilePath()))
+                    .build();
+        }
+        
+        if (material.getLocalFilePath() != null) {
             Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
 
             if (resource.exists()) {
-                material.setDownloadCount(material.getDownloadCount() + 1);
-                materialRepository.save(material);
-
                 return ResponseEntity.ok()
                         .contentType(MediaType.APPLICATION_OCTET_STREAM)
                         .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
+                        .build();
             }
-        } catch (MalformedURLException ex) {
-            return ResponseEntity.badRequest().build();
         }
+        
+        return ResponseEntity.notFound().build();
+    } catch (Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+}
 
-    @GetMapping("/materials/{id}/preview")
-    public ResponseEntity<Resource> previewMaterial(@PathVariable Long id, HttpSession session) {
-        try {
-            Long userId = getUserIdFromSession(session);
-            if (userId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-            }
+@GetMapping("/materials/{id}/preview")
+public ResponseEntity<Void> previewMaterial(@PathVariable Long id, HttpSession session) {
+    try {
+        Long userId = getUserIdFromSession(session);
+        if (userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
 
-            Material material = materialRepository.findById(id).orElse(null);
-            if (material == null) {
-                return ResponseEntity.notFound().build();
-            }
+        Material material = materialRepository.findById(id).orElse(null);
+        if (material == null) {
+            return ResponseEntity.notFound().build();
+        }
 
+        if (material.getFilePath() != null && material.getFilePath().startsWith("http")) {
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(java.net.URI.create(material.getFilePath()))
+                    .build();
+        }
+
+        if (material.getLocalFilePath() != null) {
             Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
             Resource resource = new UrlResource(filePath.toUri());
 
@@ -417,23 +432,34 @@ private void saveDailyProblemRecord(Long userId, String problemId, String answer
                 String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
                 MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
                 
-                if (fileType.equals("pdf")) {
-                    mediaType = MediaType.APPLICATION_PDF;
-                } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp").contains(fileType)) {
-                    mediaType = MediaType.IMAGE_JPEG;
+                switch (fileType) {
+                    case "pdf":
+                        mediaType = MediaType.APPLICATION_PDF;
+                        break;
+                    case "jpg":
+                    case "jpeg":
+                        mediaType = MediaType.IMAGE_JPEG;
+                        break;
+                    case "png":
+                        mediaType = MediaType.IMAGE_PNG;
+                        break;
+                    case "gif":
+                        mediaType = MediaType.IMAGE_GIF;
+                        break;
                 }
 
                 return ResponseEntity.ok()
                         .contentType(mediaType)
                         .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + material.getOriginalFilename() + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
+                        .build();
             }
-        } catch (MalformedURLException ex) {
-            return ResponseEntity.badRequest().build();
         }
+        
+        return ResponseEntity.notFound().build();
+    } catch (Exception ex) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
+}
 
     @GetMapping("/teacher-problems")
     public Map<String, Object> getTeacherProblems(HttpSession session) {
@@ -745,34 +771,6 @@ private void saveDailyProblemRecord(Long userId, String problemId, String answer
             return Map.of("success", true, "message", "노트가 삭제되었습니다.");
         } catch (Exception e) {
             return Map.of("success", false, "message", "Error: " + e.getMessage());
-        }
-    }
-
-    @GetMapping("/student/materials/{id}/preview")
-    public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
-        Object userId = session.getAttribute("userId");
-        Object userRole = session.getAttribute("userRole");
-        
-        if (userId == null || !"STUDENT".equals(userRole)) {
-            return "redirect:/";
-        }
-        
-        Material material = materialRepository.findById(id).orElse(null);
-        
-        if (material == null) {
-            model.addAttribute("error", "자료를 찾을 수 없습니다.");
-            return "student/preview-error";
-        }
-        
-        model.addAttribute("material", material);
-        
-        String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
-        if (fileType.equals("pdf")) {
-            return "student/preview-pdf";
-        } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
-            return "student/preview-image";
-        } else {
-            return "student/preview-general";
         }
     }
 }

@@ -19,13 +19,12 @@ public class Submission {
     @Column(name = "exam_id")
     private Long examId;
 
-    @Column(name = "answer", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String answer;
 
-    @Column(name = "score")
     private Integer score;
 
-    @Column(name = "feedback", columnDefinition = "TEXT")
+    @Column(columnDefinition = "TEXT")
     private String feedback;
 
     @Column(name = "ai_feedback", columnDefinition = "TEXT")
@@ -40,17 +39,20 @@ public class Submission {
     @Column(name = "graded_at")
     private LocalDateTime gradedAt;
 
-    @Column(name = "status", length = 20)
-    private String status = "PENDING";
+    @Column(name = "start_time")
+    private LocalDateTime startTime;
 
     @Column(name = "time_spent")
     private Integer timeSpent;
 
     @Column(name = "auto_submitted")
-    private boolean autoSubmitted = false;
+    private Boolean autoSubmitted = false;
 
-    public Submission() {}
+    public Submission() {
+        this.submittedAt = LocalDateTime.now();
+    }
 
+    // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
@@ -84,12 +86,19 @@ public class Submission {
     public LocalDateTime getGradedAt() { return gradedAt; }
     public void setGradedAt(LocalDateTime gradedAt) { this.gradedAt = gradedAt; }
 
-    public String getStatus() { return status; }
-    public void setStatus(String status) { this.status = status; }
+    public LocalDateTime getStartTime() { return startTime; }
+    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
 
     public Integer getTimeSpent() { return timeSpent; }
     public void setTimeSpent(Integer timeSpent) { this.timeSpent = timeSpent; }
 
-    public boolean isAutoSubmitted() { return autoSubmitted; }
-    public void setAutoSubmitted(boolean autoSubmitted) { this.autoSubmitted = autoSubmitted; }
+    public Boolean getAutoSubmitted() { return autoSubmitted; }
+    public void setAutoSubmitted(Boolean autoSubmitted) { this.autoSubmitted = autoSubmitted; }
+
+    public boolean isTimedOut(Problem problem) {
+        if (startTime == null || problem.getTimeLimit() == null) return false;
+        
+        LocalDateTime timeoutAt = startTime.plusMinutes(problem.getTimeLimit());
+        return submittedAt.isAfter(timeoutAt);
+    }
 }

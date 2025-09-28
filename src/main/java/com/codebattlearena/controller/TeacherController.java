@@ -2,6 +2,7 @@ package com.codebattlearena.controller;
 
 import com.codebattlearena.model.*;
 import com.codebattlearena.repository.*;
+import com.codebattlearena.service.MaterialService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -50,17 +51,10 @@ public class TeacherController {
     private SubmissionRepository submissionRepository;
 
     @Autowired
+    private MaterialService materialService;
+
+    @Autowired
     private SimpMessagingTemplate messagingTemplate;
-
-    private final Path fileStorageLocation = Paths.get(System.getProperty("java.io.tmpdir"), "uploads").toAbsolutePath().normalize();
-
-    public TeacherController() {
-        try {
-            Files.createDirectories(this.fileStorageLocation);
-        } catch (Exception ex) {
-            throw new RuntimeException("Could not create the directory where the uploaded files will be stored.", ex);
-        }
-    }
 
     private Long getUserIdFromSession(HttpSession session) {
         try {
@@ -74,10 +68,6 @@ public class TeacherController {
             System.err.println("세션 확인 오류: " + e.getMessage());
         }
         return null;
-    }
-
-    private Long getTeacherIdFromSession(HttpSession session) {
-        return getUserIdFromSession(session);
     }
 
     @GetMapping("/api/teacher/statistics")
@@ -358,58 +348,25 @@ public class TeacherController {
                 return Map.of("success", false, "message", "파일명이 올바르지 않습니다.");
             }
 
-            String safeFilename = sanitizeFilename(originalFilename);
-            String uniqueFilename = System.currentTimeMillis() + "_" + safeFilename;
-            
-            Path uploadPath = Paths.get(System.getProperty("java.io.tmpdir"), "uploads");
-            Files.createDirectories(uploadPath);
-            
-            Path filePath = uploadPath.resolve(uniqueFilename);
-            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+            if (file.getSize() > 50 * 1024 * 1024) {
+                return Map.of("success", false, "message", "파일 크기는 50MB를 초과할 수 없습니다.");
+            }
 
-            Material material = new Material();
-            material.setTeacherId(teacherId);
-            material.setTitle(title);
-            material.setDescription(description);
-            material.setOriginalFilename(originalFilename);
-            material.setLocalFilePath(uniqueFilename);
-            material.setFileSize(file.getSize());
-            material.setFileType(getFileExtension(originalFilename));
-            material.setCreatedAt(LocalDateTime.now());
-            material.setDownloadCount(0);
+            Material material = materialService.uploadMaterial(file, title, description, teacherId, null);
 
-            materialRepository.save(material);
-
-            return Map.of("success", true, "message", "파일이 업로드되었습니다.");
+            return Map.of("success", true, "message", "파일이 성공적으로 업로드되었습니다.", "materialId", material.getId());
             
+        } catch (IOException e) {
+            System.err.println("Cloudinary 업로드 실패: " + e.getMessage());
+            return Map.of("success", false, "message", "파일 업로드에 실패했습니다: " + e.getMessage());
         } catch (Exception e) {
             System.err.println("파일 업로드 실패: " + e.getMessage());
             return Map.of("success", false, "message", "파일 업로드에 실패했습니다: " + e.getMessage());
         }
     }
 
-    private String sanitizeFilename(String filename) {
-        if (filename == null) return "unknown";
-        
-        try {
-            String decoded = URLDecoder.decode(filename, StandardCharsets.UTF_8);
-            String sanitized = decoded.replaceAll("[^\\w가-힣._-]", "_");
-            return sanitized.length() > 100 ? sanitized.substring(0, 100) : sanitized;
-        } catch (Exception e) {
-            String sanitized = filename.replaceAll("[^\\w._-]", "_");
-            return sanitized.length() > 100 ? sanitized.substring(0, 100) : sanitized;
-        }
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename == null || !filename.contains(".")) {
-            return "unknown";
-        }
-        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
-    }
-
     @GetMapping("/api/teacher/materials/{id}/download")
-    public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
@@ -421,25 +378,17 @@ public class TeacherController {
                 return ResponseEntity.notFound().build();
             }
 
-            if (material.getLocalFilePath() == null) {
+            if (material.getFilePath() == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
+            material.setDownloadCount(material.getDownloadCount() + 1);
+            materialRepository.save(material);
 
-            if (resource.exists() && resource.isReadable()) {
-                material.setDownloadCount(material.getDownloadCount() + 1);
-                materialRepository.save(material);
-
-                return ResponseEntity.ok()
-                        .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
-                        .header(HttpHeaders.CONTENT_LENGTH, String.valueOf(resource.contentLength()))
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(java.net.URI.create(material.getFilePath()))
+                    .build();
+                    
         } catch (Exception ex) {
             System.err.println("Download error: " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -447,7 +396,7 @@ public class TeacherController {
     }
 
     @GetMapping("/api/teacher/materials/{id}/preview")
-    public ResponseEntity<Resource> previewMaterial(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<Void> previewMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
@@ -459,40 +408,14 @@ public class TeacherController {
                 return ResponseEntity.notFound().build();
             }
 
-            if (material.getLocalFilePath() == null) {
+            if (material.getFilePath() == null) {
                 return ResponseEntity.notFound().build();
             }
 
-            Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
-
-            if (resource.exists() && resource.isReadable()) {
-                String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
-                MediaType mediaType = MediaType.APPLICATION_OCTET_STREAM;
-                
-                switch (fileType) {
-                    case "pdf":
-                        mediaType = MediaType.APPLICATION_PDF;
-                        break;
-                    case "jpg":
-                    case "jpeg":
-                        mediaType = MediaType.IMAGE_JPEG;
-                        break;
-                    case "png":
-                        mediaType = MediaType.IMAGE_PNG;
-                        break;
-                    case "gif":
-                        mediaType = MediaType.IMAGE_GIF;
-                        break;
-                }
-
-                return ResponseEntity.ok()
-                        .contentType(mediaType)
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + material.getOriginalFilename() + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
+            return ResponseEntity.status(HttpStatus.FOUND)
+                    .location(java.net.URI.create(material.getFilePath()))
+                    .build();
+                    
         } catch (Exception ex) {
             System.err.println("Preview error: " + ex.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
@@ -513,7 +436,6 @@ public class TeacherController {
             return "teacher/preview-error";
         }
         
-        material.setFilePath("/api/teacher/materials/" + material.getId() + "/preview");
         model.addAttribute("material", material);
         
         String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
@@ -538,13 +460,6 @@ public class TeacherController {
             Material material = materialRepository.findById(id).orElse(null);
             if (material == null || !material.getTeacherId().equals(teacherId)) {
                 return Map.of("success", false, "message", "자료를 찾을 수 없습니다.");
-            }
-
-            try {
-                Path filePath = this.fileStorageLocation.resolve(material.getLocalFilePath()).normalize();
-                Files.deleteIfExists(filePath);
-            } catch (Exception e) {
-                System.err.println("파일 삭제 실패: " + e.getMessage());
             }
 
             materialRepository.delete(material);
@@ -608,6 +523,7 @@ public class TeacherController {
                 notification.put("title", "새로운 " + getTypeKorean((String) problemData.get("type")) + "가 출제되었습니다!");
                 notification.put("message", savedProblem.getTitle());
                 notification.put("problemId", savedProblem.getId());
+                notification.put("timeLimit", savedProblem.getTimeLimit());
                 notification.put("timestamp", LocalDateTime.now().toString());
                 messagingTemplate.convertAndSend("/topic/notifications", notification);
             }
@@ -736,12 +652,11 @@ public class TeacherController {
                 data.put("userId", submission.getUserId());
                 data.put("problemId", submission.getProblemId());
                 data.put("answer", submission.getAnswer());
-                data.put("status", submission.getStatus());
                 data.put("score", submission.getScore());
                 data.put("feedback", submission.getFeedback());
                 data.put("submittedAt", submission.getSubmittedAt());
                 data.put("timeSpent", submission.getTimeSpent());
-                data.put("autoSubmitted", submission.isAutoSubmitted());
+                data.put("autoSubmitted", submission.getAutoSubmitted());
 
                 User student = userRepository.findById(submission.getUserId()).orElse(null);
                 data.put("studentName", student != null ? student.getName() : "Unknown");
@@ -749,6 +664,14 @@ public class TeacherController {
                 Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
                 data.put("problemTitle", problem != null ? problem.getTitle() : "Unknown");
                 data.put("problemType", problem != null ? problem.getType() : "PROBLEM");
+                data.put("timeLimit", problem != null ? problem.getTimeLimit() : 60);
+
+                boolean isTimedOut = false;
+                if (problem != null && submission.getStartTime() != null && problem.getTimeLimit() != null) {
+                    LocalDateTime timeoutAt = submission.getStartTime().plusMinutes(problem.getTimeLimit());
+                    isTimedOut = submission.getSubmittedAt().isAfter(timeoutAt);
+                }
+                data.put("isTimedOut", isTimedOut);
 
                 return data;
             }).collect(Collectors.toList());
@@ -777,11 +700,18 @@ public class TeacherController {
                 return Map.of("success", false, "message", "제출물을 찾을 수 없습니다.");
             }
 
+            Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
+            if (problem != null && submission.getStartTime() != null && problem.getTimeLimit() != null) {
+                if (submission.isTimedOut(problem)) {
+                    feedback = "[시간 초과] " + (feedback != null ? feedback : "제한 시간을 초과하여 제출되었습니다.");
+                    score = Math.max(0, score - 20);
+                }
+            }
+
             submission.setScore(score);
             submission.setFeedback(feedback);
             submission.setGradedBy(teacherId);
             submission.setGradedAt(LocalDateTime.now());
-            submission.setStatus("GRADED");
 
             submissionRepository.save(submission);
 
@@ -797,18 +727,5 @@ public class TeacherController {
             case "EXAM": return "시험";
             default: return "문제";
         }
-    }
-
-    private boolean isAllowedFileType(String extension) {
-        Set<String> allowedTypes = Set.of(
-                "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx",
-                "txt", "rtf", "hwp",
-                "jpg", "jpeg", "png", "gif", "bmp", "svg",
-                "mp4", "avi", "mov", "wmv", "flv", "webm",
-                "mp3", "wav", "ogg", "m4a",
-                "zip", "rar", "7z", "tar", "gz",
-                "java", "js", "html", "css", "json", "xml",
-                "py", "cpp", "c", "h", "cs", "php", "rb", "go");
-        return allowedTypes.contains(extension);
     }
 }
