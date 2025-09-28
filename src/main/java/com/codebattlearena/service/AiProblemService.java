@@ -100,7 +100,7 @@ public class AiProblemService {
 
     private String createGradingPrompt(String answer, String language) {
         return String.format("""
-            다음 %s 코드를 채점해주세요:
+            다음 %s 코드를 전문적으로 채점해주세요:
 
             코드:
             %s
@@ -109,35 +109,41 @@ public class AiProblemService {
             {
                 "score": 점수(0-100),
                 "isCorrect": true/false,
-                "feedback": "상세한 피드백",
-                "suggestions": "개선 제안",
-                "syntaxErrors": "문법 오류 (있다면)",
-                "logicErrors": "논리 오류 (있다면)"
+                "feedback": "구체적이고 건설적인 피드백 (3-5줄)",
+                "suggestions": "코드 개선 제안 (구체적인 방법 포함)",
+                "syntaxErrors": "문법 오류 분석",
+                "logicErrors": "논리 오류 분석",
+                "bestPractices": "좋은 코딩 관례 제안"
             }
 
             채점 기준:
-            1. 문법 정확성 (30점)
-            2. 논리 정확성 (40점)
-            3. 코드 효율성 (20점)
-            4. 가독성 (10점)
+            1. 문법 정확성 (25점) - 컴파일/실행 가능 여부
+            2. 논리 정확성 (40점) - 문제 해결 여부
+            3. 코드 효율성 (20점) - 시간/공간 복잡도
+            4. 가독성 (15점) - 변수명, 주석, 구조
             """, language, answer);
     }
 
     private String createChatPrompt(String userMessage, String history) {
         return String.format("""
-            당신은 친근하고 전문적인 프로그래밍 튜터입니다.
-            
-            대화 규칙:
-            1. 한국어로 친근하게 답변
-            2. 2-3문장 정도로 간결하게
-            3. 구체적이고 실용적인 조언 제공
-            4. 격려와 동기부여 포함
-            
+            당신은 숙련된 프로그래밍 튜터입니다. 다음 원칙을 엄격히 따라 답변하세요:
+
+            **답변 원칙:**
+            1. 프로그래밍 질문에만 정확하고 구체적으로 답변
+            2. 코드 예제는 실행 가능하고 실용적으로 제공
+            3. 개념 설명 시 "왜 그런지" 이유도 함께 설명
+            4. 실무에서 실제로 사용되는 베스트 프랙티스 위주
+            5. 답변 길이: 2-4문장 (코드 예제 제외)
+            6. 애매한 질문에는 구체적인 예시를 요구
+            7. 잘못된 접근법은 명확히 지적하고 올바른 방법 제시
+
+            **전문 영역:** Java, Python, C++, JavaScript, 알고리즘, 자료구조, 디자인 패턴
+
             이전 대화: %s
             
             학생 질문: %s
             
-            답변:
+            전문적인 답변:
             """, history != null ? history : "없음", userMessage);
     }
 
@@ -151,7 +157,7 @@ public class AiProblemService {
         Map<String, Object> requestBody = new HashMap<>();
         requestBody.put("model", "gpt-4o-mini");
         requestBody.put("max_tokens", 1500);
-        requestBody.put("temperature", 0.7);
+        requestBody.put("temperature", 0.3);
         
         List<Map<String, String>> messages = new ArrayList<>();
         Map<String, String> message = new HashMap<>();
@@ -221,6 +227,7 @@ public class AiProblemService {
             feedback.put("suggestions", jsonNode.path("suggestions").asText());
             feedback.put("syntaxErrors", jsonNode.path("syntaxErrors").asText());
             feedback.put("logicErrors", jsonNode.path("logicErrors").asText());
+            feedback.put("bestPractices", jsonNode.path("bestPractices").asText());
             
             return feedback;
         } catch (Exception e) {
@@ -228,7 +235,7 @@ public class AiProblemService {
             return Map.of(
                 "score", 50,
                 "isCorrect", false,
-                "feedback", "죄송합니다. 자동 채점에 실패했습니다.",
+                "feedback", "자동 채점에 실패했습니다. 수동으로 검토해주세요.",
                 "suggestions", "코드를 다시 확인해보세요.",
                 "syntaxErrors", "",
                 "logicErrors", ""
@@ -381,32 +388,66 @@ public class AiProblemService {
         String message = userMessage.toLowerCase();
         
         if (message.contains("안녕") || message.contains("hello")) {
-            return "안녕하세요! 코딩 공부하다가 막히는 부분이 있으면 언제든 물어보세요!";
+            return "안녕하세요! 프로그래밍 관련 질문이 있으시면 언제든 물어보세요. 자바, 파이썬, C++ 등 어떤 언어든 도와드릴게요!";
         }
         
         if (message.contains("자바") || message.contains("java")) {
-            if (message.contains("어려워") || message.contains("힘들어")) {
-                return "자바는 처음엔 어렵지만 차근차근 하면 분명 늘어요! 어떤 부분이 가장 어려우신가요?";
+            if (message.contains("클래스") || message.contains("객체")) {
+                return "자바에서 클래스는 객체의 설계도입니다. `class Person { }` 형태로 정의하고, `Person p = new Person();`으로 객체를 생성합니다.";
             }
-            return "자바 관련해서 궁금한 게 있으시군요! 구체적으로 어떤 부분이 궁금하신가요?";
+            if (message.contains("상속")) {
+                return "자바 상속은 `extends` 키워드를 사용합니다. `class Child extends Parent { }`로 부모 클래스의 속성과 메서드를 물려받습니다.";
+            }
+            if (message.contains("배열")) {
+                return "자바 배열: `int[] arr = new int[5];` 또는 `int[] arr = {1,2,3,4,5};`로 선언합니다. 인덱스는 0부터 시작해요.";
+            }
+            if (message.contains("반복문") || message.contains("for")) {
+                return "자바 for문: `for(int i=0; i<10; i++) { }` 또는 향상된 for문 `for(int item : array) { }`를 사용합니다.";
+            }
+            return "자바 관련해서 구체적으로 어떤 부분이 궁금하신가요? 클래스, 상속, 배열, 반복문 등 세부 주제를 말씀해주세요.";
         }
         
         if (message.contains("파이썬") || message.contains("python")) {
-            return "파이썬은 문법이 간단해서 배우기 좋은 언어예요. 어떤 것이 궁금하신가요?";
+            if (message.contains("리스트")) {
+                return "파이썬 리스트: `my_list = [1, 2, 3]`으로 생성하고, `append()`로 추가, `pop()`으로 제거, `len()`으로 길이를 확인합니다.";
+            }
+            if (message.contains("딕셔너리")) {
+                return "파이썬 딕셔너리: `my_dict = {'key': 'value'}`로 생성하고, `my_dict['key']`로 값에 접근합니다. `get()` 메서드도 유용해요.";
+            }
+            if (message.contains("함수")) {
+                return "파이썬 함수: `def function_name(parameter): return value`로 정의합니다. 들여쓰기로 코드 블록을 구분해요.";
+            }
+            return "파이썬은 간결하고 읽기 쉬운 문법이 특징입니다. 리스트, 딕셔너리, 함수 등 어떤 기능이 궁금하신가요?";
         }
         
-        if (message.contains("c++") || message.contains("c언어")) {
-            return "C/C++는 기초가 탄탄해야 하는 언어예요. 포인터나 메모리 관리 부분이 특히 중요하죠.";
+        if (message.contains("c++") || message.contains("cpp")) {
+            if (message.contains("포인터")) {
+                return "C++ 포인터: `int* ptr = &variable;`로 선언하고 `*ptr`로 값에 접근합니다. 메모리 주소를 직접 조작할 수 있어요.";
+            }
+            if (message.contains("벡터") || message.contains("vector")) {
+                return "C++ vector: `vector<int> v = {1,2,3};`로 선언하고, `push_back()`으로 추가, `size()`로 크기 확인합니다.";
+            }
+            return "C++는 저수준 제어가 가능한 언어입니다. 포인터, 벡터, 클래스 등 어떤 부분이 궁금한가요?";
         }
         
         if (message.contains("알고리즘")) {
-            return "알고리즘은 문제를 단계별로 분해해서 생각하는 게 핵심이에요. 어떤 알고리즘이 궁금하신가요?";
+            if (message.contains("정렬")) {
+                return "기본 정렬: 버블정렬(O(n²)), 퀵정렬(O(nlogn)), 병합정렬(O(nlogn))이 있습니다. 실무에서는 대부분 언어의 내장 정렬 함수를 사용해요.";
+            }
+            if (message.contains("검색") || message.contains("탐색")) {
+                return "검색 알고리즘: 선형탐색(O(n)), 이진탐색(O(logn))이 대표적입니다. 정렬된 배열에서는 이진탐색이 효율적이에요.";
+            }
+            return "알고리즘은 문제 해결의 단계적 방법입니다. 정렬, 탐색, 그래프 등 어떤 알고리즘이 궁금하신가요?";
         }
         
         if (message.contains("오류") || message.contains("에러")) {
-            return "오류가 났군요! 오류 메시지를 정확히 알려주시면 더 구체적으로 도와드릴 수 있어요.";
+            return "오류가 발생했나요? 구체적인 오류 메시지와 코드를 보여주시면 더 정확한 도움을 드릴 수 있습니다.";
         }
         
-        return "구체적으로 어떤 부분이 궁금하신지 알려주시면 더 정확한 답변을 드릴 수 있어요!";
+        if (message.contains("시작") || message.contains("처음")) {
+            return "프로그래밍을 시작하신다면 변수, 조건문, 반복문부터 차근차근 익히세요. 어떤 언어를 배우고 싶으신가요?";
+        }
+        
+        return "구체적인 프로그래밍 질문을 해주시면 더 정확한 답변을 드릴 수 있습니다. 예: '자바에서 배열을 어떻게 정렬하나요?' 같은 식으로요.";
     }
 }
