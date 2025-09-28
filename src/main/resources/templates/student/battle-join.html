@@ -13,7 +13,7 @@
             <a href="/" class="logo">코드배틀아레나</a>
             <ul class="nav-links">
                 <li><a href="/student">대시보드</a></li>
-                <li><a href="/student/battle">배틀 홈</a></li>
+                <li><a href="/student/battles">배틀 홈</a></li>
                 <li><a href="#" onclick="logout()">로그아웃</a></li>
             </ul>
         </div>
@@ -53,7 +53,7 @@
                 
                 if (response.ok) {
                     alert('배틀룸에 참여했습니다!');
-                    window.location.href = '/student/battle';
+                    window.location.href = '/student/battles';
                 } else {
                     alert('잘못된 초대코드이거나 만료된 방입니다.');
                 }

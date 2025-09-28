@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 
 @Controller
-@RequestMapping("/student/battles")
+@RequestMapping("/student/battless")
 public class BattleController {
 
     @GetMapping("")

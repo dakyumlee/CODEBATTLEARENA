@@ -43,27 +43,27 @@ public class PageController {
         return "student/notes";
     }
 
-    @GetMapping("/student/battle")
+    @GetMapping("/student/battles")
     public String studentBattle() {
         return "student/battle";
     }
 
-    @GetMapping("/student/battle/create")
+    @GetMapping("/student/battles/create")
     public String battleCreate() {
         return "student/battle-create";
     }
 
-    @GetMapping("/student/battle/join")
+    @GetMapping("/student/battles/join")
     public String battleJoin() {
         return "student/battle-join";
     }
 
-    @GetMapping("/student/battle/random")
+    @GetMapping("/student/battles/random")
     public String battleRandom() {
         return "student/battle-random";
     }
 
-    @GetMapping("/student/battle/ai")
+    @GetMapping("/student/battles/ai")
     public String battleAi() {
         return "student/battle-ai";
     }

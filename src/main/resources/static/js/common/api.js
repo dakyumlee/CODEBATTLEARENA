@@ -65,7 +65,7 @@ class API {
         return {
             getToday: () => this.get('/api/student/today'),
             getStats: () => this.get('/api/student/stats'),
-            getBattleStats: () => this.get('/api/student/battle-stats'),
+            getBattleStats: () => this.get('/api/student/battles-stats'),
             getPracticeStats: () => this.get('/api/student/practice-stats'),
             getNotes: () => this.get('/api/student/notes'),
             createNote: (data) => this.post('/api/student/notes', data),

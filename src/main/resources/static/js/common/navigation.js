@@ -18,7 +18,7 @@ class NavigationManager {
                     { href: '/student/ai-tutor', text: 'AI 튜터' },
                     { href: '/student/practice', text: '코딩연습' },
                     { href: '/student/notes', text: '복습노트' },
-                    { href: '/student/battle', text: '코드배틀' }
+                    { href: '/student/battles', text: '코드배틀' }
                 ];
                 break;
                 
