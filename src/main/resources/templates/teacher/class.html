@@ -701,813 +701,786 @@
 
     <script>
         let allSubmissions = [];
-        let allProblems = [];
-        let currentFilter = 'ALL';
-        let selectedFile = null;
-        let selectedExamFile = null;
+let allProblems = [];
+let currentFilter = 'ALL';
+let selectedFile = null;
+let selectedExamFile = null;
 
-        async function loadMaterials() {
-            try {
-                const response = await fetch('/api/teacher/materials');
-                
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-                
-                const data = await response.json();
-                const container = document.getElementById('materialsContainer');
-                
-                if (data.materials && data.materials.length > 0) {
-                    container.innerHTML = `
-                        <div class="materials-grid">
-                            ${data.materials.map(material => `
-                                <div class="material-card">
-                                    <div class="material-title">${material.title}</div>
-                                    <div class="material-info">
-                                        크기: ${formatFileSize(material.fileSize)}<br>
-                                        다운로드: ${material.downloadCount || 0}회<br>
-                                        업로드: ${new Date(material.createdAt).toLocaleDateString()}
-                                    </div>
-                                    <div class="material-actions">
-                                        <button class="btn btn-warning btn-small" onclick="previewMaterial(${material.id}, '${material.title}', '${material.fileType}')">미리보기</button>
-                                        <button class="btn btn-primary btn-small" onclick="downloadMaterial(${material.id})">다운로드</button>
-                                        <button class="btn btn-danger btn-small" onclick="deleteMaterial(${material.id})">삭제</button>
-                                    </div>
-                                </div>
-                            `).join('')}
+async function loadMaterials() {
+    try {
+        const response = await fetch('/api/teacher/materials');
+        
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+        
+        const data = await response.json();
+        const container = document.getElementById('materialsContainer');
+        
+        if (data.materials && data.materials.length > 0) {
+            container.innerHTML = `
+                <div class="materials-grid">
+                    ${data.materials.map(material => `
+                        <div class="material-card">
+                            <div class="material-title">${material.title}</div>
+                            <div class="material-info">
+                                크기: ${formatFileSize(material.fileSize)}<br>
+                                다운로드: ${material.downloadCount || 0}회<br>
+                                업로드: ${new Date(material.createdAt).toLocaleDateString()}
+                            </div>
+                            <div class="material-actions">
+                                <button class="btn btn-warning btn-small" onclick="previewMaterial(${material.id}, '${material.title}', '${material.fileType}')">미리보기</button>
+                                <button class="btn btn-primary btn-small" onclick="downloadMaterial(${material.id})">다운로드</button>
+                                <button class="btn btn-danger btn-small" onclick="deleteMaterial(${material.id})">삭제</button>
+                            </div>
                         </div>
-                    `;
-                } else {
-                    container.innerHTML = '<div class="empty-state">업로드된 자료가 없습니다.</div>';
-                }
-            } catch (error) {
-                console.error('자료 로드 실패:', error);
-                document.getElementById('materialsContainer').innerHTML = '<div class="empty-state">자료를 불러올 수 없습니다.</div>';
-            }
-        }
-
-        function previewMaterial(id, title, fileType) {
-            const previewUrl = `/teacher/materials/${id}/preview`;
-            window.open(previewUrl, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
-        }
-
-        function showPreviewModal(title, filePath, fileType) {
-            document.getElementById('previewTitle').textContent = title;
-            const container = document.getElementById('previewContainer');
-            
-            if (fileType && fileType.toLowerCase() === 'pdf') {
-                container.innerHTML = `<iframe class="preview-file" src="${filePath}"></iframe>`;
-            } else if (fileType && ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileType.toLowerCase())) {
-                container.innerHTML = `<img class="preview-image" src="${filePath}" alt="${title}">`;
-            } else {
-                container.innerHTML = `
-                    <div class="simple-preview">
-                        <h3>📄 ${title}</h3>
-                        <p>이 파일은 미리보기를 지원하지 않는 형식입니다.</p>
-                        <p>파일 형식: ${fileType ? fileType.toUpperCase() : '알 수 없음'}</p>
-                        <a href="${filePath}" class="btn btn-primary" download>파일 다운로드</a>
-                    </div>
-                `;
-            }
-            
-            document.getElementById('previewModal').style.display = 'flex';
-        }
-
-        function closePreviewModal() {
-            document.getElementById('previewModal').style.display = 'none';
-            document.getElementById('previewContainer').innerHTML = '';
-        }
-
-        async function loadProblems() {
-            try {
-                const response = await fetch('/api/teacher/problems');
-                
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-                
-                const data = await response.json();
-                
-                allProblems = data.problems || [];
-                const container = document.getElementById('problemsContainer');
-                
-                if (allProblems.length > 0) {
-                    container.innerHTML = `
-                        <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
-                            <thead>
-                                <tr style="background: #f5faff;">
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">제목</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">유형</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">난이도</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">제한시간</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">배점</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">출제일</th>
-                                    <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">관리</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                ${allProblems.map(problem => `
-                                    <tr>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.title}</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;"><span class="type-badge type-${(problem.type || 'PROBLEM').toLowerCase()}">${getTypeKorean(problem.type || 'PROBLEM')}</span></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;"><span class="difficulty-badge difficulty-${getDifficultyClass(problem.difficulty)}">${problem.difficulty}</span></td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.timeLimit}분</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.points}점</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${new Date(problem.createdAt).toLocaleDateString()}</td>
-                                        <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">
-                                            <button class="btn btn-primary btn-small" onclick="viewProblemDetail(${problem.id})">상세보기</button>
-                                            <button class="btn btn-warning btn-small" onclick="editProblem(${problem.id})">수정</button>
-                                            <button class="btn btn-danger btn-small" onclick="deleteProblem(${problem.id})">삭제</button>
-                                        </td>
-                                    </tr>
-                                `).join('')}
-                            </tbody>
-                        </table>
-                    `;
-                } else {
-                    container.innerHTML = '<div class="empty-state">출제된 문제가 없습니다.</div>';
-                }
-            } catch (error) {
-                console.error('문제 로드 실패:', error);
-                document.getElementById('problemsContainer').innerHTML = '<div class="empty-state">문제를 불러올 수 없습니다.</div>';
-            }
-        }
-
-        function viewProblemDetail(problemId) {
-            fetch(`/api/teacher/problems/${problemId}/detail`)
-            .then(response => {
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data && data.success && data.problem) {
-                    showProblemDetailModal(data.problem);
-                } else {
-                    alert('문제를 불러올 수 없습니다.');
-                }
-            })
-            .catch(error => {
-                console.error('문제 상세보기 오류:', error);
-                alert('문제를 불러올 수 없습니다.');
-            });
-        }
-
-        function showProblemDetailModal(problem) {
-            const modal = document.createElement('div');
-            modal.className = 'modal';
-            modal.style.display = 'flex';
-            
-            const content = document.createElement('div');
-            content.className = 'modal-content';
-            
-            content.innerHTML = `
-                <h3 class="modal-title">문제 상세보기</h3>
-                <div class="form-group">
-                    <label class="form-label">제목</label>
-                    <div style="padding: 12px; background: #f5faff; border-radius: 8px; color: #333;">
-                        ${problem.title}
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">설명</label>
-                    <div style="padding: 12px; background: #f5faff; border-radius: 8px; color: #333; white-space: pre-wrap; min-height: 100px;">
-                        ${problem.description}
-                    </div>
-                </div>
-                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label">난이도</label>
-                        <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
-                            ${problem.difficulty}
-                        </div>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label">유형</label>
-                        <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
-                            ${getTypeKorean(problem.type)}
-                        </div>
-                    </div>
-                </div>
-                <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label">제한시간</label>
-                        <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
-                            ${problem.timeLimit}분
-                        </div>
-                    </div>
-                    <div class="form-group" style="flex: 1;">
-                        <label class="form-label">배점</label>
-                        <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
-                            ${problem.points}점
-                        </div>
-                    </div>
-                </div>
-                ${problem.type === 'QUIZ' ? `
-                <div class="form-group">
-                    <label class="form-label">선택지</label>
-                    <div style="padding: 12px; background: #f5faff; border-radius: 8px; color: #333;">
-                        A. ${problem.optionA}<br>
-                        B. ${problem.optionB}<br>
-                        C. ${problem.optionC}<br>
-                        D. ${problem.optionD}<br>
-                        <strong style="color: #2196f3;">정답: ${problem.correctAnswer}</strong>
-                    </div>
-                </div>
-                ` : ''}
-                <div class="modal-actions">
-                    <button type="button" class="btn btn-secondary" onclick="closeProblemDetailModal()">닫기</button>
-                    <button type="button" class="btn btn-warning" onclick="editProblem(${problem.id}); closeProblemDetailModal();">수정</button>
+                    `).join('')}
                 </div>
             `;
-            
-            modal.appendChild(content);
-            document.body.appendChild(modal);
-            
-            window.currentProblemDetailModal = modal;
-            
-            modal.onclick = (e) => {
-                if (e.target === modal) closeProblemDetailModal();
-            };
+        } else {
+            container.innerHTML = '<div class="empty-state">업로드된 자료가 없습니다.</div>';
         }
+    } catch (error) {
+        console.error('자료 로드 실패:', error);
+        document.getElementById('materialsContainer').innerHTML = '<div class="empty-state">자료를 불러올 수 없습니다.</div>';
+    }
+}
 
-        function closeProblemDetailModal() {
-            if (window.currentProblemDetailModal) {
-                document.body.removeChild(window.currentProblemDetailModal);
-                window.currentProblemDetailModal = null;
-            }
+function previewMaterial(id, title, fileType) {
+    const previewUrl = `/teacher/materials/${id}/preview`;
+    window.open(previewUrl, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+}
+
+async function loadProblems() {
+    try {
+        const response = await fetch('/api/teacher/problems');
+        
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
         }
-
-        async function loadSubmissions() {
-            try {
-                const response = await fetch('/api/teacher/submissions');
-                
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-                
-                const data = await response.json();
-                
-                allSubmissions = data.submissions || [];
-                filterSubmissions(currentFilter);
-                
-            } catch (error) {
-                console.error('제출물 로드 실패:', error);
-                document.getElementById('submissionsContainer').innerHTML = '<div class="empty-state">제출물을 불러올 수 없습니다.</div>';
-            }
+        
+        const data = await response.json();
+        
+        allProblems = data.problems || [];
+        const container = document.getElementById('problemsContainer');
+        
+        if (allProblems.length > 0) {
+            container.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px;">
+                    <thead>
+                        <tr style="background: #f5faff;">
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">제목</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">유형</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">난이도</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">제한시간</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">배점</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">출제일</th>
+                            <th style="padding: 12px; text-align: left; border-bottom: 1px solid #e3f2fd; font-weight: 600; color: #1976d2;">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${allProblems.map(problem => `
+                            <tr>
+                                <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.title}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;"><span class="type-badge type-${(problem.type || 'PROBLEM').toLowerCase()}">${getTypeKorean(problem.type || 'PROBLEM')}</span></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;"><span class="difficulty-badge difficulty-${getDifficultyClass(problem.difficulty)}">${problem.difficulty}</span></td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.timeLimit}분</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${problem.points}점</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">${new Date(problem.createdAt).toLocaleDateString()}</td>
+                                <td style="padding: 12px; border-bottom: 1px solid #e3f2fd;">
+                                    <button class="btn btn-primary btn-small" onclick="viewProblemDetail(${problem.id})">상세보기</button>
+                                    <button class="btn btn-warning btn-small" onclick="editProblem(${problem.id})">수정</button>
+                                    <button class="btn btn-danger btn-small" onclick="deleteProblem(${problem.id})">삭제</button>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } else {
+            container.innerHTML = '<div class="empty-state">출제된 문제가 없습니다.</div>';
         }
+    } catch (error) {
+        console.error('문제 로드 실패:', error);
+        document.getElementById('problemsContainer').innerHTML = '<div class="empty-state">문제를 불러올 수 없습니다.</div>';
+    }
+}
 
-        function filterSubmissions(type) {
-            currentFilter = type;
-            
-            document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
-            event?.target?.classList.add('active') || document.querySelector(`[onclick="filterSubmissions('${type}')"]`).classList.add('active');
-            
-            let filteredSubmissions = allSubmissions;
-            if (type !== 'ALL') {
-                filteredSubmissions = allSubmissions.filter(submission => 
-                    (submission.problemType || 'PROBLEM') === type
-                );
-            }
-            
-            const container = document.getElementById('submissionsContainer');
-            
-            if (filteredSubmissions && filteredSubmissions.length > 0) {
-                container.innerHTML = filteredSubmissions.map(submission => `
-                    <div class="submission-card">
-                        <div class="submission-header">
-                            <div>
-                                <strong>${submission.studentName}</strong> - ${submission.problemTitle}
-                                <span class="type-badge type-${(submission.problemType || 'problem').toLowerCase()}">${getTypeKorean(submission.problemType || 'PROBLEM')}</span>
-                                <div class="submission-info">제출일: ${new Date(submission.submittedAt).toLocaleString()}</div>
-                            </div>
-                            <div style="display: flex; gap: 10px; align-items: center;">
-                                <span class="status-badge status-${submission.status.toLowerCase()}">${submission.status === 'PENDING' ? '채점 대기' : '채점 완료'}</span>
-                                ${submission.status === 'PENDING' ? 
-                                    `<button class="btn btn-primary btn-small" onclick="openGradeModal(${submission.id}, '${submission.studentName}', '${submission.problemTitle}', '${submission.problemType || 'PROBLEM'}', \`${submission.answer.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\`)">채점하기</button>` : 
-                                    `<span style="color: #4caf50; font-weight: 600;">${submission.score}점</span>`
-                                }
-                            </div>
-                        </div>
-                        <div class="submission-answer">${submission.answer}</div>
-                        ${submission.feedback ? `<div style="background: #e8f5e8; padding: 10px; border-radius: 6px; margin-top: 10px;"><strong>피드백:</strong> ${submission.feedback}</div>` : ''}
+async function loadSubmissions() {
+    try {
+        const response = await fetch('/api/teacher/submissions');
+        
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+        
+        const data = await response.json();
+        allSubmissions = data.submissions || [];
+        filterSubmissions(currentFilter);
+        
+    } catch (error) {
+        console.error('제출물 로드 실패:', error);
+        document.getElementById('submissionsContainer').innerHTML = '<div class="empty-state">제출물을 불러올 수 없습니다.</div>';
+    }
+}
+
+function filterSubmissions(type) {
+    currentFilter = type;
+    
+    document.querySelectorAll('.category-tab').forEach(tab => tab.classList.remove('active'));
+    event?.target?.classList.add('active') || document.querySelector(`[onclick="filterSubmissions('${type}')"]`).classList.add('active');
+    
+    let filteredSubmissions = allSubmissions;
+    if (type !== 'ALL') {
+        filteredSubmissions = allSubmissions.filter(submission => 
+            (submission.problemType || 'PROBLEM') === type
+        );
+    }
+    
+    const container = document.getElementById('submissionsContainer');
+    
+    if (filteredSubmissions && filteredSubmissions.length > 0) {
+        container.innerHTML = filteredSubmissions.map(submission => `
+            <div class="submission-card">
+                <div class="submission-header">
+                    <div>
+                        <strong>${submission.studentName}</strong> - ${submission.problemTitle}
+                        <span class="type-badge type-${(submission.problemType || 'problem').toLowerCase()}">${getTypeKorean(submission.problemType || 'PROBLEM')}</span>
+                        <div class="submission-info">제출일: ${new Date(submission.submittedAt).toLocaleString()}</div>
                     </div>
-                `).join('');
-            } else {
-                container.innerHTML = `<div class="empty-state">${type === 'ALL' ? '제출된 답안이 없습니다.' : getTypeKorean(type) + ' 제출물이 없습니다.'}</div>`;
-            }
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <span class="status-badge status-${submission.status.toLowerCase()}">${submission.status === 'PENDING' ? '채점 대기' : '채점 완료'}</span>
+                        ${submission.status === 'PENDING' ? 
+                            `<button class="btn btn-primary btn-small" onclick="openGradeModal(${submission.id}, '${submission.studentName}', '${submission.problemTitle}', '${submission.problemType || 'PROBLEM'}', \`${submission.answer.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\`)">채점하기</button>` : 
+                            `<span style="color: #4caf50; font-weight: 600;">${submission.score}점</span>`
+                        }
+                    </div>
+                </div>
+                <div class="submission-answer">${submission.answer}</div>
+                ${submission.feedback ? `<div style="background: #e8f5e8; padding: 10px; border-radius: 6px; margin-top: 10px;"><strong>피드백:</strong> ${submission.feedback}</div>` : ''}
+            </div>
+        `).join('');
+    } else {
+        container.innerHTML = `<div class="empty-state">${type === 'ALL' ? '제출된 답안이 없습니다.' : getTypeKorean(type) + ' 제출물이 없습니다.'}</div>`;
+    }
+}
+
+function showUploadModal() {
+    document.getElementById('uploadModal').style.display = 'flex';
+}
+
+function closeUploadModal() {
+    document.getElementById('uploadModal').style.display = 'none';
+    document.getElementById('uploadForm').reset();
+    selectedFile = null;
+    resetUploadArea();
+}
+
+function showCreateProblemModal() {
+    document.getElementById('createProblemModal').style.display = 'flex';
+}
+
+function closeCreateProblemModal() {
+    document.getElementById('createProblemModal').style.display = 'none';
+    document.getElementById('createProblemForm').reset();
+}
+
+function showCreateQuizModal() {
+    document.getElementById('createQuizModal').style.display = 'flex';
+}
+
+function closeCreateQuizModal() {
+    document.getElementById('createQuizModal').style.display = 'none';
+    document.getElementById('createQuizForm').reset();
+}
+
+function showCreateExamModal() {
+    document.getElementById('createExamModal').style.display = 'flex';
+}
+
+function closeCreateExamModal() {
+    document.getElementById('createExamModal').style.display = 'none';
+    document.getElementById('createExamForm').reset();
+    selectedExamFile = null;
+    resetExamUploadArea();
+}
+
+function openGradeModal(submissionId, studentName, problemTitle, problemType, answer) {
+    document.getElementById('gradeSubmissionId').value = submissionId;
+    document.getElementById('gradeStudentName').value = studentName;
+    document.getElementById('gradeProblemTitle').value = problemTitle;
+    document.getElementById('gradeProblemType').value = getTypeKorean(problemType);
+    document.getElementById('gradeStudentAnswer').value = answer;
+    document.getElementById('gradeModal').style.display = 'flex';
+}
+
+function closeGradeModal() {
+    document.getElementById('gradeModal').style.display = 'none';
+    document.getElementById('gradeForm').reset();
+}
+
+function editProblem(id) {
+    const problem = allProblems.find(p => p.id === id);
+    if (!problem) {
+        alert('문제 정보를 찾을 수 없습니다.');
+        return;
+    }
+    
+    document.getElementById('editProblemId').value = problem.id;
+    document.getElementById('editProblemTitle').value = problem.title;
+    document.getElementById('editProblemDescription').value = problem.description;
+    document.getElementById('editProblemDifficulty').value = problem.difficulty;
+    document.getElementById('editProblemTimeLimit').value = problem.timeLimit;
+    document.getElementById('editProblemPoints').value = problem.points;
+    
+    if (problem.type === 'QUIZ') {
+        document.getElementById('editQuizOptions').style.display = 'block';
+        document.getElementById('editOptionA').value = problem.optionA || '';
+        document.getElementById('editOptionB').value = problem.optionB || '';
+        document.getElementById('editOptionC').value = problem.optionC || '';
+        document.getElementById('editOptionD').value = problem.optionD || '';
+        document.getElementById('editCorrectAnswer').value = problem.correctAnswer || '';
+    } else {
+        document.getElementById('editQuizOptions').style.display = 'none';
+    }
+    
+    document.getElementById('editProblemModal').style.display = 'flex';
+}
+
+function closeEditProblemModal() {
+    document.getElementById('editProblemModal').style.display = 'none';
+    document.getElementById('editProblemForm').reset();
+}
+
+function viewProblemDetail(problemId) {
+    fetch(`/api/teacher/problems/${problemId}/detail`)
+    .then(response => {
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
         }
-
-        function editProblem(id) {
-            const problem = allProblems.find(p => p.id === id);
-            if (!problem) {
-                alert('문제 정보를 찾을 수 없습니다.');
-                return;
-            }
-            
-            document.getElementById('editProblemId').value = problem.id;
-            document.getElementById('editProblemTitle').value = problem.title;
-            document.getElementById('editProblemDescription').value = problem.description;
-            document.getElementById('editProblemDifficulty').value = problem.difficulty;
-            document.getElementById('editProblemTimeLimit').value = problem.timeLimit;
-            document.getElementById('editProblemPoints').value = problem.points;
-            
-            if (problem.type === 'QUIZ') {
-                document.getElementById('editQuizOptions').style.display = 'block';
-                document.getElementById('editOptionA').value = problem.optionA || '';
-                document.getElementById('editOptionB').value = problem.optionB || '';
-                document.getElementById('editOptionC').value = problem.optionC || '';
-                document.getElementById('editOptionD').value = problem.optionD || '';
-                document.getElementById('editCorrectAnswer').value = problem.correctAnswer || '';
-            } else {
-                document.getElementById('editQuizOptions').style.display = 'none';
-            }
-            
-            document.getElementById('editProblemModal').style.display = 'flex';
+        return response.json();
+    })
+    .then(data => {
+        if (data && data.success && data.problem) {
+            showProblemDetailModal(data.problem);
+        } else {
+            alert('문제를 불러올 수 없습니다.');
         }
+    })
+    .catch(error => {
+        console.error('문제 상세보기 오류:', error);
+        alert('문제를 불러올 수 없습니다.');
+    });
+}
 
-        function closeEditProblemModal() {
-            document.getElementById('editProblemModal').style.display = 'none';
-            document.getElementById('editProblemForm').reset();
-        }
+function showProblemDetailModal(problem) {
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.style.display = 'flex';
+    
+    const content = document.createElement('div');
+    content.className = 'modal-content';
+    
+    content.innerHTML = `
+        <h3 class="modal-title">문제 상세보기</h3>
+        <div class="form-group">
+            <label class="form-label">제목</label>
+            <div style="padding: 12px; background: #f5faff; border-radius: 8px; color: #333;">
+                ${problem.title}
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">설명</label>
+            <div style="padding: 12px; background: #f5faff; border-radius: 8px; color: #333; white-space: pre-wrap; min-height: 100px;">
+                ${problem.description}
+            </div>
+        </div>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div class="form-group" style="flex: 1;">
+                <label class="form-label">난이도</label>
+                <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
+                    ${problem.difficulty}
+                </div>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label class="form-label">유형</label>
+                <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
+                    ${getTypeKorean(problem.type)}
+                </div>
+            </div>
+        </div>
+        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+            <div class="form-group" style="flex: 1;">
+                <label class="form-label">제한시간</label>
+                <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
+                    ${problem.timeLimit}분
+                </div>
+            </div>
+            <div class="form-group" style="flex: 1;">
+                <label class="form-label">배점</label>
+                <div style="padding: 8px 12px; background: #f5faff; border-radius: 8px; color: #333;">
+                    ${problem.points}점
+                </div>
+            </div>
+        </div>
+        ${problem.type === 'QUIZ' ? `
+        <div class="form-group">
+            <label class="form-label">선택지</label>
+            <div style="padding: 12px; background: #f5faff; border-radius: 8px; color: #333;">
+                A. ${problem.optionA}<br>
+                B. ${problem.optionB}<br>
+                C. ${problem.optionC}<br>
+                D. ${problem.optionD}<br>
+                <strong style="color: #2196f3;">정답: ${problem.correctAnswer}</strong>
+            </div>
+        </div>
+        ` : ''}
+        <div class="modal-actions">
+            <button type="button" class="btn btn-secondary" onclick="closeProblemDetailModal()">닫기</button>
+            <button type="button" class="btn btn-warning" onclick="editProblem(${problem.id}); closeProblemDetailModal();">수정</button>
+        </div>
+    `;
+    
+    modal.appendChild(content);
+    document.body.appendChild(modal);
+    
+    window.currentProblemDetailModal = modal;
+    
+    modal.onclick = (e) => {
+        if (e.target === modal) closeProblemDetailModal();
+    };
+}
 
-        function getTypeKorean(type) {
-            switch(type) {
-                case 'QUIZ': return '퀴즈';
-                case 'EXAM': return '시험';
-                case 'PROBLEM':
-                default: return '문제';
-            }
-        }
+function closeProblemDetailModal() {
+    if (window.currentProblemDetailModal) {
+        document.body.removeChild(window.currentProblemDetailModal);
+        window.currentProblemDetailModal = null;
+    }
+}
 
-        function getDifficultyClass(difficulty) {
-            switch(difficulty) {
-                case '하': return 'easy';
-                case '중': return 'medium';
-                case '상': return 'hard';
-                default: return 'easy';
-            }
-        }
+function resetUploadArea() {
+    const uploadArea = document.getElementById('uploadArea');
+    uploadArea.className = 'upload-area';
+    uploadArea.innerHTML = '<p>파일을 클릭하여 선택하세요</p>';
+}
 
-        function formatFileSize(bytes) {
-            if (bytes === 0) return '0 Bytes';
-            const k = 1024;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-        }
+function resetExamUploadArea() {
+    const examUploadArea = document.getElementById('examUploadArea');
+    examUploadArea.className = 'upload-area';
+    examUploadArea.innerHTML = '<p>시험지 파일을 업로드하세요 (PDF, DOC, HWP 등)</p>';
+}
 
-        function showUploadModal() {
-            document.getElementById('uploadModal').style.display = 'flex';
-        }
+function refreshMaterials() {
+    loadMaterials();
+}
 
-        function closeUploadModal() {
-            document.getElementById('uploadModal').style.display = 'none';
-            document.getElementById('uploadForm').reset();
-            selectedFile = null;
-            resetUploadArea();
-        }
+function refreshSubmissions() {
+    loadSubmissions();
+}
 
-        function resetUploadArea() {
-            const uploadArea = document.getElementById('uploadArea');
-            uploadArea.className = 'upload-area';
-            uploadArea.innerHTML = '<p>파일을 클릭하여 선택하세요</p>';
-        }
+function downloadMaterial(id) {
+    window.open(`/api/teacher/materials/${id}/download-fixed`, '_blank');
+}
 
-        function resetExamUploadArea() {
-            const examUploadArea = document.getElementById('examUploadArea');
-            examUploadArea.className = 'upload-area';
-            examUploadArea.innerHTML = '<p>시험지 파일을 업로드하세요 (PDF, DOC, HWP 등)</p>';
-        }
-
-        function showCreateProblemModal() {
-            document.getElementById('createProblemModal').style.display = 'flex';
-        }
-
-        function closeCreateProblemModal() {
-            document.getElementById('createProblemModal').style.display = 'none';
-            document.getElementById('createProblemForm').reset();
-        }
-
-        function showCreateQuizModal() {
-            document.getElementById('createQuizModal').style.display = 'flex';
-        }
-
-        function closeCreateQuizModal() {
-            document.getElementById('createQuizModal').style.display = 'none';
-            document.getElementById('createQuizForm').reset();
-        }
-
-        function showCreateExamModal() {
-            document.getElementById('createExamModal').style.display = 'flex';
-        }
-
-        function closeCreateExamModal() {
-            document.getElementById('createExamModal').style.display = 'none';
-            document.getElementById('createExamForm').reset();
-            selectedExamFile = null;
-            resetExamUploadArea();
-        }
-
-        function openGradeModal(submissionId, studentName, problemTitle, problemType, answer) {
-            document.getElementById('gradeSubmissionId').value = submissionId;
-            document.getElementById('gradeStudentName').value = studentName;
-            document.getElementById('gradeProblemTitle').value = problemTitle;
-            document.getElementById('gradeProblemType').value = getTypeKorean(problemType);
-            document.getElementById('gradeStudentAnswer').value = answer;
-            document.getElementById('gradeModal').style.display = 'flex';
-        }
-
-        function closeGradeModal() {
-            document.getElementById('gradeModal').style.display = 'none';
-            document.getElementById('gradeForm').reset();
-        }
-
-        function refreshMaterials() {
-            loadMaterials();
-        }
-
-        function refreshSubmissions() {
-            loadSubmissions();
-        }
-
-        function downloadMaterial(id) {
-            window.open(`/api/teacher/materials/${id}/download-fixed`, '_blank');
-        }
-
-        async function deleteMaterial(id) {
-            if (confirm('정말 이 자료를 삭제하시겠습니까?')) {
-                try {
-                    const response = await fetch(`/api/teacher/materials/${id}`, {
-                        method: 'DELETE'
-                    });
-                    
-                    if (response.status === 401) {
-                        window.location.href = '/';
-                        return;
-                    }
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        alert('자료가 삭제되었습니다.');
-                        loadMaterials();
-                    } else {
-                        alert('삭제 실패: ' + result.message);
-                    }
-                } catch (error) {
-                    alert('오류가 발생했습니다: ' + error.message);
-                }
-            }
-        }
-
-        async function deleteProblem(id) {
-            if (confirm('정말 이 문제를 삭제하시겠습니까?')) {
-                try {
-                    const response = await fetch(`/api/teacher/problems/${id}`, {
-                        method: 'DELETE'
-                    });
-                    
-                    if (response.status === 401) {
-                        window.location.href = '/';
-                        return;
-                    }
-                    
-                    const result = await response.json();
-                    
-                    if (result.success) {
-                        alert('문제가 삭제되었습니다.');
-                        loadProblems();
-                    } else {
-                        alert('삭제 실패: ' + result.message);
-                    }
-                } catch (error) {
-                    alert('오류가 발생했습니다: ' + error.message);
-                }
-            }
-        }
-
-        document.getElementById('uploadArea').addEventListener('click', function() {
-            document.getElementById('fileInput').click();
-        });
-
-        document.getElementById('examUploadArea').addEventListener('click', function() {
-            document.getElementById('examFileInput').click();
-        });
-
-        document.getElementById('fileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                selectedFile = file;
-                const uploadArea = document.getElementById('uploadArea');
-                uploadArea.className = 'upload-area file-selected';
-                uploadArea.innerHTML = `<p>✓ 선택된 파일: ${file.name}</p><p>크기: ${formatFileSize(file.size)}</p>`;
-            }
-        });
-
-        document.getElementById('examFileInput').addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                selectedExamFile = file;
-                const examUploadArea = document.getElementById('examUploadArea');
-                examUploadArea.className = 'upload-area file-selected';
-                examUploadArea.innerHTML = `<p>✓ 선택된 파일: ${file.name}</p><p>크기: ${formatFileSize(file.size)}</p>`;
-            }
-        });
-
-        document.getElementById('uploadForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (!selectedFile) {
-                alert('파일을 선택해주세요.');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('title', e.target.title.value);
-            formData.append('description', e.target.description.value);
-            formData.append('file', selectedFile);
-            
-            const submitBtn = document.getElementById('uploadSubmitBtn');
-            submitBtn.disabled = true;
-            submitBtn.textContent = '업로드 중...';
-            
-            try {
-                const response = await fetch('/api/teacher/materials', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('자료가 성공적으로 업로드되었습니다.');
-                    closeUploadModal();
-                    loadMaterials();
-                } else {
-                    alert('업로드 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = '업로드';
-            }
-        });
-
-        document.getElementById('createProblemForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const problemData = {
-                title: formData.get('title'),
-                description: formData.get('description'),
-                difficulty: formData.get('difficulty'),
-                type: 'PROBLEM',
-                timeLimit: formData.get('timeLimit'),
-                points: formData.get('points')
-            };
-
-            try {
-                const response = await fetch('/api/teacher/problems', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(problemData)
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('문제가 성공적으로 출제되었습니다.');
-                    closeCreateProblemModal();
-                    loadProblems();
-                } else {
-                    alert('문제 출제 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        document.getElementById('createQuizForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const quizData = {
-                title: formData.get('title'),
-                description: formData.get('description'),
-                type: 'QUIZ',
-                optionA: formData.get('optionA'),
-                optionB: formData.get('optionB'),
-                optionC: formData.get('optionC'),
-                optionD: formData.get('optionD'),
-                correctAnswer: formData.get('correctAnswer'),
-                timeLimit: formData.get('timeLimit'),
-                points: formData.get('points')
-            };
-
-            try {
-                const response = await fetch('/api/teacher/problems', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(quizData)
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('퀴즈가 성공적으로 생성되었습니다.');
-                    closeCreateQuizModal();
-                    loadProblems();
-                } else {
-                    alert('퀴즈 생성 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        document.getElementById('createExamForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (!selectedExamFile) {
-                alert('시험지 파일을 선택해주세요.');
-                return;
-            }
-            
-            const formData = new FormData();
-            formData.append('title', e.target.title.value);
-            formData.append('description', e.target.description.value);
-            formData.append('file', selectedExamFile);
-            
-            try {
-                const response = await fetch('/api/teacher/materials', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('시험지가 성공적으로 업로드되었습니다.');
-                    closeCreateExamModal();
-                    loadMaterials();
-                } else {
-                    alert('시험지 업로드 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        document.getElementById('gradeForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const submissionId = document.getElementById('gradeSubmissionId').value;
-            const gradeData = {
-                submissionId: submissionId,
-                score: formData.get('score'),
-                feedback: formData.get('feedback')
-            };
-
-            try {
-                const response = await fetch('/api/teacher/grade-submission', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(gradeData)
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('채점이 완료되었습니다.');
-                    closeGradeModal();
-                    loadSubmissions();
-                } else {
-                    alert('채점 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        document.getElementById('editProblemForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            const formData = new FormData(e.target);
-            const problemId = document.getElementById('editProblemId').value;
-            
-            const problemData = {
-                title: formData.get('title'),
-                description: formData.get('description'),
-                difficulty: formData.get('difficulty'),
-                timeLimit: formData.get('timeLimit'),
-                points: formData.get('points')
-            };
-            
-            if (document.getElementById('editQuizOptions').style.display !== 'none') {
-                problemData.optionA = formData.get('optionA');
-                problemData.optionB = formData.get('optionB');
-                problemData.optionC = formData.get('optionC');
-                problemData.optionD = formData.get('optionD');
-                problemData.correctAnswer = formData.get('correctAnswer');
-                problemData.type = 'QUIZ';
-            }
-
-            try {
-                const response = await fetch(`/api/teacher/problems/${problemId}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(problemData)
-                });
-
-                if (response.status === 401) {
-                    window.location.href = '/';
-                    return;
-                }
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('문제가 성공적으로 수정되었습니다.');
-                    closeEditProblemModal();
-                    loadProblems();
-                } else {
-                    alert('문제 수정 실패: ' + result.message);
-                }
-            } catch (error) {
-                alert('오류가 발생했습니다: ' + error.message);
-            }
-        });
-
-        function logout() {
-            if (confirm('로그아웃 하시겠습니까?')) {
-                fetch('/api/auth/logout', {
-                    method: 'POST'
-                }).then(() => {
-                    window.location.href = '/';
-                });
-            }
-        }
-
-        document.querySelectorAll('.modal').forEach(modal => {
-            modal.addEventListener('click', function(e) {
-                if (e.target === this) {
-                    this.style.display = 'none';
-                }
+async function deleteMaterial(id) {
+    if (confirm('정말 이 자료를 삭제하시겠습니까?')) {
+        try {
+            const response = await fetch(`/api/teacher/materials/${id}`, {
+                method: 'DELETE'
             });
-        });
-
-        document.getElementById('previewModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                closePreviewModal();
+            
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
             }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('자료가 삭제되었습니다.');
+                loadMaterials();
+            } else {
+                alert('삭제 실패: ' + result.message);
+            }
+        } catch (error) {
+            alert('오류가 발생했습니다: ' + error.message);
+        }
+    }
+}
+
+async function deleteProblem(id) {
+    if (confirm('정말 이 문제를 삭제하시겠습니까?')) {
+        try {
+            const response = await fetch(`/api/teacher/problems/${id}`, {
+                method: 'DELETE'
+            });
+            
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert('문제가 삭제되었습니다.');
+                loadProblems();
+            } else {
+                alert('삭제 실패: ' + result.message);
+            }
+        } catch (error) {
+            alert('오류가 발생했습니다: ' + error.message);
+        }
+    }
+}
+
+function getTypeKorean(type) {
+    switch(type) {
+        case 'QUIZ': return '퀴즈';
+        case 'EXAM': return '시험';
+        case 'PROBLEM':
+        default: return '문제';
+    }
+}
+
+function getDifficultyClass(difficulty) {
+    switch(difficulty) {
+        case '하': return 'easy';
+        case '중': return 'medium';
+        case '상': return 'hard';
+        default: return 'easy';
+    }
+}
+
+function formatFileSize(bytes) {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+}
+
+function logout() {
+    if (confirm('로그아웃 하시겠습니까?')) {
+        fetch('/api/auth/logout', {
+            method: 'POST'
+        }).then(() => {
+            window.location.href = '/';
+        });
+    }
+}
+
+document.getElementById('uploadArea').addEventListener('click', function() {
+    document.getElementById('fileInput').click();
+});
+
+document.getElementById('examUploadArea').addEventListener('click', function() {
+    document.getElementById('examFileInput').click();
+});
+
+document.getElementById('fileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        selectedFile = file;
+        const uploadArea = document.getElementById('uploadArea');
+        uploadArea.className = 'upload-area file-selected';
+        uploadArea.innerHTML = `<p>✓ 선택된 파일: ${file.name}</p><p>크기: ${formatFileSize(file.size)}</p>`;
+    }
+});
+
+document.getElementById('examFileInput').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (file) {
+        selectedExamFile = file;
+        const examUploadArea = document.getElementById('examUploadArea');
+        examUploadArea.className = 'upload-area file-selected';
+        examUploadArea.innerHTML = `<p>✓ 선택된 파일: ${file.name}</p><p>크기: ${formatFileSize(file.size)}</p>`;
+    }
+});
+
+document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!selectedFile) {
+        alert('파일을 선택해주세요.');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('title', e.target.title.value);
+    formData.append('description', e.target.description.value);
+    formData.append('file', selectedFile);
+    
+    const submitBtn = document.getElementById('uploadSubmitBtn');
+    submitBtn.disabled = true;
+    submitBtn.textContent = '업로드 중...';
+    
+    try {
+        const response = await fetch('/api/teacher/materials', {
+            method: 'POST',
+            body: formData
         });
 
-        document.addEventListener('DOMContentLoaded', function() {
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('자료가 성공적으로 업로드되었습니다.');
+            closeUploadModal();
             loadMaterials();
-            loadProblems();
-            loadSubmissions();
+        } else {
+            alert('업로드 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = '업로드';
+    }
+});
+
+document.getElementById('createProblemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const problemData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        difficulty: formData.get('difficulty'),
+        type: 'PROBLEM',
+        timeLimit: formData.get('timeLimit'),
+        points: formData.get('points')
+    };
+
+    try {
+        const response = await fetch('/api/teacher/problems', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(problemData)
         });
+
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('문제가 성공적으로 출제되었습니다.');
+            closeCreateProblemModal();
+            loadProblems();
+        } else {
+            alert('문제 출제 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    }
+});
+
+document.getElementById('createQuizForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const quizData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        type: 'QUIZ',
+        optionA: formData.get('optionA'),
+        optionB: formData.get('optionB'),
+        optionC: formData.get('optionC'),
+        optionD: formData.get('optionD'),
+        correctAnswer: formData.get('correctAnswer'),
+        timeLimit: formData.get('timeLimit'),
+        points: formData.get('points')
+    };
+
+    try {
+        const response = await fetch('/api/teacher/problems', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(quizData)
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('퀴즈가 성공적으로 생성되었습니다.');
+            closeCreateQuizModal();
+            loadProblems();
+        } else {
+            alert('퀴즈 생성 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    }
+});
+
+document.getElementById('createExamForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    if (!selectedExamFile) {
+        alert('시험지 파일을 선택해주세요.');
+        return;
+    }
+    
+    const formData = new FormData();
+    formData.append('title', e.target.title.value);
+    formData.append('description', e.target.description.value);
+    formData.append('file', selectedExamFile);
+    
+    try {
+        const response = await fetch('/api/teacher/materials', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('시험지가 성공적으로 업로드되었습니다.');
+            closeCreateExamModal();
+            loadMaterials();
+        } else {
+            alert('시험지 업로드 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    }
+});
+
+document.getElementById('gradeForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const submissionId = document.getElementById('gradeSubmissionId').value;
+    const gradeData = {
+        submissionId: submissionId,
+        score: formData.get('score'),
+        feedback: formData.get('feedback')
+    };
+
+    try {
+        const response = await fetch('/api/teacher/grade-submission', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(gradeData)
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('채점이 완료되었습니다.');
+            closeGradeModal();
+            loadSubmissions();
+        } else {
+            alert('채점 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    }
+});
+
+document.getElementById('editProblemForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const problemId = document.getElementById('editProblemId').value;
+    
+    const problemData = {
+        title: formData.get('title'),
+        description: formData.get('description'),
+        difficulty: formData.get('difficulty'),
+        timeLimit: formData.get('timeLimit'),
+        points: formData.get('points')
+    };
+    
+    if (document.getElementById('editQuizOptions').style.display !== 'none') {
+        problemData.optionA = formData.get('optionA');
+        problemData.optionB = formData.get('optionB');
+        problemData.optionC = formData.get('optionC');
+        problemData.optionD = formData.get('optionD');
+        problemData.correctAnswer = formData.get('correctAnswer');
+        problemData.type = 'QUIZ';
+    }
+
+    try {
+        const response = await fetch(`/api/teacher/problems/${problemId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(problemData)
+        });
+
+        if (response.status === 401) {
+            window.location.href = '/';
+            return;
+        }
+
+        const result = await response.json();
+        
+        if (result.success) {
+            alert('문제가 성공적으로 수정되었습니다.');
+            closeEditProblemModal();
+            loadProblems();
+        } else {
+            alert('문제 수정 실패: ' + result.message);
+        }
+    } catch (error) {
+        alert('오류가 발생했습니다: ' + error.message);
+    }
+});
+
+document.addEventListener('click', function(e) {
+    if (e.target.classList.contains('modal')) {
+        e.target.style.display = 'none';
+    }
+});
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.style.display = 'none';
+        });
+        closeProblemDetailModal();
+    }
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    loadMaterials();
+    loadProblems();
+    loadSubmissions();
+});
     </script>
 </body>
 </html>
