@@ -155,6 +155,7 @@
             text-decoration: none;
             display: inline-block;
             font-size: 0.9rem;
+            margin-right: 10px;
         }
         
         .btn-primary {
@@ -232,9 +233,52 @@
             padding: 30px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(20px);
-            max-width: 900px;
+            max-width: 1000px;
             max-height: 90vh;
             overflow-y: auto;
+            width: 90%;
+        }
+
+        .language-selector {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .language-selector label {
+            color: #b0bec5;
+            font-weight: 500;
+        }
+
+        .language-selector select {
+            background: rgba(255, 255, 255, 0.1);
+            color: #e8eaed;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 0.9rem;
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 350px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            color: #e8eaed;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            resize: vertical;
+            margin-bottom: 15px;
+        }
+
+        .code-editor:focus {
+            outline: none;
+            border-color: #4fc3f7;
+            box-shadow: 0 0 0 2px rgba(79, 195, 247, 0.2);
         }
 
         .quiz-options {
@@ -262,18 +306,6 @@
             color: #4fc3f7;
         }
 
-        .answer-textarea {
-            width: 100%;
-            min-height: 200px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            border-radius: 8px;
-            padding: 15px;
-            color: #e8eaed;
-            font-family: 'Courier New', monospace;
-            resize: vertical;
-        }
-
         .modal-actions {
             margin-top: 20px;
             display: flex;
@@ -298,11 +330,27 @@
             100% { transform: scale(1); }
         }
 
+        .template-btn {
+            background: rgba(33, 150, 243, 0.2);
+            color: #64b5f6;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            margin-bottom: 10px;
+        }
+
+        .template-btn:hover {
+            background: rgba(33, 150, 243, 0.3);
+        }
+
         @media (max-width: 768px) {
             .header-content { flex-direction: column; gap: 15px; }
             .nav-menu { flex-wrap: wrap; }
             .main-container { padding: 20px 15px; }
             .materials-grid { grid-template-columns: 1fr; }
+            .modal-content { width: 95%; padding: 20px; }
         }
     </style>
 </head>
@@ -353,7 +401,7 @@
     <div id="problemModal" class="modal" style="display: none;">
         <div class="modal-content">
             <h3 id="modalTitle" class="modal-title">문제 제목</h3>
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 10px;">
                 <div id="modalSubtitle" style="color: #b0bec5; font-size: 0.9rem;">문제 정보</div>
                 <div id="timerDisplay" style="background: rgba(244, 67, 54, 0.2); color: #e57373; padding: 8px 16px; border-radius: 8px; font-weight: 600; font-size: 1.1rem;">
                     ⏰ 00:00
@@ -364,10 +412,25 @@
                 문제 설명
             </div>
             
+            <div class="language-selector" id="languageSelector" style="display: none;">
+                <label>언어 선택:</label>
+                <select id="languageSelect">
+                    <option value="java">Java</option>
+                    <option value="python">Python</option>
+                    <option value="cpp">C++</option>
+                    <option value="c">C</option>
+                </select>
+                <button type="button" class="template-btn" onclick="loadTemplate()">템플릿 로드</button>
+            </div>
+            
             <div id="quizOptionsContainer"></div>
             
+            <div id="codeContainer" style="display: none;">
+                <textarea class="code-editor" id="codeEditor" placeholder="여기에 코드를 작성하세요..."></textarea>
+            </div>
+            
             <div id="answerContainer">
-                <textarea class="answer-textarea" id="answerInput" placeholder="답안을 작성해주세요..."></textarea>
+                <textarea class="code-editor" id="answerInput" placeholder="답안을 작성해주세요..." style="height: 200px;"></textarea>
             </div>
             
             <div class="modal-actions">
@@ -383,6 +446,38 @@
         let problemTimer = null;
         let timeRemaining = 0;
         let problemStartTime = null;
+
+        const codeTemplates = {
+            java: `import java.util.Scanner;
+
+public class Solution {
+    public static void main(String[] args) {
+        Scanner sc = new Scanner(System.in);
+        
+        // 여기에 코드를 작성하세요
+        
+        sc.close();
+    }
+}`,
+            python: `# 여기에 코드를 작성하세요
+
+`,
+            cpp: `#include <iostream>
+using namespace std;
+
+int main() {
+    // 여기에 코드를 작성하세요
+    
+    return 0;
+}`,
+            c: `#include <stdio.h>
+
+int main() {
+    // 여기에 코드를 작성하세요
+    
+    return 0;
+}`
+        };
 
         async function loadProfile() {
             try {
@@ -406,7 +501,8 @@
                     },
                     body: JSON.stringify({
                         difficulty: '중',
-                        topic: '기본'
+                        topic: '기본',
+                        language: 'java'
                     })
                 });
                 const data = await response.json();
@@ -418,7 +514,10 @@
                         description: data.description,
                         difficulty: data.difficulty || '중',
                         timeLimit: 30,
-                        points: data.points || 100
+                        points: data.points || 100,
+                        category: 'AI 문제',
+                        type: 'CODING',
+                        template: data.template
                     });
                 } else {
                     document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">오늘의 AI 문제를 불러올 수 없습니다.</div>';
@@ -438,11 +537,11 @@
                         <span class="problem-badge badge-difficulty-${problem.difficulty}">${problem.difficulty}</span>
                         <span class="problem-badge badge-ai">AI 문제</span>
                         <span class="problem-badge">⏱️ ${problem.timeLimit}분</span>
-                        <span class="problem-badge">📊 ${problem.points}점</span>
+                        <span class="problem-badge">🏆 ${problem.points}점</span>
                     </div>
                     <div style="margin: 15px 0;">
-                        <button class="btn btn-primary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}')">문제 풀기</button>
-                        <button class="btn btn-secondary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}')">문제 보기</button>
+                        <button class="btn btn-primary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}', 'CODING')">문제 풀기</button>
+                        <button class="btn btn-secondary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}', 'VIEW')">문제 보기</button>
                     </div>
                 </div>
             `;
@@ -525,7 +624,7 @@
                                 <span class="problem-badge badge-difficulty-${problem.difficulty}">${problem.difficulty}</span>
                                 <span class="problem-badge badge-type-${problem.type}">${getTypeKorean(problem.type)}</span>
                                 <span class="problem-badge">⏱️ ${problem.timeLimit}분</span>
-                                <span class="problem-badge">📊 ${problem.points}점</span>
+                                <span class="problem-badge">🏆 ${problem.points}점</span>
                             </div>
                             <div style="margin: 15px 0;">
                                 ${problem.submitted ? 
@@ -541,7 +640,6 @@
             `;
         }
 
-        
         function getTypeKorean(type) {
             switch(type) {
                 case 'QUIZ': return '퀴즈';
@@ -550,7 +648,7 @@
             }
         }
 
-        function openAiProblemModal(id, title, description, difficulty, timeLimit, points) {
+        function openAiProblemModal(id, title, description, difficulty, timeLimit, points, mode) {
             currentProblem = {
                 id: id,
                 title: title,
@@ -558,19 +656,29 @@
                 difficulty: difficulty,
                 timeLimit: parseInt(timeLimit),
                 points: points,
-                type: 'AI'
+                type: 'AI_CODING',
+                mode: mode
             };
 
             document.getElementById('modalTitle').textContent = title;
             document.getElementById('modalSubtitle').textContent = `AI 문제 | ${difficulty} | ${timeLimit}분 | ${points}점`;
             document.getElementById('modalDescription').textContent = description;
             
-            document.getElementById('quizOptionsContainer').innerHTML = '';
-            document.getElementById('answerContainer').innerHTML = `
-                <textarea class="answer-textarea" id="answerInput" placeholder="답안을 작성해주세요..."></textarea>
-            `;
-            
-            startProblemTimer(parseInt(timeLimit));
+            if (mode === 'CODING') {
+                document.getElementById('languageSelector').style.display = 'flex';
+                document.getElementById('codeContainer').style.display = 'block';
+                document.getElementById('answerContainer').style.display = 'none';
+                document.getElementById('quizOptionsContainer').innerHTML = '';
+                
+                loadTemplate();
+                startProblemTimer(parseInt(timeLimit));
+            } else {
+                document.getElementById('languageSelector').style.display = 'none';
+                document.getElementById('codeContainer').style.display = 'none';
+                document.getElementById('answerContainer').style.display = 'block';
+                document.getElementById('timerDisplay').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'none';
+            }
             
             document.getElementById('problemModal').style.display = 'flex';
         }
@@ -588,14 +696,18 @@
                     document.getElementById('modalSubtitle').textContent = `${getTypeKorean(problem.type)} | ${problem.difficulty} | ${problem.timeLimit}분 | ${problem.points}점`;
                     document.getElementById('modalDescription').textContent = problem.description;
                     
+                    document.getElementById('languageSelector').style.display = 'none';
+                    document.getElementById('codeContainer').style.display = 'none';
+                    
                     if (problem.type === 'QUIZ') {
                         displayQuizOptions(problem);
-                        document.getElementById('answerContainer').innerHTML = '';
+                        document.getElementById('answerContainer').style.display = 'none';
                     } else {
                         document.getElementById('quizOptionsContainer').innerHTML = '';
-                        document.getElementById('answerContainer').innerHTML = `
-                            <textarea class="answer-textarea" id="answerInput" placeholder="답안을 작성해주세요..." ${problem.submitted ? 'readonly' : ''}>${problem.submitted ? problem.submissionAnswer || '' : ''}</textarea>
-                        `;
+                        document.getElementById('answerContainer').style.display = 'block';
+                        const answerInput = document.getElementById('answerInput');
+                        answerInput.disabled = problem.submitted;
+                        answerInput.value = problem.submitted ? (problem.submissionAnswer || '') : '';
                     }
                     
                     const submitBtn = document.getElementById('submitBtn');
@@ -635,6 +747,14 @@
             selectedAnswer = option;
         }
 
+        function loadTemplate() {
+            const language = document.getElementById('languageSelect').value;
+            const codeEditor = document.getElementById('codeEditor');
+            if (codeEditor && codeTemplates[language]) {
+                codeEditor.value = codeTemplates[language];
+            }
+        }
+
         function startProblemTimer(timeLimitMinutes) {
             if (problemTimer) {
                 clearInterval(problemTimer);
@@ -651,7 +771,7 @@
                 
                 if (timeRemaining <= 0) {
                     clearInterval(problemTimer);
-                    autoSubmitAnswer();
+                    handleTimeUp();
                 }
             }, 1000);
         }
@@ -674,12 +794,33 @@
             }
         }
 
+        function handleTimeUp() {
+            const submitBtn = document.getElementById('submitBtn');
+            const answerInput = document.getElementById('answerInput');
+            const codeEditor = document.getElementById('codeEditor');
+            const quizOptions = document.querySelectorAll('.quiz-option');
+            
+            if (submitBtn) submitBtn.disabled = true;
+            if (answerInput) answerInput.disabled = true;
+            if (codeEditor) codeEditor.disabled = true;
+            quizOptions.forEach(option => option.style.pointerEvents = 'none');
+            
+            alert('시간이 초과되었습니다! 더 이상 답안을 수정할 수 없습니다.');
+            
+            if (currentProblem && !currentProblem.submitted) {
+                autoSubmitAnswer();
+            }
+        }
+
         async function autoSubmitAnswer() {
             if (!currentProblem) return;
             
             let answer = '';
             if (currentProblem.type === 'QUIZ') {
                 answer = selectedAnswer || '';
+            } else if (currentProblem.type === 'AI_CODING') {
+                const codeEditor = document.getElementById('codeEditor');
+                answer = codeEditor ? codeEditor.value.trim() : '';
             } else {
                 const answerInput = document.getElementById('answerInput');
                 answer = answerInput ? answerInput.value.trim() : '';
@@ -690,15 +831,30 @@
             }
             
             try {
-                const formData = new FormData();
-                formData.append('problemId', currentProblem.id);
-                formData.append('answer', answer);
-                formData.append('timeSpent', Math.floor((Date.now() - problemStartTime) / 1000));
-                formData.append('autoSubmit', 'true');
+                let submitUrl, requestBody;
                 
-                const response = await fetch('/api/student/submit-answer', {
+                if (currentProblem.type === 'AI_CODING') {
+                    submitUrl = '/api/ai/grade';
+                    requestBody = {
+                        problemId: currentProblem.id,
+                        answer: answer,
+                        language: document.getElementById('languageSelect').value,
+                        autoSubmit: true
+                    };
+                } else {
+                    submitUrl = '/api/student/submit-answer';
+                    const formData = new FormData();
+                    formData.append('problemId', currentProblem.id);
+                    formData.append('answer', answer);
+                    formData.append('timeSpent', Math.floor((Date.now() - problemStartTime) / 1000));
+                    formData.append('autoSubmit', 'true');
+                    requestBody = formData;
+                }
+                
+                const response = await fetch(submitUrl, {
                     method: 'POST',
-                    body: formData
+                    body: currentProblem.type === 'AI_CODING' ? JSON.stringify(requestBody) : requestBody,
+                    headers: currentProblem.type === 'AI_CODING' ? {'Content-Type': 'application/json'} : {}
                 });
                 
                 const result = await response.json();
@@ -712,68 +868,6 @@
             }
         }
 
-        function startProblemTimer(timeLimitMinutes) {
-            if (problemTimer) {
-                clearInterval(problemTimer);
-            }
-            
-            timeRemaining = timeLimitMinutes * 60;
-            problemStartTime = Date.now();
-            
-            updateTimerDisplay();
-            
-            problemTimer = setInterval(() => {
-                timeRemaining--;
-                updateTimerDisplay();
-                
-                if (timeRemaining <= 0) {
-                    clearInterval(problemTimer);
-                    handleTimeUp();
-                }
-            }, 1000);
-        }
-        
-        function handleTimeUp() {
-            const submitBtn = document.getElementById('submitBtn');
-            const answerInput = document.getElementById('answerInput');
-            const quizOptions = document.querySelectorAll('.quiz-option');
-            
-            if (submitBtn) submitBtn.disabled = true;
-            if (answerInput) answerInput.disabled = true;
-            quizOptions.forEach(option => option.style.pointerEvents = 'none');
-            
-            alert('시간이 초과되었습니다! 더 이상 답안을 수정할 수 없습니다.');
-            
-            if (currentProblem && !currentProblem.submitted) {
-                autoSubmitAnswer();
-            }
-        }
-        
-        async function checkServerTimeLimit() {
-            if (!currentProblem || !problemStartTime) return;
-            
-            try {
-                const formData = new FormData();
-                formData.append('problemId', currentProblem.id);
-                formData.append('startTime', problemStartTime);
-                
-                const response = await fetch('/api/student/check-time-limit', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success && result.timeUp) {
-                    handleTimeUp();
-                }
-            } catch (error) {
-                console.error('서버 시간 확인 실패:', error);
-            }
-        }
-        
-        setInterval(checkServerTimeLimit, 30000);
-        
         async function submitAnswer() {
             if (!currentProblem) return;
             
@@ -782,6 +876,13 @@
                 answer = selectedAnswer;
                 if (!answer) {
                     alert('답을 선택해주세요.');
+                    return;
+                }
+            } else if (currentProblem.type === 'AI_CODING') {
+                const codeEditor = document.getElementById('codeEditor');
+                answer = codeEditor ? codeEditor.value.trim() : '';
+                if (!answer) {
+                    alert('코드를 작성해주세요.');
                     return;
                 }
             } else {
@@ -793,24 +894,49 @@
             }
             
             try {
-                const formData = new FormData();
-                formData.append('problemId', currentProblem.id);
-                formData.append('answer', answer);
-                formData.append('timeSpent', Math.floor((Date.now() - problemStartTime) / 1000));
+                let response, result;
                 
-                const response = await fetch('/api/student/submit-answer', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    alert('답안이 제출되었습니다!');
-                    closeModal();
-                    loadTeacherProblems();
+                if (currentProblem.type === 'AI_CODING') {
+                    response = await fetch('/api/ai/grade', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            problemId: currentProblem.id,
+                            answer: answer,
+                            language: document.getElementById('languageSelect').value
+                        })
+                    });
+                    
+                    result = await response.json();
+                    
+                    if (result.success && result.feedback) {
+                        const feedback = result.feedback;
+                        alert(`채점 완료!\n점수: ${feedback.score}점\n피드백: ${feedback.feedback}`);
+                    } else {
+                        alert('채점에 실패했습니다.');
+                    }
                 } else {
-                    alert(result.message || '제출에 실패했습니다.');
+                    const formData = new FormData();
+                    formData.append('problemId', currentProblem.id);
+                    formData.append('answer', answer);
+                    formData.append('timeSpent', Math.floor((Date.now() - problemStartTime) / 1000));
+                    
+                    response = await fetch('/api/student/submit-answer', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    result = await response.json();
+                    
+                    if (result.success) {
+                        alert('답안이 제출되었습니다!');
+                        closeModal();
+                        loadTeacherProblems();
+                    } else {
+                        alert(result.message || '제출에 실패했습니다.');
+                    }
                 }
             } catch (error) {
                 console.error('제출 실패:', error);
