@@ -748,8 +748,93 @@ async function loadMaterials() {
 }
 
 function previewMaterial(id, title, fileType) {
-    const previewUrl = `/teacher/materials/${id}/preview`;
-    window.open(previewUrl, '_blank', 'width=1000,height=800,scrollbars=yes,resizable=yes');
+    fetch(`/api/teacher/materials/${id}/preview`)
+        .then(response => {
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.previewUrl) {
+                openPreviewModal(data.previewUrl, title, data.fileType);
+            } else {
+                alert('미리보기를 할 수 없습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('미리보기 오류:', error);
+            alert('미리보기 중 오류가 발생했습니다.');
+        });
+}
+
+function openPreviewModal(url, title, fileType) {
+    const modal = document.getElementById('previewModal');
+    const titleElement = document.getElementById('previewTitle');
+    const container = document.getElementById('previewContainer');
+    
+    titleElement.textContent = title;
+    
+    if (fileType && fileType.toLowerCase() === 'pdf') {
+        container.innerHTML = `
+            <iframe src="${url}" class="preview-file" title="PDF 미리보기">
+                이 브라우저는 PDF 미리보기를 지원하지 않습니다.
+            </iframe>
+        `;
+    } else if (fileType && ['jpg', 'jpeg', 'png', 'gif', 'bmp', 'svg'].includes(fileType.toLowerCase())) {
+        container.innerHTML = `
+            <img src="${url}" class="preview-image" alt="${title}" 
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+            <div class="preview-unsupported" style="display:none;">
+                이미지를 불러올 수 없습니다.
+            </div>
+        `;
+    } else {
+        container.innerHTML = `
+            <div class="simple-preview">
+                <h3>${title}</h3>
+                <p>이 파일 형식은 브라우저에서 미리보기를 지원하지 않습니다.</p>
+                <a href="${url}" target="_blank" class="btn btn-primary">새 창에서 열기</a>
+            </div>
+        `;
+    }
+    
+    modal.style.display = 'flex';
+}
+
+function closePreviewModal() {
+    const modal = document.getElementById('previewModal');
+    modal.style.display = 'none';
+    document.getElementById('previewContainer').innerHTML = '';
+}
+
+function downloadMaterial(id) {
+    fetch(`/api/teacher/materials/${id}/download`)
+        .then(response => {
+            if (response.status === 401) {
+                window.location.href = '/';
+                return;
+            }
+            return response.json();
+        })
+        .then(data => {
+            if (data && data.downloadUrl) {
+                const link = document.createElement('a');
+                link.href = data.downloadUrl;
+                link.download = data.filename || '파일';
+                link.target = '_blank';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            } else {
+                alert('다운로드할 수 없습니다.');
+            }
+        })
+        .catch(error => {
+            console.error('다운로드 오류:', error);
+            alert('다운로드 중 오류가 발생했습니다.');
+        });
 }
 
 async function loadProblems() {
@@ -1080,10 +1165,6 @@ function refreshMaterials() {
 
 function refreshSubmissions() {
     loadSubmissions();
-}
-
-function downloadMaterial(id) {
-    window.open(`/api/teacher/materials/${id}/download`, '_blank');
 }
 
 async function deleteMaterial(id) {
@@ -1473,6 +1554,7 @@ document.addEventListener('keydown', function(e) {
             modal.style.display = 'none';
         });
         closeProblemDetailModal();
+        closePreviewModal();
     }
 });
 

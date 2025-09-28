@@ -366,11 +366,11 @@ public class TeacherController {
     }
 
     @GetMapping("/api/teacher/materials/{id}/download")
-    public ResponseEntity<Void> downloadMaterial(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<String> downloadMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
             }
 
             Material material = materialRepository.findById(id).orElse(null);
@@ -385,22 +385,24 @@ public class TeacherController {
             material.setDownloadCount(material.getDownloadCount() + 1);
             materialRepository.save(material);
 
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(java.net.URI.create(material.getFilePath()))
-                    .build();
+            return ResponseEntity.ok()
+                    .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + material.getOriginalFilename() + "\"")
+                    .header("X-Download-URL", material.getFilePath())
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"downloadUrl\":\"" + material.getFilePath() + "\",\"filename\":\"" + material.getOriginalFilename() + "\"}");
                     
         } catch (Exception ex) {
             System.err.println("Download error: " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Download failed");
         }
     }
 
     @GetMapping("/api/teacher/materials/{id}/preview")
-    public ResponseEntity<Void> previewMaterial(@PathVariable Long id, HttpSession session) {
+    public ResponseEntity<String> previewMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
-                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
             }
 
             Material material = materialRepository.findById(id).orElse(null);
@@ -412,40 +414,19 @@ public class TeacherController {
                 return ResponseEntity.notFound().build();
             }
 
-            return ResponseEntity.status(HttpStatus.FOUND)
-                    .location(java.net.URI.create(material.getFilePath()))
-                    .build();
+            return ResponseEntity.ok()
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .body("{\"previewUrl\":\"" + material.getFilePath() + "\",\"filename\":\"" + material.getOriginalFilename() + "\",\"fileType\":\"" + material.getFileType() + "\"}");
                     
         } catch (Exception ex) {
             System.err.println("Preview error: " + ex.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Preview failed");
         }
     }
 
     @GetMapping("/teacher/materials/{id}/preview")
     public String previewMaterialPage(@PathVariable Long id, Model model, HttpSession session) {
-        Long teacherId = getUserIdFromSession(session);
-        if (teacherId == null) {
-            return "redirect:/";
-        }
-        
-        Material material = materialRepository.findById(id).orElse(null);
-        
-        if (material == null || !material.getTeacherId().equals(teacherId)) {
-            model.addAttribute("error", "자료를 찾을 수 없습니다.");
-            return "teacher/preview-error";
-        }
-        
-        model.addAttribute("material", material);
-        
-        String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
-        if (fileType.equals("pdf")) {
-            return "teacher/preview-pdf";
-        } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
-            return "teacher/preview-image";
-        } else {
-            return "teacher/preview-general";
-        }
+        return "redirect:/api/teacher/materials/" + id + "/preview";
     }
 
     @DeleteMapping("/api/teacher/materials/{id}")
