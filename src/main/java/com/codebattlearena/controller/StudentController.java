@@ -428,6 +428,55 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/ai-problems")
+public Map<String, Object> getAiProblems(HttpSession session) {
+    try {
+        Long userId = getUserIdFromSession(session);
+        if (userId == null) {
+            return Map.of("error", "Unauthorized");
+        }
+        
+        List<Map<String, Object>> problems = new ArrayList<>();
+        
+        String[] difficulties = {"하", "중", "상"};
+        String[] topics = {"기본", "배열", "문자열"};
+        String[] languages = {"java", "python", "cpp"};
+        
+        for (int i = 0; i < 9; i++) {
+            String difficulty = difficulties[i % 3];
+            String topic = topics[i % 3];
+            String language = languages[i % 3];
+            
+            Map<String, Object> problem = aiProblemService.generateProblemWithLanguage(difficulty, topic, language);
+            problems.add(problem);
+        }
+        
+        return Map.of("problems", problems);
+    } catch (Exception e) {
+        return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
+    }
+}
+
+@PostMapping("/ai-problem/submit")
+public Map<String, Object> submitAiProblem(
+    @RequestParam("problemId") String problemId,
+    @RequestParam("answer") String answer,
+    @RequestParam("language") String language,
+    HttpSession session) {
+    
+    try {
+        Long userId = getUserIdFromSession(session);
+        if (userId == null) {
+            return Map.of("success", false, "message", "인증이 필요합니다.");
+        }
+        
+        Map<String, Object> feedback = aiProblemService.gradeAnswer(problemId, answer, language);
+        return Map.of("success", true, "feedback", feedback);
+    } catch (Exception e) {
+        return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
+    }
+}
+
     @PostMapping("/notes")
     public Map<String, Object> createNote(@RequestBody Map<String, String> noteData, HttpSession session) {
         try {
