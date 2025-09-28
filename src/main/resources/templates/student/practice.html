@@ -561,25 +561,34 @@
             output.innerHTML = '<span class="output-info">코드를 실행 중...</span>';
             
             try {
-                const response = await fetch('/api/practice/submit', {
+                const formData = new FormData();
+                formData.append('problemId', currentProblemId);
+                formData.append('answer', code);
+                formData.append('language', document.getElementById('languageSelect').value);
+                
+                const response = await fetch('/api/student/ai-problem/submit', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        problemId: currentProblemId,
-                        code: code
-                    })
+                    body: formData
                 });
                 
                 const result = await response.json();
                 
-                if (result.correct) {
-                    output.innerHTML = `<span class="output-success">정답입니다! 🎉\n\n점수: ${result.score}점\n실행시간: ${result.executionTime}\n\n피드백: ${result.feedback}</span>`;
+                if (result.success && result.feedback) {
+                    const feedback = result.feedback;
+                    const score = feedback.score || 0;
+                    const isCorrect = feedback.correct || feedback.isCorrect || false;
+                    const feedbackText = feedback.feedback || '채점 완료';
+                    
+                    if (isCorrect) {
+                        output.innerHTML = `<span class="output-success">정답입니다! 🎉\n\n점수: ${score}점\n\n피드백: ${feedbackText}</span>`;
+                    } else {
+                        output.innerHTML = `<span class="output-error">틀렸습니다.\n\n점수: ${score}점\n\n피드백: ${feedbackText}</span>`;
+                    }
                 } else {
-                    output.innerHTML = `<span class="output-error">틀렸습니다.\n\n점수: ${result.score}점\n\n피드백: ${result.feedback}</span>`;
+                    output.innerHTML = `<span class="output-error">채점 실패: ${result.message || '알 수 없는 오류'}</span>`;
                 }
             } catch (error) {
+                console.error('코드 실행 오류:', error);
                 output.innerHTML = '<span class="output-error">코드 실행 중 오류가 발생했습니다.</span>';
             }
         }

@@ -11,4 +11,5 @@ import java.util.Optional;
 public interface StudyNoteRepository extends JpaRepository<StudyNote, Long> {
     List<StudyNote> findByUserIdOrderByCreatedAtDesc(Long userId);
     Optional<StudyNote> findByUserIdAndTitle(Long userId, String title);
+    List<StudyNote> findByUserIdAndTitleContaining(Long userId, String titleKeyword);
 }

@@ -178,68 +178,75 @@ public class StudentController {
     }
 
     @PostMapping("/ai-problem/submit")
-    public Map<String, Object> submitAiProblem(
-        @RequestParam("problemId") String problemId,
-        @RequestParam("answer") String answer,
-        @RequestParam("language") String language,
-        @RequestParam(value = "timeSpent", required = false) Integer timeSpent,
-        HttpSession session) {
+public Map<String, Object> submitAiProblem(
+    @RequestParam("problemId") String problemId,
+    @RequestParam("answer") String answer,
+    @RequestParam("language") String language,
+    @RequestParam(value = "timeSpent", required = false) Integer timeSpent,
+    HttpSession session) {
+    
+    try {
+        Long userId = getUserIdFromSession(session);
+        if (userId == null) {
+            return Map.of("success", false, "message", "인증이 필요합니다.");
+        }
         
-        try {
-            Long userId = getUserIdFromSession(session);
-            if (userId == null) {
-                return Map.of("success", false, "message", "인증이 필요합니다.");
-            }
-            
-            int score = (int) (Math.random() * 50) + 50;
-            String feedback = score >= 80 ? "훌륭합니다!" : "조금 더 노력해보세요!";
-            
-            saveDailyProblemRecord(userId, problemId, answer, score, feedback, timeSpent);
-            
-            Map<String, Object> result = Map.of(
-                "score", score,
-                "feedback", feedback,
-                "correct", score >= 70,
-                "autoClose", true
-            );
-            
-            return Map.of("success", true, "feedback", result);
-        } catch (Exception e) {
-            return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
-        }
+        Map<String, Object> gradingResult = aiProblemService.gradeAnswer(problemId, answer, language);
+        
+        int score = (Integer) gradingResult.getOrDefault("score", 50);
+        boolean isCorrect = (Boolean) gradingResult.getOrDefault("correct", false);
+        String feedback = (String) gradingResult.getOrDefault("feedback", "채점 완료");
+        
+        saveDailyProblemRecord(userId, problemId, answer, score, feedback, timeSpent);
+        
+        Map<String, Object> responseData = new HashMap<>();
+        responseData.put("score", score);
+        responseData.put("correct", isCorrect);
+        responseData.put("isCorrect", isCorrect);
+        responseData.put("feedback", feedback);
+        responseData.put("autoClose", true);
+        
+        return Map.of("success", true, "feedback", responseData);
+    } catch (Exception e) {
+        System.err.println("AI 문제 제출 오류: " + e.getMessage());
+        e.printStackTrace();
+        return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
     }
+}
 
-    private void saveDailyProblemRecord(Long userId, String problemId, String answer, int score, String feedback, Integer timeSpent) {
-        try {
-            String today = LocalDateTime.now().toLocalDate().toString();
-            String title = "AI 일일 문제 - " + today;
-            
-            Optional<StudyNote> existingNote = studyNoteRepository.findByUserIdAndTitle(userId, title);
-            StudyNote dailyRecord;
-            
-            if (existingNote.isPresent()) {
-                dailyRecord = existingNote.get();
-                String existingContent = dailyRecord.getContent();
-                String newEntry = String.format("\n\n=== 문제 %s ===\n답안: %s\n점수: %d점\n피드백: %s\n소요시간: %d초\n제출시간: %s", 
-                    problemId, answer, score, feedback, timeSpent != null ? timeSpent : 0, LocalDateTime.now());
-                dailyRecord.setContent(existingContent + newEntry);
-                dailyRecord.setUpdatedAt(LocalDateTime.now());
-            } else {
-                dailyRecord = new StudyNote();
-                dailyRecord.setUserId(userId);
-                dailyRecord.setTitle(title);
-                String content = String.format("=== 문제 %s ===\n답안: %s\n점수: %d점\n피드백: %s\n소요시간: %d초\n제출시간: %s", 
-                    problemId, answer, score, feedback, timeSpent != null ? timeSpent : 0, LocalDateTime.now());
-                dailyRecord.setContent(content);
-                dailyRecord.setCreatedAt(LocalDateTime.now());
-                dailyRecord.setUpdatedAt(LocalDateTime.now());
-            }
-            
-            studyNoteRepository.save(dailyRecord);
-        } catch (Exception e) {
-            System.err.println("일일 문제 기록 저장 실패: " + e.getMessage());
+private void saveDailyProblemRecord(Long userId, String problemId, String answer, int score, String feedback, Integer timeSpent) {
+    try {
+        String today = LocalDateTime.now().toLocalDate().toString();
+        String title = "AI 일일 문제 - " + today;
+        
+        Optional<StudyNote> existingNote = studyNoteRepository.findByUserIdAndTitle(userId, title);
+        StudyNote dailyRecord;
+        
+        if (existingNote.isPresent()) {
+            dailyRecord = existingNote.get();
+            String existingContent = dailyRecord.getContent();
+            String newEntry = String.format("\n\n=== 문제 %s ===\n답안: %s\n점수: %d점\n피드백: %s\n소요시간: %d초\n제출시간: %s", 
+                problemId, answer.length() > 100 ? answer.substring(0, 100) + "..." : answer, 
+                score, feedback, timeSpent != null ? timeSpent : 0, LocalDateTime.now());
+            dailyRecord.setContent(existingContent + newEntry);
+            dailyRecord.setUpdatedAt(LocalDateTime.now());
+        } else {
+            dailyRecord = new StudyNote();
+            dailyRecord.setUserId(userId);
+            dailyRecord.setTitle(title);
+            String content = String.format("=== 문제 %s ===\n답안: %s\n점수: %d점\n피드백: %s\n소요시간: %d초\n제출시간: %s", 
+                problemId, answer.length() > 100 ? answer.substring(0, 100) + "..." : answer, 
+                score, feedback, timeSpent != null ? timeSpent : 0, LocalDateTime.now());
+            dailyRecord.setContent(content);
+            dailyRecord.setCreatedAt(LocalDateTime.now());
+            dailyRecord.setUpdatedAt(LocalDateTime.now());
         }
+        
+        studyNoteRepository.save(dailyRecord);
+    } catch (Exception e) {
+        System.err.println("일일 문제 기록 저장 실패: " + e.getMessage());
     }
+}
 
     @GetMapping("/daily-stats")
     public Map<String, Object> getDailyStats(HttpSession session) {

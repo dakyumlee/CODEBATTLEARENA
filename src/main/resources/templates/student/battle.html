@@ -312,21 +312,52 @@
                 const response = await fetch('/api/student/daily-stats');
                 const data = await response.json();
                 
+                console.log('Daily stats response:', data);
+                
                 if (!data.error) {
-                    document.getElementById('problemCount').textContent = data.problemsSolved || 0;
-                    document.getElementById('averageScore').textContent = data.averageScore || 0;
-                    document.getElementById('lastFeedback').textContent = data.lastFeedback || '오늘 아직 문제를 풀지 않았습니다.';
+                    const problemCount = data.problemsSolved || 0;
+                    const averageScore = data.averageScore || 0;
+                    const lastFeedback = data.lastFeedback || '오늘 아직 문제를 풀지 않았습니다.';
+                    
+                    document.getElementById('problemCount').textContent = problemCount;
+                    document.getElementById('averageScore').textContent = averageScore;
+                    document.getElementById('lastFeedback').textContent = lastFeedback;
+                    
+                    localStorage.setItem('dailyStats', JSON.stringify({
+                        problemsSolved: problemCount,
+                        averageScore: averageScore,
+                        lastFeedback: lastFeedback,
+                        timestamp: Date.now()
+                    }));
                 }
             } catch (error) {
                 console.error('일일 통계 로드 실패:', error);
+                
+                try {
+                    const cached = localStorage.getItem('dailyStats');
+                    if (cached) {
+                        const cachedData = JSON.parse(cached);
+                        if (Date.now() - cachedData.timestamp < 300000) {
+                            document.getElementById('problemCount').textContent = cachedData.problemsSolved;
+                            document.getElementById('averageScore').textContent = cachedData.averageScore;
+                            document.getElementById('lastFeedback').textContent = cachedData.lastFeedback;
+                            return;
+                        }
+                    }
+                } catch (e) {
+                    console.error('캐시 로드 실패:', e);
+                }
+                
                 document.getElementById('lastFeedback').textContent = '통계를 불러올 수 없습니다.';
             }
         }
-
+        
         async function loadBattleStats() {
             try {
                 const response = await fetch('/api/battle/stats');
                 const data = await response.json();
+                
+                console.log('Battle stats response:', data);
                 
                 if (!data.error) {
                     document.getElementById('totalBattles').textContent = data.totalBattles || 0;
@@ -341,7 +372,7 @@
                 document.getElementById('recentBattles').innerHTML = '<div class="empty-state">통계를 불러올 수 없습니다.</div>';
             }
         }
-
+        
         function displayRecentBattles(battles) {
             const container = document.getElementById('recentBattles');
             
@@ -362,17 +393,21 @@
                 </div>
             `).join('');
         }
-
-        function logout() {
-            if (confirm('로그아웃 하시겠습니까?')) {
-                localStorage.clear();
-                window.location.href = '/';
-            }
+        
+        function refreshStats() {
+            loadDailyStats();
+            loadBattleStats();
         }
-
+        
+        setInterval(refreshStats, 30000);
+        
         document.addEventListener('DOMContentLoaded', function() {
             loadDailyStats();
             loadBattleStats();
+            
+            window.addEventListener('focus', function() {
+                refreshStats();
+            });
         });
     </script>
 </body>
