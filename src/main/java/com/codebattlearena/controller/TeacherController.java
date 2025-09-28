@@ -638,49 +638,50 @@ public class TeacherController {
     @GetMapping("/api/teacher/submissions")
     @ResponseBody
     public ResponseEntity<Map<String, Object>> getSubmissions(HttpSession session) {
-        try {
-            Long teacherId = getUserIdFromSession(session);
-            if (teacherId == null) {
-                return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
-            }
-
-            List<Submission> submissions = submissionRepository.findSubmissionsByTeacher(teacherId);
-
-            List<Map<String, Object>> submissionData = submissions.stream().map(submission -> {
-                Map<String, Object> data = new HashMap<>();
-                data.put("id", submission.getId());
-                data.put("userId", submission.getUserId());
-                data.put("problemId", submission.getProblemId());
-                data.put("answer", submission.getAnswer());
-                data.put("score", submission.getScore());
-                data.put("feedback", submission.getFeedback());
-                data.put("submittedAt", submission.getSubmittedAt());
-                data.put("timeSpent", submission.getTimeSpent());
-                data.put("autoSubmitted", submission.getAutoSubmitted());
-
-                User student = userRepository.findById(submission.getUserId()).orElse(null);
-                data.put("studentName", student != null ? student.getName() : "Unknown");
-
-                Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
-                data.put("problemTitle", problem != null ? problem.getTitle() : "Unknown");
-                data.put("problemType", problem != null ? problem.getType() : "PROBLEM");
-                data.put("timeLimit", problem != null ? problem.getTimeLimit() : 60);
-
-                boolean isTimedOut = false;
-                if (problem != null && submission.getStartTime() != null && problem.getTimeLimit() != null) {
-                    LocalDateTime timeoutAt = submission.getStartTime().plusMinutes(problem.getTimeLimit());
-                    isTimedOut = submission.getSubmittedAt().isAfter(timeoutAt);
-                }
-                data.put("isTimedOut", isTimedOut);
-
-                return data;
-            }).collect(Collectors.toList());
-
-            return ResponseEntity.ok(Map.of("submissions", submissionData));
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body(Map.of("error", "Failed to load submissions: " + e.getMessage()));
+    try {
+        Long teacherId = getUserIdFromSession(session);
+        if (teacherId == null) {
+            return ResponseEntity.status(401).body(Map.of("error", "Unauthorized"));
         }
+
+        List<Submission> submissions = submissionRepository.findSubmissionsByTeacher(teacherId);
+
+        List<Map<String, Object>> submissionData = submissions.stream().map(submission -> {
+            Map<String, Object> data = new HashMap<>();
+            data.put("id", submission.getId());
+            data.put("userId", submission.getUserId());
+            data.put("problemId", submission.getProblemId());
+            data.put("answer", submission.getAnswer());
+            data.put("score", submission.getScore());
+            data.put("feedback", submission.getFeedback());
+            data.put("submittedAt", submission.getSubmittedAt());
+            data.put("timeSpent", submission.getTimeSpent());
+            data.put("autoSubmitted", submission.getAutoSubmitted());
+            data.put("status", submission.getStatus() != null ? submission.getStatus() : "PENDING");
+
+            User student = userRepository.findById(submission.getUserId()).orElse(null);
+            data.put("studentName", student != null ? student.getName() : "Unknown");
+
+            Problem problem = problemRepository.findById(submission.getProblemId()).orElse(null);
+            data.put("problemTitle", problem != null ? problem.getTitle() : "Unknown");
+            data.put("problemType", problem != null ? problem.getType() : "PROBLEM");
+            data.put("timeLimit", problem != null ? problem.getTimeLimit() : 60);
+
+            boolean isTimedOut = false;
+            if (problem != null && submission.getStartTime() != null && problem.getTimeLimit() != null) {
+                LocalDateTime timeoutAt = submission.getStartTime().plusMinutes(problem.getTimeLimit());
+                isTimedOut = submission.getSubmittedAt().isAfter(timeoutAt);
+            }
+            data.put("isTimedOut", isTimedOut);
+
+            return data;
+        }).collect(Collectors.toList());
+
+        return ResponseEntity.ok(Map.of("submissions", submissionData));
+    } catch (Exception e) {
+        return ResponseEntity.status(500).body(Map.of("error", "Failed to load submissions: " + e.getMessage()));
     }
+}
 
     @PostMapping("/api/teacher/grade-submission")
     @ResponseBody

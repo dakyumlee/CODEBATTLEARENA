@@ -852,8 +852,8 @@ function filterSubmissions(type) {
                         <div class="submission-info">제출일: ${new Date(submission.submittedAt).toLocaleString()}</div>
                     </div>
                     <div style="display: flex; gap: 10px; align-items: center;">
-                        <span class="status-badge status-${submission.status.toLowerCase()}">${submission.status === 'PENDING' ? '채점 대기' : '채점 완료'}</span>
-                        ${submission.status === 'PENDING' ? 
+                        <span class="status-badge status-${(submission.status || 'pending').toLowerCase()}">${(submission.status || 'PENDING') === 'PENDING' ? '채점 대기' : '채점 완료'}</span>
+                        ${(submission.status || 'PENDING') === 'PENDING' ? 
                             `<button class="btn btn-primary btn-small" onclick="openGradeModal(${submission.id}, '${submission.studentName}', '${submission.problemTitle}', '${submission.problemType || 'PROBLEM'}', \`${submission.answer.replace(/`/g, '\\`').replace(/\n/g, '\\n')}\`)">채점하기</button>` : 
                             `<span style="color: #4caf50; font-weight: 600;">${submission.score}점</span>`
                         }
@@ -1083,7 +1083,7 @@ function refreshSubmissions() {
 }
 
 function downloadMaterial(id) {
-    window.open(`/api/teacher/materials/${id}/download-fixed`, '_blank');
+    window.open(`/api/teacher/materials/${id}/download`, '_blank');
 }
 
 async function deleteMaterial(id) {
@@ -1220,7 +1220,7 @@ document.getElementById('uploadForm').addEventListener('submit', async (e) => {
     submitBtn.textContent = '업로드 중...';
     
     try {
-        const response = await fetch('/api/teacher/materials', {
+        const response = await fetch('/api/teacher/upload-material', {
             method: 'POST',
             body: formData
         });
@@ -1347,7 +1347,7 @@ document.getElementById('createExamForm').addEventListener('submit', async (e) =
     formData.append('file', selectedExamFile);
     
     try {
-        const response = await fetch('/api/teacher/materials', {
+        const response = await fetch('/api/teacher/upload-material', {
             method: 'POST',
             body: formData
         });
