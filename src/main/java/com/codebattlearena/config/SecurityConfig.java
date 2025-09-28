@@ -22,12 +22,13 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable())
             .cors(Customizer.withDefaults())
+            .headers(h -> h.frameOptions(f -> f.sameOrigin()))
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/", "/index.html", "/register", "/login").permitAll()
                 .requestMatchers("/css/**", "/js/**", "/images/**", "/webjars/**").permitAll()
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/api/teacher/**").hasRole("TEACHER")
-                .requestMatchers("/api/student/**").hasRole("STUDENT") 
+                .requestMatchers("/api/student/**").hasRole("STUDENT")
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .requestMatchers("/student/**").hasRole("STUDENT")
                 .requestMatchers("/teacher/**").hasRole("TEACHER")
