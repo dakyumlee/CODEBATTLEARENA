@@ -26,7 +26,7 @@ public class BattleController {
         return "student/battle";
     }
 
-    @GetMapping("/create")
+    @GetMapping("/friend")
     public String createBattlePage(HttpSession session, Model model) {
         Object userId = session.getAttribute("userId");
         Object userRole = session.getAttribute("userRole");
@@ -62,7 +62,7 @@ public class BattleController {
         return "student/battle-random";
     }
 
-    @GetMapping("/ai")
+    @GetMapping("/vs-ai")
     public String aiBattlePage(HttpSession session, Model model) {
         Object userId = session.getAttribute("userId");
         Object userRole = session.getAttribute("userRole");
