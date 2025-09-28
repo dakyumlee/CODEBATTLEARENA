@@ -103,17 +103,6 @@
             flex-direction: row-reverse;
         }
         
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
         .message.ai .message-avatar {
             background: linear-gradient(135deg, #4fc3f7 0%, #29b6f6 100%);
             color: white;
@@ -127,16 +116,30 @@
         .message-content {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 16px;
-            padding: 15px 20px;
+            padding: 8px 14px;
             max-width: 70%;
             border: 1px solid rgba(255, 255, 255, 0.1);
-            line-height: 1.6;
+            line-height: 1.4;
             white-space: pre-wrap;
+            word-wrap: break-word;
+            font-size: 0.95rem;
         }
         
         .message.user .message-content {
             background: rgba(79, 195, 247, 0.1);
             border-color: rgba(79, 195, 247, 0.3);
+        }
+        
+        .message-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+            font-size: 0.9rem;
+            flex-shrink: 0;
         }
         
         .typing-indicator {
