@@ -97,4 +97,20 @@ public class PageController {
     public String adminDashboard() {
         return "admin/dashboard";
     }
+
+    // ▼ 추가: 페이지형 미리보기 3종
+    @GetMapping("/teacher/preview-pdf")
+    public String teacherPreviewPdf() {
+        return "teacher/preview-pdf";
+    }
+
+    @GetMapping("/teacher/preview-image")
+    public String teacherPreviewImage() {
+        return "teacher/preview-image";
+    }
+
+    @GetMapping("/teacher/preview-general")
+    public String teacherPreviewGeneral() {
+        return "teacher/preview-general";
+    }
 }
