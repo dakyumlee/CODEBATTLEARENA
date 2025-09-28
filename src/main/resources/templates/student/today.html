@@ -494,30 +494,20 @@ int main() {
 
         async function loadAiProblem() {
             try {
-                const response = await fetch('/api/ai/generate-problem', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        difficulty: '중',
-                        topic: '기본',
-                        language: 'java'
-                    })
-                });
+                const response = await fetch('/api/student/ai-problems/today');
                 const data = await response.json();
                 
-                if (data && data.title) {
+                if (data.success && data.problem) {
                     displayAiProblem({
-                        id: 'ai-today',
-                        title: data.title,
-                        description: data.description,
-                        difficulty: data.difficulty || '중',
-                        timeLimit: 30,
-                        points: data.points || 100,
+                        id: data.problem.id,
+                        title: data.problem.title,
+                        description: data.problem.description,
+                        difficulty: data.problem.difficulty || '중',
+                        timeLimit: data.problem.timeLimit || 15,
+                        points: data.problem.points || 20,
                         category: 'AI 문제',
-                        type: 'CODING',
-                        template: data.template
+                        type: 'AI_CODING',
+                        language: data.problem.language || 'java'
                     });
                 } else {
                     document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">오늘의 AI 문제를 불러올 수 없습니다.</div>';
@@ -527,7 +517,7 @@ int main() {
                 document.getElementById('aiProblemContainer').innerHTML = '<div class="empty-state">AI 문제를 불러올 수 없습니다.</div>';
             }
         }
-
+        
         function displayAiProblem(problem) {
             const container = document.getElementById('aiProblemContainer');
             container.innerHTML = `
@@ -538,13 +528,53 @@ int main() {
                         <span class="problem-badge badge-ai">AI 문제</span>
                         <span class="problem-badge">⏱️ ${problem.timeLimit}분</span>
                         <span class="problem-badge">🏆 ${problem.points}점</span>
+                        <span class="problem-badge">${problem.language.toUpperCase()}</span>
                     </div>
                     <div style="margin: 15px 0;">
-                        <button class="btn btn-primary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}', 'CODING')">문제 풀기</button>
-                        <button class="btn btn-secondary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}', 'VIEW')">문제 보기</button>
+                        <button class="btn btn-primary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}', 'CODING', '${problem.language}')">문제 풀기</button>
+                        <button class="btn btn-secondary" onclick="openAiProblemModal('${problem.id}', '${problem.title}', \`${problem.description}\`, '${problem.difficulty}', '${problem.timeLimit}', '${problem.points}', 'VIEW', '${problem.language}')">문제 보기</button>
                     </div>
                 </div>
             `;
+        }
+        
+        function openAiProblemModal(id, title, description, difficulty, timeLimit, points, mode, language) {
+            currentProblem = {
+                id: id,
+                title: title,
+                description: description,
+                difficulty: difficulty,
+                timeLimit: parseInt(timeLimit),
+                points: parseInt(points),
+                type: 'AI_CODING',
+                mode: mode,
+                language: language || 'java'
+            };
+        
+            document.getElementById('modalTitle').textContent = title;
+            document.getElementById('modalSubtitle').textContent = `AI 문제 | ${difficulty} | ${timeLimit}분 | ${points}점`;
+            document.getElementById('modalDescription').textContent = description;
+            
+            if (mode === 'CODING') {
+                document.getElementById('languageSelector').style.display = 'flex';
+                document.getElementById('codeContainer').style.display = 'block';
+                document.getElementById('answerContainer').style.display = 'none';
+                document.getElementById('quizOptionsContainer').innerHTML = '';
+                
+                const languageSelect = document.getElementById('languageSelect');
+                languageSelect.value = language;
+                
+                loadTemplate();
+                startProblemTimer(parseInt(timeLimit));
+            } else {
+                document.getElementById('languageSelector').style.display = 'none';
+                document.getElementById('codeContainer').style.display = 'none';
+                document.getElementById('answerContainer').style.display = 'block';
+                document.getElementById('timerDisplay').style.display = 'none';
+                document.getElementById('submitBtn').style.display = 'none';
+            }
+            
+            document.getElementById('problemModal').style.display = 'flex';
         }
 
         async function loadTodayData() {
