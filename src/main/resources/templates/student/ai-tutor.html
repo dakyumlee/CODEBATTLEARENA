@@ -130,11 +130,43 @@
             padding: 15px 20px;
             max-width: 70%;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            line-height: 1.6;
+            white-space: pre-wrap;
         }
         
         .message.user .message-content {
             background: rgba(79, 195, 247, 0.1);
             border-color: rgba(79, 195, 247, 0.3);
+        }
+        
+        .typing-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 20px;
+        }
+        
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #4fc3f7;
+            animation: typing 1.4s infinite ease-in-out;
+        }
+        
+        .typing-dot:nth-child(1) { animation-delay: 0ms; }
+        .typing-dot:nth-child(2) { animation-delay: 200ms; }
+        .typing-dot:nth-child(3) { animation-delay: 400ms; }
+        
+        @keyframes typing {
+            0%, 60%, 100% {
+                transform: translateY(0);
+                opacity: 0.4;
+            }
+            30% {
+                transform: translateY(-10px);
+                opacity: 1;
+            }
         }
         
         .chat-input-area {
@@ -229,17 +261,6 @@
             padding: 60px 20px;
             font-style: italic;
         }
-        
-        .loading {
-            display: none;
-            text-align: center;
-            color: #4fc3f7;
-            padding: 20px;
-        }
-        
-        .loading.show {
-            display: block;
-        }
 
         @media (max-width: 768px) {
             .header-content { flex-direction: column; gap: 15px; }
@@ -279,10 +300,6 @@
                 </div>
             </div>
             
-            <div class="loading" id="loadingIndicator">
-                AI가 답변을 생성하고 있습니다...
-            </div>
-            
             <div class="chat-input-area">
                 <textarea 
                     id="chatInput" 
@@ -294,7 +311,7 @@
         </div>
 
         <div class="quick-questions">
-            <h3>💡 자주 묻는 질문</h3>
+            <h3>자주 묻는 질문</h3>
             <div class="quick-questions-grid">
                 <button class="quick-question-btn" onclick="askQuickQuestion('자바 변수와 데이터 타입에 대해 설명해주세요')">
                     자바 변수와 데이터 타입
@@ -308,11 +325,11 @@
                 <button class="quick-question-btn" onclick="askQuickQuestion('알고리즘 시간복잡도를 어떻게 계산하나요?')">
                     알고리즘 시간복잡도
                 </button>
-                <button class="quick-question-btn" onclick="askQuickQuestion('데이터베이스 정규화에 대해 알려주세요')">
-                    데이터베이스 정규화
+                <button class="quick-question-btn" onclick="askQuickQuestion('for문과 while문의 차이점을 알려주세요')">
+                    반복문 차이점
                 </button>
-                <button class="quick-question-btn" onclick="askQuickQuestion('REST API란 무엇이고 어떻게 설계하나요?')">
-                    REST API 설계
+                <button class="quick-question-btn" onclick="askQuickQuestion('메서드와 함수의 차이점이 뭔가요?')">
+                    메서드와 함수
                 </button>
             </div>
         </div>
@@ -320,6 +337,7 @@
 
     <script>
         let isFirstMessage = true;
+        let conversationHistory = '';
 
         function askQuickQuestion(question) {
             document.getElementById('chatInput').value = question;
@@ -344,12 +362,45 @@
             
             messagesContainer.appendChild(messageDiv);
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+            if (isUser) {
+                conversationHistory += `User: ${content}\n`;
+            } else {
+                conversationHistory += `AI: ${content}\n`;
+            }
+        }
+
+        function showTypingIndicator() {
+            const messagesContainer = document.getElementById('chatMessages');
+            const typingDiv = document.createElement('div');
+            typingDiv.className = 'message ai';
+            typingDiv.id = 'typingIndicator';
+            
+            typingDiv.innerHTML = `
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <div class="typing-indicator">
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                        <div class="typing-dot"></div>
+                    </div>
+                </div>
+            `;
+            
+            messagesContainer.appendChild(typingDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typingIndicator');
+            if (typingIndicator) {
+                typingIndicator.remove();
+            }
         }
 
         async function sendMessage() {
             const input = document.getElementById('chatInput');
             const sendButton = document.getElementById('sendButton');
-            const loadingIndicator = document.getElementById('loadingIndicator');
             
             const message = input.value.trim();
             if (!message) return;
@@ -358,19 +409,22 @@
             input.value = '';
             
             sendButton.disabled = true;
-            loadingIndicator.classList.add('show');
+            showTypingIndicator();
             
             try {
                 const response = await fetch('/api/ai/chat', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': 'Bearer ' + localStorage.getItem('authToken')
+                        'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ message: message })
+                    body: JSON.stringify({ 
+                        message: message,
+                        history: conversationHistory.slice(-2000)
+                    })
                 });
                 
                 if (response.status === 401) {
+                    hideTypingIndicator();
                     addMessage('로그인이 만료되었습니다. 다시 로그인해주세요.', false);
                     setTimeout(() => {
                         localStorage.clear();
@@ -381,6 +435,8 @@
                 
                 const data = await response.json();
                 
+                hideTypingIndicator();
+                
                 if (data.success) {
                     addMessage(data.response, false);
                 } else {
@@ -389,10 +445,10 @@
                 
             } catch (error) {
                 console.error('AI 채팅 오류:', error);
+                hideTypingIndicator();
                 addMessage('네트워크 오류가 발생했습니다. 연결을 확인하고 다시 시도해주세요.', false);
             } finally {
                 sendButton.disabled = false;
-                loadingIndicator.classList.remove('show');
             }
         }
 
@@ -422,7 +478,7 @@
         document.getElementById('sendButton').addEventListener('click', sendMessage);
 
         document.addEventListener('DOMContentLoaded', function() {
-            addMessage('안녕하세요! 코딩 학습에 도움이 필요하시면 언제든지 질문해주세요. 아래 자주 묻는 질문을 참고하시거나 직접 질문을 입력해보세요!', false);
+            addMessage('안녕하세요! 프로그래밍 관련 질문이 있으시면 언제든 물어보세요. 자바, 파이썬, C++ 등 어떤 언어든 도와드릴게요! 아래 자주 묻는 질문을 참고하시거나 직접 질문을 입력해보세요.', false);
         });
     </script>
 </body>
