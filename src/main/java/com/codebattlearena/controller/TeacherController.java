@@ -18,6 +18,8 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpSession;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URLDecoder;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -72,6 +74,10 @@ public class TeacherController {
             System.err.println("세션 확인 오류: " + e.getMessage());
         }
         return null;
+    }
+
+    private Long getTeacherIdFromSession(HttpSession session) {
+        return getUserIdFromSession(session);
     }
 
     @GetMapping("/api/teacher/statistics")
@@ -329,67 +335,81 @@ public class TeacherController {
         }
     }
 
-    @PostMapping("/api/teacher/materials")
+    @PostMapping("/api/teacher/upload-material")
     @ResponseBody
     public Map<String, Object> uploadMaterial(
-            @RequestParam("title") String title,
-            @RequestParam(value = "description", required = false) String description,
-            @RequestParam("file") MultipartFile file,
-            HttpSession session) {
-    
+        @RequestParam("title") String title,
+        @RequestParam("description") String description,
+        @RequestParam("file") MultipartFile file,
+        HttpSession session) {
+        
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
-                return Map.of("success", false, "message", "인증이 필요합니다.");
+                return Map.of("success", false, "message", "권한이 없습니다.");
             }
-    
+
             if (file.isEmpty()) {
-                return Map.of("success", false, "message", "파일을 선택해주세요.");
+                return Map.of("success", false, "message", "파일이 선택되지 않았습니다.");
             }
-    
+
             String originalFilename = file.getOriginalFilename();
             if (originalFilename == null) {
                 return Map.of("success", false, "message", "파일명이 올바르지 않습니다.");
             }
-    
-            String fileExtension = getFileExtension(originalFilename);
-    
-            if (!isAllowedFileType(fileExtension)) {
-                return Map.of("success", false, "message", "지원하지 않는 파일 형식입니다.");
-            }
-    
-            String fileName = System.currentTimeMillis() + "_" + 
-                    java.util.UUID.randomUUID().toString() + "." + fileExtension;
-            Path targetLocation = this.fileStorageLocation.resolve(fileName);
+
+            String safeFilename = sanitizeFilename(originalFilename);
+            String uniqueFilename = System.currentTimeMillis() + "_" + safeFilename;
             
-            Files.createDirectories(targetLocation.getParent());
-            Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-    
+            Path uploadPath = Paths.get(System.getProperty("java.io.tmpdir"), "uploads");
+            Files.createDirectories(uploadPath);
+            
+            Path filePath = uploadPath.resolve(uniqueFilename);
+            Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+
             Material material = new Material();
             material.setTeacherId(teacherId);
             material.setTitle(title);
             material.setDescription(description);
-            material.setFileType(fileExtension);
-            material.setFileSize(file.getSize());
             material.setOriginalFilename(originalFilename);
-            material.setLocalFilePath(fileName);
+            material.setLocalFilePath(uniqueFilename);
+            material.setFileSize(file.getSize());
+            material.setFileType(getFileExtension(originalFilename));
             material.setCreatedAt(LocalDateTime.now());
-    
-            Material savedMaterial = materialRepository.save(material);
-            savedMaterial.setFilePath("/api/teacher/materials/" + savedMaterial.getId() + "/download-fixed");
-            materialRepository.save(savedMaterial);
-    
-            return Map.of("success", true, "message", "자료가 업로드되었습니다.");
-    
+            material.setDownloadCount(0);
+
+            materialRepository.save(material);
+
+            return Map.of("success", true, "message", "파일이 업로드되었습니다.");
+            
         } catch (Exception e) {
-            System.err.println("Upload error: " + e.getMessage());
-            e.printStackTrace();
-            return Map.of("success", false, "message", "업로드 실패: " + e.getMessage());
+            System.err.println("파일 업로드 실패: " + e.getMessage());
+            return Map.of("success", false, "message", "파일 업로드에 실패했습니다: " + e.getMessage());
         }
     }
 
-    @GetMapping("/api/teacher/materials/{id}/download-fixed")
-    public ResponseEntity<Resource> downloadMaterialFixed(@PathVariable Long id, HttpSession session) {
+    private String sanitizeFilename(String filename) {
+        if (filename == null) return "unknown";
+        
+        try {
+            String decoded = URLDecoder.decode(filename, StandardCharsets.UTF_8);
+            String sanitized = decoded.replaceAll("[^\\w가-힣._-]", "_");
+            return sanitized.length() > 100 ? sanitized.substring(0, 100) : sanitized;
+        } catch (Exception e) {
+            String sanitized = filename.replaceAll("[^\\w._-]", "_");
+            return sanitized.length() > 100 ? sanitized.substring(0, 100) : sanitized;
+        }
+    }
+
+    private String getFileExtension(String filename) {
+        if (filename == null || !filename.contains(".")) {
+            return "unknown";
+        }
+        return filename.substring(filename.lastIndexOf(".") + 1).toLowerCase();
+    }
+
+    @GetMapping("/api/teacher/materials/{id}/download")
+    public ResponseEntity<Resource> downloadMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
@@ -422,13 +442,12 @@ public class TeacherController {
             }
         } catch (Exception ex) {
             System.err.println("Download error: " + ex.getMessage());
-            ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
-    @GetMapping("/api/teacher/materials/{id}/preview-file")
-    public ResponseEntity<Resource> previewFile(@PathVariable Long id, HttpSession session) {
+    @GetMapping("/api/teacher/materials/{id}/preview")
+    public ResponseEntity<Resource> previewMaterial(@PathVariable Long id, HttpSession session) {
         try {
             Long teacherId = getUserIdFromSession(session);
             if (teacherId == null) {
@@ -476,13 +495,12 @@ public class TeacherController {
             }
         } catch (Exception ex) {
             System.err.println("Preview error: " + ex.getMessage());
-            ex.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 
     @GetMapping("/teacher/materials/{id}/preview")
-    public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
+    public String previewMaterialPage(@PathVariable Long id, Model model, HttpSession session) {
         Long teacherId = getUserIdFromSession(session);
         if (teacherId == null) {
             return "redirect:/";
@@ -495,7 +513,7 @@ public class TeacherController {
             return "teacher/preview-error";
         }
         
-        material.setFilePath("/api/teacher/materials/" + material.getId() + "/preview-file");
+        material.setFilePath("/api/teacher/materials/" + material.getId() + "/preview");
         model.addAttribute("material", material);
         
         String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
@@ -663,6 +681,14 @@ public class TeacherController {
             problem.setPoints(
                     problemData.get("points") != null ? Integer.parseInt(problemData.get("points").toString()) : 100);
 
+            if ("QUIZ".equals(problemData.get("type"))) {
+                problem.setOptionA((String) problemData.get("optionA"));
+                problem.setOptionB((String) problemData.get("optionB"));
+                problem.setOptionC((String) problemData.get("optionC"));
+                problem.setOptionD((String) problemData.get("optionD"));
+                problem.setCorrectAnswer((String) problemData.get("correctAnswer"));
+            }
+
             problemRepository.save(problem);
 
             return Map.of("success", true, "message", "문제가 수정되었습니다.");
@@ -714,6 +740,8 @@ public class TeacherController {
                 data.put("score", submission.getScore());
                 data.put("feedback", submission.getFeedback());
                 data.put("submittedAt", submission.getSubmittedAt());
+                data.put("timeSpent", submission.getTimeSpent());
+                data.put("autoSubmitted", submission.isAutoSubmitted());
 
                 User student = userRepository.findById(submission.getUserId()).orElse(null);
                 data.put("studentName", student != null ? student.getName() : "Unknown");
@@ -769,13 +797,6 @@ public class TeacherController {
             case "EXAM": return "시험";
             default: return "문제";
         }
-    }
-
-    private String getFileExtension(String filename) {
-        if (filename == null || filename.lastIndexOf('.') == -1) {
-            return "";
-        }
-        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
     }
 
     private boolean isAllowedFileType(String extension) {

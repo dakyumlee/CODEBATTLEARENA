@@ -541,6 +541,7 @@
             `;
         }
 
+        
         function getTypeKorean(type) {
             switch(type) {
                 case 'QUIZ': return '퀴즈';
@@ -711,6 +712,68 @@
             }
         }
 
+        function startProblemTimer(timeLimitMinutes) {
+            if (problemTimer) {
+                clearInterval(problemTimer);
+            }
+            
+            timeRemaining = timeLimitMinutes * 60;
+            problemStartTime = Date.now();
+            
+            updateTimerDisplay();
+            
+            problemTimer = setInterval(() => {
+                timeRemaining--;
+                updateTimerDisplay();
+                
+                if (timeRemaining <= 0) {
+                    clearInterval(problemTimer);
+                    handleTimeUp();
+                }
+            }, 1000);
+        }
+        
+        function handleTimeUp() {
+            const submitBtn = document.getElementById('submitBtn');
+            const answerInput = document.getElementById('answerInput');
+            const quizOptions = document.querySelectorAll('.quiz-option');
+            
+            if (submitBtn) submitBtn.disabled = true;
+            if (answerInput) answerInput.disabled = true;
+            quizOptions.forEach(option => option.style.pointerEvents = 'none');
+            
+            alert('시간이 초과되었습니다! 더 이상 답안을 수정할 수 없습니다.');
+            
+            if (currentProblem && !currentProblem.submitted) {
+                autoSubmitAnswer();
+            }
+        }
+        
+        async function checkServerTimeLimit() {
+            if (!currentProblem || !problemStartTime) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('problemId', currentProblem.id);
+                formData.append('startTime', problemStartTime);
+                
+                const response = await fetch('/api/student/check-time-limit', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success && result.timeUp) {
+                    handleTimeUp();
+                }
+            } catch (error) {
+                console.error('서버 시간 확인 실패:', error);
+            }
+        }
+        
+        setInterval(checkServerTimeLimit, 30000);
+        
         async function submitAnswer() {
             if (!currentProblem) return;
             

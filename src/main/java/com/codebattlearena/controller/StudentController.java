@@ -95,6 +95,35 @@ public class StudentController {
         }
     }
 
+    @GetMapping("/ai-problems")
+    public Map<String, Object> getAiProblems(HttpSession session) {
+        try {
+            Long userId = getUserIdFromSession(session);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            List<Map<String, Object>> problems = new ArrayList<>();
+            
+            String[] difficulties = {"하", "중", "상"};
+            String[] topics = {"기본", "배열", "문자열"};
+            String[] languages = {"java", "python", "cpp"};
+            
+            for (int i = 0; i < 9; i++) {
+                String difficulty = difficulties[i % 3];
+                String topic = topics[i % 3];
+                String language = languages[i % 3];
+                
+                Map<String, Object> problem = aiProblemService.generateProblemWithLanguage(difficulty, topic, language);
+                problems.add(problem);
+            }
+            
+            return Map.of("problems", problems);
+        } catch (Exception e) {
+            return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
+        }
+    }
+
     @PostMapping("/ai-problem/generate")
     public Map<String, Object> generateAiProblem(@RequestBody Map<String, String> request, HttpSession session) {
         try {
@@ -105,11 +134,32 @@ public class StudentController {
             
             String difficulty = request.getOrDefault("difficulty", "중");
             String topic = request.getOrDefault("topic", "기본");
+            String language = request.getOrDefault("language", "java");
             
-            Map<String, Object> problem = aiProblemService.generateProblem(difficulty, topic);
+            Map<String, Object> problem = aiProblemService.generateProblemWithLanguage(difficulty, topic, language);
             return Map.of("success", true, "problem", problem);
         } catch (Exception e) {
             return Map.of("error", "AI 문제 생성 실패: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/ai-problem/submit")
+    public Map<String, Object> submitAiProblem(
+        @RequestParam("problemId") String problemId,
+        @RequestParam("answer") String answer,
+        @RequestParam("language") String language,
+        HttpSession session) {
+        
+        try {
+            Long userId = getUserIdFromSession(session);
+            if (userId == null) {
+                return Map.of("success", false, "message", "인증이 필요합니다.");
+            }
+            
+            Map<String, Object> feedback = aiProblemService.gradeAnswer(problemId, answer, language);
+            return Map.of("success", true, "feedback", feedback);
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
         }
     }
 
@@ -132,6 +182,8 @@ public class StudentController {
                 problemData.put("difficulty", problem.getDifficulty());
                 problemData.put("points", problem.getPoints());
                 problemData.put("type", problem.getType());
+                problemData.put("timeLimit", problem.getTimeLimit());
+                problemData.put("category", "연습 문제");
                 
                 Optional<Submission> submission = submissionRepository.findByUserIdAndProblemId(userId, problem.getId());
                 problemData.put("solved", submission.isPresent() && "GRADED".equals(submission.get().getStatus()));
@@ -352,16 +404,13 @@ public class StudentController {
         @RequestParam("answer") String answer,
         @RequestParam(value = "timeSpent", required = false) Integer timeSpent,
         @RequestParam(value = "autoSubmit", required = false) Boolean autoSubmit,
+        @RequestParam(value = "timeLimitExceeded", required = false) Boolean timeLimitExceeded,
         HttpSession session) {
-    
+
     try {
         Long userId = getUserIdFromSession(session);
         if (userId == null) {
             return Map.of("success", false, "message", "인증이 필요합니다.");
-        }
-        
-        if (answer == null || answer.trim().isEmpty()) {
-            return Map.of("success", false, "message", "답안을 작성해주세요.");
         }
         
         if (submissionRepository.existsByUserIdAndProblemId(userId, problemId)) {
@@ -373,6 +422,18 @@ public class StudentController {
             return Map.of("success", false, "message", "문제를 찾을 수 없습니다.");
         }
         
+        if (Boolean.TRUE.equals(timeLimitExceeded)) {
+            return Map.of("success", false, "message", "시간이 초과되었습니다. 더 이상 제출할 수 없습니다.");
+        }
+        
+        if (answer == null || answer.trim().isEmpty()) {
+            if (Boolean.TRUE.equals(autoSubmit)) {
+                answer = "시간 초과로 빈 답안 자동 제출";
+            } else {
+                return Map.of("success", false, "message", "답안을 작성해주세요.");
+            }
+        }
+        
         Submission submission = new Submission();
         submission.setUserId(userId);
         submission.setProblemId(problemId);
@@ -382,23 +443,35 @@ public class StudentController {
         
         if (timeSpent != null) {
             submission.setTimeSpent(timeSpent);
+            
+            if (problem.getTimeLimit() != null && timeSpent > (problem.getTimeLimit() * 60)) {
+                submission.setAutoSubmitted(true);
+                submission.setFeedback("시간 초과 후 제출됨");
+            }
         }
         
         if (Boolean.TRUE.equals(autoSubmit)) {
             submission.setAutoSubmitted(true);
-            submission.setFeedback("시간 초과로 자동 제출됨");
+            if (submission.getFeedback() == null) {
+                submission.setFeedback("시간 초과로 자동 제출됨");
+            }
         }
         
         if ("QUIZ".equals(problem.getType()) && problem.getCorrectAnswer() != null) {
             boolean isCorrect = problem.getCorrectAnswer().equalsIgnoreCase(answer.trim());
-            submission.setScore(isCorrect ? problem.getPoints() : 0);
-            submission.setStatus("GRADED");
+            int baseScore = isCorrect ? problem.getPoints() : 0;
             
-            String feedback = isCorrect ? "정답입니다!" : "오답입니다. 정답: " + problem.getCorrectAnswer();
-            if (Boolean.TRUE.equals(autoSubmit)) {
-                feedback = "시간 초과로 자동 제출됨 - " + feedback;
+            if (Boolean.TRUE.equals(autoSubmit) && isCorrect) {
+                baseScore = (int) (baseScore * 0.7);
+                submission.setFeedback("시간 초과 후 제출 - 정답이지만 70% 점수");
+            } else if (Boolean.TRUE.equals(autoSubmit)) {
+                submission.setFeedback("시간 초과 후 제출 - 오답");
+            } else {
+                submission.setFeedback(isCorrect ? "정답입니다!" : "오답입니다. 정답: " + problem.getCorrectAnswer());
             }
-            submission.setFeedback(feedback);
+            
+            submission.setScore(baseScore);
+            submission.setStatus("GRADED");
             submission.setGradedAt(LocalDateTime.now());
         }
         
@@ -414,6 +487,46 @@ public class StudentController {
     }
 }
 
+    @PostMapping("/check-time-limit")
+    public Map<String, Object> checkTimeLimit(
+        @RequestParam("problemId") Long problemId,
+        @RequestParam("startTime") Long startTime,
+        HttpSession session) {
+        
+        try {
+            Long userId = getUserIdFromSession(session);
+            if (userId == null) {
+                return Map.of("success", false, "message", "인증이 필요합니다.");
+            }
+            
+            Problem problem = problemRepository.findById(problemId).orElse(null);
+            if (problem == null) {
+                return Map.of("success", false, "message", "문제를 찾을 수 없습니다.");
+            }
+            
+            if (problem.getTimeLimit() == null) {
+                return Map.of("success", true, "timeUp", false);
+            }
+            
+            long currentTime = System.currentTimeMillis();
+            long elapsedSeconds = (currentTime - startTime) / 1000;
+            long timeLimitSeconds = problem.getTimeLimit() * 60;
+            
+            boolean timeUp = elapsedSeconds >= timeLimitSeconds;
+            long remainingSeconds = Math.max(0, timeLimitSeconds - elapsedSeconds);
+            
+            return Map.of(
+                "success", true,
+                "timeUp", timeUp,
+                "remainingSeconds", remainingSeconds,
+                "elapsedSeconds", elapsedSeconds
+            );
+            
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "시간 확인 실패: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/notes")
     public List<StudyNote> getNotes(HttpSession session) {
         try {
@@ -427,55 +540,6 @@ public class StudentController {
             return new ArrayList<>();
         }
     }
-
-    @GetMapping("/ai-problems")
-public Map<String, Object> getAiProblems(HttpSession session) {
-    try {
-        Long userId = getUserIdFromSession(session);
-        if (userId == null) {
-            return Map.of("error", "Unauthorized");
-        }
-        
-        List<Map<String, Object>> problems = new ArrayList<>();
-        
-        String[] difficulties = {"하", "중", "상"};
-        String[] topics = {"기본", "배열", "문자열"};
-        String[] languages = {"java", "python", "cpp"};
-        
-        for (int i = 0; i < 9; i++) {
-            String difficulty = difficulties[i % 3];
-            String topic = topics[i % 3];
-            String language = languages[i % 3];
-            
-            Map<String, Object> problem = aiProblemService.generateProblemWithLanguage(difficulty, topic, language);
-            problems.add(problem);
-        }
-        
-        return Map.of("problems", problems);
-    } catch (Exception e) {
-        return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
-    }
-}
-
-@PostMapping("/ai-problem/submit")
-public Map<String, Object> submitAiProblem(
-    @RequestParam("problemId") String problemId,
-    @RequestParam("answer") String answer,
-    @RequestParam("language") String language,
-    HttpSession session) {
-    
-    try {
-        Long userId = getUserIdFromSession(session);
-        if (userId == null) {
-            return Map.of("success", false, "message", "인증이 필요합니다.");
-        }
-        
-        Map<String, Object> feedback = aiProblemService.gradeAnswer(problemId, answer, language);
-        return Map.of("success", true, "feedback", feedback);
-    } catch (Exception e) {
-        return Map.of("success", false, "message", "채점 실패: " + e.getMessage());
-    }
-}
 
     @PostMapping("/notes")
     public Map<String, Object> createNote(@RequestBody Map<String, String> noteData, HttpSession session) {
@@ -525,6 +589,27 @@ public Map<String, Object> submitAiProblem(
         }
     }
 
+    @DeleteMapping("/notes/{id}")
+    public Map<String, Object> deleteNote(@PathVariable Long id, HttpSession session) {
+        try {
+            Long userId = getUserIdFromSession(session);
+            if (userId == null) {
+                return Map.of("success", false, "message", "Unauthorized");
+            }
+            
+            StudyNote note = studyNoteRepository.findById(id).orElse(null);
+            if (note == null || !note.getUserId().equals(userId)) {
+                return Map.of("success", false, "message", "노트를 찾을 수 없습니다.");
+            }
+            
+            studyNoteRepository.delete(note);
+            
+            return Map.of("success", true, "message", "노트가 삭제되었습니다.");
+        } catch (Exception e) {
+            return Map.of("success", false, "message", "Error: " + e.getMessage());
+        }
+    }
+
     @GetMapping("/student/materials/{id}/preview")
     public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
         Object userId = session.getAttribute("userId");
@@ -550,27 +635,6 @@ public Map<String, Object> submitAiProblem(
             return "student/preview-image";
         } else {
             return "student/preview-general";
-        }
-    }
-
-    @DeleteMapping("/notes/{id}")
-    public Map<String, Object> deleteNote(@PathVariable Long id, HttpSession session) {
-        try {
-            Long userId = getUserIdFromSession(session);
-            if (userId == null) {
-                return Map.of("success", false, "message", "Unauthorized");
-            }
-            
-            StudyNote note = studyNoteRepository.findById(id).orElse(null);
-            if (note == null || !note.getUserId().equals(userId)) {
-                return Map.of("success", false, "message", "노트를 찾을 수 없습니다.");
-            }
-            
-            studyNoteRepository.delete(note);
-            
-            return Map.of("success", true, "message", "노트가 삭제되었습니다.");
-        } catch (Exception e) {
-            return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
 }
