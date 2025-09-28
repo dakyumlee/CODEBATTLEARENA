@@ -765,21 +765,24 @@
         }
         
         function previewByData(btn) {
-            const url = btn.dataset.url || '';
+            const url = btn.dataset.url;
             const name = btn.dataset.name || 'file';
-            const type = (btn.dataset.type || '').toLowerCase();
+            const type = btn.dataset.type || '';
+            const toCT = (t) => {
+                const x = (t || '').toLowerCase();
+                if (x === 'pdf') return 'application/pdf';
+                if (['jpg','jpeg','png','gif','bmp','svg','webp'].includes(x)) return 'image/' + (x === 'jpg' ? 'jpeg' : x);
+                if (['mp4','mov','avi','mkv','webm'].includes(x)) return 'video/' + (x === 'mp4' ? 'mp4' : x);
+                if (['mp3','wav','ogg','m4a'].includes(x)) return 'audio/' + x;
+                return '';
+            };
             const ct = toCT(type);
-        
-            let base = '/teacher/preview-general';
-            if (type === 'pdf') base = '/teacher/preview-pdf';
-            else if (['jpg','jpeg','png','gif','bmp','svg','webp'].includes(type)) base = '/teacher/preview-image';
-        
             const qs = url
                 ? `url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}${ct ? `&contentType=${encodeURIComponent(ct)}` : ''}`
                 : `name=${encodeURIComponent(name)}${ct ? `&contentType=${encodeURIComponent(ct)}` : ''}`;
-        
-            window.location.href = `${base}?${qs}`;
+            window.location.href = `/preview.html?${qs}`;
         }
+        
         
 
         function downloadByData(btn) {

@@ -621,8 +621,24 @@ int main() {
                                     📥 ${material.downloadCount || 0}회 다운로드
                                 </div>
                                 <div style="display: flex; gap: 10px; margin-top: 15px;">
-                                    ${getFilePreviewButton(material)}
-                                    <button class="btn btn-primary" style="padding: 8px 16px; font-size: 0.8rem;" onclick="downloadMaterial(${material.id})">
+                                    <button
+    class="btn btn-secondary"
+ style="padding: 8px 16px; font-size: 0.8rem;"
+  onclick="previewByData(this)"
+  data-url="${material.url || material.fileUrl || material.cloudinaryUrl || ''}"
+  data-name="${material.filename || material.name || material.title || 'file'}"
+  data-type="${material.fileType || material.contentType || ''}"
+>미리보기</button>
+
+<button
+  class="btn btn-primary"
+  style="padding: 8px 16px; font-size: 0.8rem;"
+  onclick="downloadByData(this)"
+  data-url="${material.url || material.fileUrl || material.cloudinaryUrl || ''}"
+  data-name="${material.filename || material.name || material.title || 'file'}"
+  data-type="${material.fileType || material.contentType || ''}"
+>다운로드</button>
+
                                         다운로드
                                     </button>
                                 </div>

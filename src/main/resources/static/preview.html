@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>파일 미리보기</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #0b1220;
+            color: #ffffff;
+            line-height: 1.6;
+        }
+
+        .wrap {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            gap: 16px;
+        }
+
+        .title {
+            font-weight: 700;
+            font-size: 18px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            background: #1f6feb;
+            border: none;
+            color: #ffffff;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #1a5bd6;
+        }
+
+        .btn:active {
+            background: #1653c7;
+        }
+
+        .btn-link {
+            display: inline-block;
+            text-decoration: none;
+        }
+
+        .viewer {
+            background: #0f172a;
+            border: 1px solid #1e293b;
+            border-radius: 12px;
+            min-height: 70vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: auto;
+            position: relative;
+        }
+
+        .viewer iframe {
+            width: 100%;
+            height: 80vh;
+            border: 0;
+            border-radius: 12px;
+        }
+
+        .viewer img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 12px;
+            max-height: 80vh;
+            object-fit: contain;
+        }
+
+        .viewer video {
+            width: 100%;
+            max-height: 80vh;
+            border-radius: 12px;
+        }
+
+        .viewer audio {
+            width: 100%;
+            max-width: 600px;
+        }
+
+        .fallback {
+            padding: 32px 24px;
+            text-align: center;
+            color: #94a3b8;
+        }
+
+        .fallback-message {
+            margin-bottom: 16px;
+            font-size: 16px;
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 12px;
+            }
+
+            .title {
+                text-align: center;
+                white-space: normal;
+                word-break: break-word;
+            }
+
+            .button-group {
+                justify-content: center;
+            }
+
+            .btn {
+                flex: 1;
+                max-width: 120px;
+            }
+
+            .viewer {
+                min-height: 60vh;
+            }
+
+            .viewer iframe {
+                height: 60vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wrap">
+        <div class="header">
+            <div class="title" id="fileTitle">파일 미리보기</div>
+            <div class="button-group">
+                <button class="btn" id="btnOpen">원본 열기</button>
+                <button class="btn" id="btnDownload">다운로드</button>
+            </div>
+        </div>
+        <div class="viewer" id="viewer"></div>
+    </div>
+
+    <script>
+        function getQueryParam(key) {
+            return new URL(location.href).searchParams.get(key) || '';
+        }
+
+        function getContentTypeByExtension(extension) {
+            const ext = extension.toLowerCase();
+            
+            const imageTypes = {
+                'jpg': 'image/jpeg',
+                'jpeg': 'image/jpeg',
+                'png': 'image/png',
+                'gif': 'image/gif',
+                'bmp': 'image/bmp',
+                'svg': 'image/svg+xml',
+                'webp': 'image/webp'
+            };
+            
+            const videoTypes = {
+                'mp4': 'video/mp4',
+                'mov': 'video/quicktime',
+                'avi': 'video/x-msvideo',
+                'mkv': 'video/x-matroska',
+                'webm': 'video/webm'
+            };
+            
+            const audioTypes = {
+                'mp3': 'audio/mpeg',
+                'wav': 'audio/wav',
+                'ogg': 'audio/ogg',
+                'm4a': 'audio/mp4'
+            };
+            
+            if (ext === 'pdf') return 'application/pdf';
+            if (imageTypes[ext]) return imageTypes[ext];
+            if (videoTypes[ext]) return videoTypes[ext];
+            if (audioTypes[ext]) return audioTypes[ext];
+            
+            return '';
+        }
+
+        function buildQueryString(url, name, contentType) {
+            const params = new URLSearchParams();
+            params.set('url', url);
+            params.set('name', name);
+            if (contentType) {
+                params.set('contentType', contentType);
+            }
+            return params.toString();
+        }
+
+        function setViewerContent(html) {
+            document.getElementById('viewer').innerHTML = html;
+        }
+
+        function showFallback(message, showOpenButton = true) {
+            const openButtonHtml = showOpenButton && url ? 
+                `<a class="btn btn-link" href="${proxyPreview}" target="_blank" rel="noopener">새 창에서 열기</a>` : '';
+            
+            setViewerContent(`
+                <div class="fallback">
+                    <div class="fallback-message">${message}</div>
+                    ${openButtonHtml}
+                </div>
+            `);
+        }
+
+        const url = getQueryParam('url');
+        const fileName = getQueryParam('name') || 'file';
+        let contentType = getQueryParam('contentType') || '';
+        
+        const fileExtension = (fileName.split('.').pop() || '').toLowerCase();
+        if (!contentType) {
+            contentType = getContentTypeByExtension(fileExtension);
+        }
+
+        document.getElementById('fileTitle').textContent = fileName;
+
+        const proxyPreview = url ? `/api/materials/preview?${buildQueryString(url, fileName, contentType)}` : '';
+        const proxyDownload = url ? `/api/materials/download?${buildQueryString(url, fileName, contentType)}` : '';
+
+        if (!url) {
+            showFallback('파일 URL이 제공되지 않았습니다.', false);
+        } else if (contentType === 'application/pdf') {
+            setViewerContent(`<iframe src="${proxyPreview}" title="PDF 문서"></iframe>`);
+        } else if (contentType.startsWith('image/')) {
+            setViewerContent(`
+                <img src="${proxyPreview}" 
+                    alt="${fileName}" 
+                    onerror="showFallback('이미지를 표시할 수 없습니다.')">
+            `);
+        } else if (contentType.startsWith('video/')) {
+            setViewerContent(`
+                <video controls>
+                    <source src="${proxyPreview}" type="${contentType}">
+                    이 브라우저는 동영상 재생을 지원하지 않습니다.
+                </video>
+            `);
+        } else if (contentType.startsWith('audio/')) {
+            setViewerContent(`
+                <audio controls>
+                    <source src="${proxyPreview}" type="${contentType}">
+                    이 브라우저는 오디오 재생을 지원하지 않습니다.
+                </audio>
+            `);
+        } else {
+            showFallback('이 파일 형식은 브라우저에서 미리보기를 지원하지 않습니다.');
+        }
+
+        document.getElementById('btnOpen').onclick = () => {
+            if (url) window.open(proxyPreview, '_blank', 'noopener');
+        };
+
+        document.getElementById('btnDownload').onclick = () => {
+            if (!url) return;
+            const a = document.createElement('a');
+            a.href = proxyDownload;
+            a.download = fileName;
+            a.target = '_blank';
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+        };
+    </script>
