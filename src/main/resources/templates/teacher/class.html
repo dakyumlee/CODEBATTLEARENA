@@ -720,24 +720,36 @@ async function loadMaterials() {
         
         if (data.materials && data.materials.length > 0) {
             container.innerHTML = `
-                <div class="materials-grid">
-                    ${data.materials.map(material => `
-                        <div class="material-card">
-                            <div class="material-title">${material.title}</div>
-                            <div class="material-info">
-                                크기: ${formatFileSize(material.fileSize)}<br>
-                                다운로드: ${material.downloadCount || 0}회<br>
-                                업로드: ${new Date(material.createdAt).toLocaleDateString()}
-                            </div>
-                            <div class="material-actions">
-                                <button class="btn btn-warning btn-small" onclick="previewMaterial(${material.id}, '${material.title}', '${material.fileType}')">미리보기</button>
-                                <button class="btn btn-primary btn-small" onclick="downloadMaterial(${material.id})">다운로드</button>
-                                <button class="btn btn-danger btn-small" onclick="deleteMaterial(${material.id})">삭제</button>
-                            </div>
-                        </div>
-                    `).join('')}
+    <div class="materials-grid">
+        ${data.materials.map(material => `
+            <div class="material-card">
+                <div class="material-title">${material.title}</div>
+                <div class="material-info">
+                    크기: ${formatFileSize(material.fileSize)}<br>
+                    다운로드: ${material.downloadCount || 0}회<br>
+                    업로드: ${new Date(material.createdAt).toLocaleDateString()}
                 </div>
-            `;
+                <div class="material-actions">
+                    <button
+                    class="btn btn-warning btn-small"
+                    onclick="previewByData(this)"
+                    data-url="${material.url || material.fileUrl || material.cloudinaryUrl || ''}"
+                    data-name="${material.filename || material.name || material.title}"
+                    data-type="${material.fileType || material.contentType || ''}"
+                    >미리보기</button>
+                    <button
+                    class="btn btn-primary btn-small"
+                    onclick="downloadByData(this)"
+                    data-url="${material.url || material.fileUrl || material.cloudinaryUrl || ''}"
+                    data-name="${material.filename || material.name || material.title}"
+                    data-type="${material.fileType || material.contentType || ''}"
+                    >다운로드</button>
+                    <button class="btn btn-danger btn-small" onclick="deleteMaterial(${material.id})">삭제</button>
+                </div>
+            </div>
+        `).join('')}
+    </div>
+`;
         } else {
             container.innerHTML = '<div class="empty-state">업로드된 자료가 없습니다.</div>';
         }
@@ -778,49 +790,45 @@ function previewMaterial(id, title, fileType) {
     });
 }
 
-function downloadMaterial(id) {
-    fetch(`/api/teacher/materials/${id}/download`, {
-        method: 'GET',
-        credentials: 'same-origin'
-    })
-    .then(response => {
-        if (response.status === 401) {
-            alert('세션이 만료되었습니다. 다시 로그인해주세요.');
-            window.location.href = '/';
-            return null;
-        }
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-    })
-    .then(data => {
-        if (data && data.success && data.downloadUrl) {
-            const link = document.createElement('a');
-            link.href = data.downloadUrl;
-            if (data.filename) {
-                link.download = data.filename;
-            }
-            link.target = '_blank';
-            link.rel = 'noopener noreferrer';
-            
-            document.body.appendChild(link);
-            link.click();
-            
-            setTimeout(() => {
-                document.body.removeChild(link);
-            }, 100);
-        } else if (data && data.error) {
-            alert('다운로드 실패: ' + data.error);
-        } else {
-            alert('다운로드할 수 없습니다.');
-        }
-    })
-    .catch(error => {
-        console.error('다운로드 오류:', error);
-        alert('다운로드 중 오류가 발생했습니다: ' + error.message);
-    });
+function toCT(type) {
+    if (!type) return '';
+    const t = type.toLowerCase();
+    if (t === 'pdf') return 'application/pdf';
+    if (['jpg','jpeg','png','gif','bmp','svg','webp'].includes(t)) return 'image/' + (t === 'jpg' ? 'jpeg' : t);
+    if (['mp4','mov','avi','mkv','webm'].includes(t)) return 'video/' + (t === 'mp4' ? 'mp4' : t);
+    if (['mp3','wav','ogg','m4a'].includes(t)) return 'audio/' + t;
+    return '';
 }
+
+function previewByData(btn) {
+    const url = btn.dataset.url;
+    const name = btn.dataset.name || 'file';
+    const type = btn.dataset.type || '';
+    const ct = toCT(type);
+    const qs = url
+        ? `url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}${ct ? `&contentType=${encodeURIComponent(ct)}` : ''}`
+        : `name=${encodeURIComponent(name)}${ct ? `&contentType=${encodeURIComponent(ct)}` : ''}`;
+    const previewUrl = `/api/materials/preview?${qs}`;
+    openPreviewModal(previewUrl, name, type || '');
+}
+
+function downloadByData(btn) {
+    const url = btn.dataset.url;
+    const name = btn.dataset.name || 'file';
+    const type = btn.dataset.type || '';
+    const ct = toCT(type);
+    const qs = url
+        ? `url=${encodeURIComponent(url)}&name=${encodeURIComponent(name)}${ct ? `&contentType=${encodeURIComponent(ct)}` : ''}`
+        : `name=${encodeURIComponent(name)}${ct ? `&contentType=${encodeURIComponent(ct)}` : ''}`;
+    const a = document.createElement('a');
+    a.href = `/api/materials/download?${qs}`;
+    a.download = name;
+    a.target = '_blank';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+}
+
 
 function openPreviewModal(url, title, fileType) {
     const modal = document.getElementById('previewModal');
