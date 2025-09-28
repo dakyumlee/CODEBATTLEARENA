@@ -893,29 +893,54 @@ int main() {
                 }
             }
             
+            const submitBtn = document.getElementById('submitBtn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '제출 중...';
+            
             try {
                 let response, result;
                 
                 if (currentProblem.type === 'AI_CODING') {
-                    response = await fetch('/api/ai/grade', {
+                    const formData = new FormData();
+                    formData.append('problemId', currentProblem.id);
+                    formData.append('answer', answer);
+                    formData.append('language', document.getElementById('languageSelect').value);
+                    formData.append('timeSpent', Math.floor((Date.now() - problemStartTime) / 1000));
+                    
+                    response = await fetch('/api/student/ai-problem/submit', {
                         method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            problemId: currentProblem.id,
-                            answer: answer,
-                            language: document.getElementById('languageSelect').value
-                        })
+                        body: formData
                     });
                     
                     result = await response.json();
                     
                     if (result.success && result.feedback) {
                         const feedback = result.feedback;
-                        alert(`채점 완료!\n점수: ${feedback.score}점\n피드백: ${feedback.feedback}`);
+                        
+                        document.getElementById('modalDescription').innerHTML = `
+                            <div class="feedback-result" style="background: ${feedback.correct ? 'rgba(76, 175, 80, 0.2)' : 'rgba(244, 67, 54, 0.2)'}; border: 1px solid ${feedback.correct ? '#81c784' : '#e57373'}; border-radius: 12px; padding: 20px;">
+                                <h4 style="color: ${feedback.correct ? '#81c784' : '#e57373'}; margin-bottom: 15px;">채점 결과</h4>
+                                <p><strong>점수:</strong> ${feedback.score}점</p>
+                                <p><strong>결과:</strong> ${feedback.correct ? '정답입니다! 🎉' : '틀렸습니다. 😞'}</p>
+                                <p><strong>피드백:</strong> ${feedback.feedback}</p>
+                            </div>
+                            <div style="text-align: center; margin-top: 20px; color: #b0bec5;">
+                                3초 후 자동으로 닫힙니다...
+                            </div>
+                        `;
+                        
+                        submitBtn.style.display = 'none';
+                        document.getElementById('timerDisplay').style.display = 'none';
+                        
+                        setTimeout(() => {
+                            closeModal();
+                            loadDailyStats();
+                        }, 3000);
+                        
                     } else {
-                        alert('채점에 실패했습니다.');
+                        alert('채점에 실패했습니다: ' + (result.message || ''));
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '제출';
                     }
                 } else {
                     const formData = new FormData();
@@ -936,11 +961,35 @@ int main() {
                         loadTeacherProblems();
                     } else {
                         alert(result.message || '제출에 실패했습니다.');
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = '제출';
                     }
                 }
             } catch (error) {
                 console.error('제출 실패:', error);
                 alert('제출에 실패했습니다.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '제출';
+            }
+        }
+
+        async function loadDailyStats() {
+            try {
+                const response = await fetch('/api/student/daily-stats');
+                const stats = await response.json();
+                
+                if (stats.error) return;
+                
+                const welcomeMessage = document.getElementById('welcomeMessage');
+                if (welcomeMessage && stats.problemsSolved > 0) {
+                    welcomeMessage.innerHTML = `
+                        오늘 ${stats.problemsSolved}개 문제를 풀었습니다! 
+                        <span style="color: #4fc3f7;">(평균 점수: ${stats.averageScore}점)</span>
+                        <br><span style="font-size: 0.9rem; color: #b0bec5;">${stats.lastFeedback}</span>
+                    `;
+                }
+            } catch (error) {
+                console.error('통계 로드 실패:', error);
             }
         }
 
