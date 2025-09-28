@@ -12,7 +12,7 @@ import java.util.*;
 @Service
 public class AiProblemService {
 
-    @Value("${openai.api.key:}")
+    @Value("${OPENAI_API_KEY:}")
     private String openaiApiKey;
 
     private final RestTemplate restTemplate = new RestTemplate();

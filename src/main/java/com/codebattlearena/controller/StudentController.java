@@ -2,6 +2,7 @@ package com.codebattlearena.controller;
 
 import com.codebattlearena.model.*;
 import com.codebattlearena.repository.*;
+import com.codebattlearena.service.AiProblemService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.UrlResource;
@@ -41,7 +42,10 @@ public class StudentController {
     @Autowired
     private MaterialRepository materialRepository;
 
-    private final Path fileStorageLocation = Paths.get("src/main/resources/uploads").toAbsolutePath().normalize();
+    @Autowired
+    private AiProblemService aiProblemService;
+
+    private final Path fileStorageLocation = Paths.get(System.getProperty("java.io.tmpdir"), "uploads").toAbsolutePath().normalize();
 
     private Long getUserIdFromSession(HttpSession session) {
         try {
@@ -84,19 +88,61 @@ public class StudentController {
                 return Map.of("error", "Unauthorized");
             }
             
-            Map<String, Object> todayProblem = Map.of(
-                "id", "ai-today-" + LocalDateTime.now().getDayOfYear(),
-                "title", "배열의 최댓값 찾기",
-                "description", "주어진 정수 배열에서 최댓값을 찾는 함수를 작성하세요.\n\n입력: [3, 1, 4, 1, 5, 9, 2, 6]\n출력: 9\n\n힌트: 반복문을 사용하여 배열을 순회하면서 최댓값을 찾아보세요.",
-                "difficulty", "하",
-                "category", "배열",
-                "timeLimit", 30,
-                "points", 100
-            );
-            
-            return Map.of("success", true, "problem", todayProblem);
+            Map<String, Object> problem = aiProblemService.generateProblem("중", "기본");
+            return Map.of("success", true, "problem", problem);
         } catch (Exception e) {
             return Map.of("error", "AI 문제를 불러올 수 없습니다: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/ai-problem/generate")
+    public Map<String, Object> generateAiProblem(@RequestBody Map<String, String> request, HttpSession session) {
+        try {
+            Long userId = getUserIdFromSession(session);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            String difficulty = request.getOrDefault("difficulty", "중");
+            String topic = request.getOrDefault("topic", "기본");
+            
+            Map<String, Object> problem = aiProblemService.generateProblem(difficulty, topic);
+            return Map.of("success", true, "problem", problem);
+        } catch (Exception e) {
+            return Map.of("error", "AI 문제 생성 실패: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/practice-problems")
+    public Map<String, Object> getPracticeProblems(HttpSession session) {
+        try {
+            Long userId = getUserIdFromSession(session);
+            if (userId == null) {
+                return Map.of("error", "Unauthorized");
+            }
+            
+            List<Problem> problems = problemRepository.findAll();
+            
+            List<Map<String, Object>> practiceProblems = new ArrayList<>();
+            for (Problem problem : problems) {
+                Map<String, Object> problemData = new HashMap<>();
+                problemData.put("id", problem.getId());
+                problemData.put("title", problem.getTitle());
+                problemData.put("description", problem.getDescription());
+                problemData.put("difficulty", problem.getDifficulty());
+                problemData.put("points", problem.getPoints());
+                problemData.put("type", problem.getType());
+                
+                Optional<Submission> submission = submissionRepository.findByUserIdAndProblemId(userId, problem.getId());
+                problemData.put("solved", submission.isPresent() && "GRADED".equals(submission.get().getStatus()));
+                problemData.put("score", submission.map(Submission::getScore).orElse(null));
+                
+                practiceProblems.add(problemData);
+            }
+            
+            return Map.of("problems", practiceProblems);
+        } catch (Exception e) {
+            return Map.of("error", "문제를 불러올 수 없습니다: " + e.getMessage());
         }
     }
 
@@ -409,33 +455,34 @@ public class StudentController {
             return Map.of("success", false, "message", "Error: " + e.getMessage());
         }
     }
+
     @GetMapping("/student/materials/{id}/preview")
-public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
-    Object userId = session.getAttribute("userId");
-    Object userRole = session.getAttribute("userRole");
-    
-    if (userId == null || !"STUDENT".equals(userRole)) {
-        return "redirect:/";
+    public String previewMaterial(@PathVariable Long id, Model model, HttpSession session) {
+        Object userId = session.getAttribute("userId");
+        Object userRole = session.getAttribute("userRole");
+        
+        if (userId == null || !"STUDENT".equals(userRole)) {
+            return "redirect:/";
+        }
+        
+        Material material = materialRepository.findById(id).orElse(null);
+        
+        if (material == null) {
+            model.addAttribute("error", "자료를 찾을 수 없습니다.");
+            return "student/preview-error";
+        }
+        
+        model.addAttribute("material", material);
+        
+        String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
+        if (fileType.equals("pdf")) {
+            return "student/preview-pdf";
+        } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
+            return "student/preview-image";
+        } else {
+            return "student/preview-general";
+        }
     }
-    
-    Material material = materialRepository.findById(id).orElse(null);
-    
-    if (material == null) {
-        model.addAttribute("error", "자료를 찾을 수 없습니다.");
-        return "student/preview-error";
-    }
-    
-    model.addAttribute("material", material);
-    
-    String fileType = material.getFileType() != null ? material.getFileType().toLowerCase() : "";
-    if (fileType.equals("pdf")) {
-        return "student/preview-pdf";
-    } else if (Arrays.asList("jpg", "jpeg", "png", "gif", "bmp", "svg").contains(fileType)) {
-        return "student/preview-image";
-    } else {
-        return "student/preview-general";
-    }
-}
 
     @DeleteMapping("/notes/{id}")
     public Map<String, Object> deleteNote(@PathVariable Long id, HttpSession session) {
